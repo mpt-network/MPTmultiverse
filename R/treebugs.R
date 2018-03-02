@@ -197,7 +197,7 @@ mpt_treebugs <- function (method, dataset, data, model,
   result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
   if (pooling != "complete")
     result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
-  
+  save(treebugs_fit, file = paste0("treebugs_model_", method, ".RData"))
   result_row
 }
 
