@@ -1,4 +1,4 @@
-library("ggplot2")
+#' @export
 
 plot_results <- function (results, save = TRUE, write.csv = TRUE){
   
