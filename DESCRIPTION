@@ -1,0 +1,30 @@
+Package: mpt.comparison
+Title: Comparison of MPT Analysis Approaches 
+Version: 0.1
+Description: 
+Authors@R: c(
+    person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
+    , person("Henrik", "Singmann", email = "", role = c("aut"))
+    , person("Daniel", "Heck", email = "", role = c("aut"))
+  )
+URL: https://github.com/methexp/mpt-comparison
+BugReports: https://github.com/methexp/mpt-comparison/issues
+Depends:
+    R (>= 2.11.1),
+    tidyr, 
+    dplyr,
+    tibble,
+    rlang,
+    reshape2,
+    ggplot2,
+    parallel,
+    MPTinR,
+    TreeBUGS,
+    runjags,
+    purrr,
+    broom,
+    readr,
+    parallel
+LazyData: yes
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1
