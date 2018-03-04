@@ -214,7 +214,7 @@ mpt_mptinr_no <- function(dataset,
   no_pooling$gof_group[[1]]$focus <- "mean"
   
   tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- prepared$condition
+  tmp$condition <- prepared$data$condition
   gof_group <- tmp %>%
     group_by(condition) %>%
     summarise(stat_obs = sum(G.Squared),

@@ -5,7 +5,7 @@
     mpt.comparison = list(
       mptinr = list(
         bootstrap_samples = 2e3
-        , n.optim = 1e2
+        , n.optim = 2e1
         , n.CPU = parallel::detectCores()
       )
       , treebugs = list(
