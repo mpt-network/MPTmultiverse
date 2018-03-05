@@ -12,7 +12,8 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  warning = FALSE
 )
 ```
 
@@ -21,12 +22,11 @@ knitr::opts_chunk$set(
 ## Example 1: Bayen & Kuhlmann (2011)
 
 ```{r model-and-data}
-# loading packages
-# => check that the newest versions are installed (especially for TreeBUGS)!
+# load packages:
 library("mpt.comparison")
 runjags.options(silent.jags = TRUE, silent.runjags = TRUE)
 
-# load scripts. make sure that working directory is correct via either:
+# Make sure that working directory is correct via either:
 # - setwd() / getwd()
 # - Rstudio->Sessions->Set Working Directory->'To Source File Location'
 
@@ -69,7 +69,12 @@ head(data)
 
 
 ```{r options}
+# How to change a single option:
+mpt_options(n.iter = 1000)
+# Ho to set all options for testing (uncomment for serious calculations):
 mpt_options("test")
+mpt_options(save_models = TRUE)
+# List all options that were set for the different analysis approaches:
 mpt_options()
 ```
 
@@ -92,13 +97,14 @@ results <- bind_rows(res_mptinr, res_treebugs)
 # print convergence results
 check_results(results)
 
+used_options <- getOption("mpt.comparison")
 # store results
 save(
   results
   , data
   , EQN_FILE
   , DATA_FILE
-  , getOption("mpt.comparison")
+  , used_options
   , file = "results.RData"
 )
 

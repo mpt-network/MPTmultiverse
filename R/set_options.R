@@ -31,6 +31,8 @@ mpt_options <- function(...){
       }
       , args = args
     )
+    sub_args <- args[names(args)%in%names(fetched)]
+    changed[names(sub_args)] <- sub_args
   }
   options(list(mpt.comparison = changed))
 }
@@ -62,5 +64,6 @@ set_test <- function() { # nocov start
     )
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
+    , save_models = FALSE
   )
 }

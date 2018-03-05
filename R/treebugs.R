@@ -15,8 +15,10 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 
 mpt_treebugs <- function (method, dataset, data, model,
                           col_id = "id", col_condition = "condition"){
-  TREEBUGS_MCMC <- getOption("mpt.comparison")$treebugs
-  CI_SIZE <- getOption("mpt.comparison")$ci_size
+  all_options <- getOption("mpt.comparison")
+  
+  TREEBUGS_MCMC <- all_options$treebugs
+  CI_SIZE <- all_options$ci_size
   
   # dlist <- prepare_data(model, data, col_id = "id", col_condition = "condition")
   conditions <- levels(factor(data[[col_condition]]))
@@ -197,7 +199,10 @@ mpt_treebugs <- function (method, dataset, data, model,
   result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
   if (pooling != "complete")
     result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
-  save(treebugs_fit, file = paste0("treebugs_model_", method, ".RData"))
+  
+  if(all_options$save_models){
+    save(treebugs_fit, file = paste0(model, data, method, ".RData"))
+  }
   result_row
 }
 

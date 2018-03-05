@@ -22,6 +22,7 @@
       )
       , ci_size = c(.025, .1, .9, .975)
       , max_ci_indiv = .99
+      , save_models = TRUE
     )
   )
   
