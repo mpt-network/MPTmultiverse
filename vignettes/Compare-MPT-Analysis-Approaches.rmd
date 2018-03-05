@@ -5,21 +5,53 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Compare MPT Analysis Approaches}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE
+  collapse = TRUE
+  , comment = "#>"
+  , warning = FALSE
+  , cache = TRUE
 )
+```
+
+# Prerequisites
+
+First of all, make sure that you have installed the *latest* version of all necessary `R` packages *and* of `JAGS`.
+To install `JAGS`, go to [mcmc-jags.sourceforge.net](http://mcmc-jags.sourceforge.net/) and follow installation instructions.
+After that, install or update the required packages.
+
+```{r install-packages, eval = FALSE}
+required <- c(
+  "devtools"
+  , "tidyr"
+  , "dplyr"
+  , "tibble"
+  , "rlang"
+  , "reshape2"
+  , "ggplot2"
+  , "MPTinR"
+  , "TreeBUGS"
+  , "runjags"
+  , "purrr"
+  , "readr"
+  , "broom"
+)
+
+install.packages(required, repos = "https://cloud.r-project.org")
+devtools::install_github("methexp/mpt.comparison")
 ```
 
 
 
 ## Example 1: Bayen & Kuhlmann (2011)
+
+
 
 ```{r model-and-data}
 # load packages:
@@ -67,23 +99,29 @@ data[,COL_CONDITION] <- factor(data[,COL_CONDITION],
 head(data)
 ```
 
+### Options
+
+Every time the package `mpt.comparison` is loaded, it automatically sets some defaults for model estimation, usage of multiple processor cores, 
+number of posterior predictive samples, etc. By calling `mpt_options()` without any parameters, you can inspect these default values.
+If you want to change them call, `mpt_options` with the respective parameter specified, i.e. `mpt_options(n.iter = 1000)`.
+For testing purposes you can also specify `mpt_options("test")`, which is a shorthand for setting fast, but highly unreliable settings.
 
 ```{r options}
 # How to change a single option:
 mpt_options(n.iter = 1000)
-# Ho to set all options for testing (uncomment for serious calculations):
+# How to set all options for testing (uncomment for serious calculations):
 mpt_options("test")
 mpt_options(save_models = TRUE)
 # List all options that were set for the different analysis approaches:
 mpt_options()
 ```
 
+### Estimation
+
+The next lines of code do the basic model estimation---if everything is set up correctly,
+these should remain unchanged.
 
 ```{r analysis}
-##############################
-## Analysis (do not change) ##
-##############################
-
 res_mptinr <- mpt_mptinr(dataset = DATA_FILE, data = data, model = EQN_FILE,
                          col_id = COL_ID, col_condition = COL_CONDITION)
 
@@ -93,7 +131,12 @@ res_treebugs <- map(c("simple", "simple_pooling", "trait", "beta", "trait_uncorr
                     col_id = COL_ID, col_condition = COL_CONDITION)
 
 results <- bind_rows(res_mptinr, res_treebugs)
+```
 
+
+### Post-procssing of Results
+
+```{r results}
 # print convergence results
 check_results(results)
 
@@ -108,7 +151,7 @@ save(
   , file = "results.RData"
 )
 
-write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
-plot_results(results, save = TRUE)
+# write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
+# plot_results(results, save = TRUE)
 ```
 

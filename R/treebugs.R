@@ -16,6 +16,7 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 mpt_treebugs <- function (method, dataset, data, model,
                           col_id = "id", col_condition = "condition"){
   all_options <- getOption("mpt.comparison")
+  call_method <- method
   
   TREEBUGS_MCMC <- all_options$treebugs
   CI_SIZE <- all_options$ci_size
@@ -199,9 +200,21 @@ mpt_treebugs <- function (method, dataset, data, model,
   result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
   if (pooling != "complete")
     result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
-  
+
   if(all_options$save_models){
-    save(treebugs_fit, file = paste0(model, data, method, ".RData"))
+    save(treebugs_fit, file = paste0(
+      paste(
+        c(
+          gsub(model, pattern = ".eqn|.EQN", replacement = "")
+          , gsub(dataset, pattern = ".csv|.CSV", replacement = "")
+          , pooling
+          , method
+        )
+        , collapse = "_"
+      )
+      , ".RData"
+      )
+    )
   }
   result_row
 }
