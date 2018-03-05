@@ -1,0 +1,108 @@
+---
+title: "Compare MPT Analysis Approaches"
+author: "Marius Barth"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Compare MPT Analysis Approaches}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+## Example 1: Bayen & Kuhlmann (2011)
+
+```{r model-and-data}
+# loading packages
+# => check that the newest versions are installed (especially for TreeBUGS)!
+library("mpt.comparison")
+runjags.options(silent.jags = TRUE, silent.runjags = TRUE)
+
+# load scripts. make sure that working directory is correct via either:
+# - setwd() / getwd()
+# - Rstudio->Sessions->Set Working Directory->'To Source File Location'
+
+
+# ------------------------------------------------------------------------------
+# MPT model definition & Data
+
+EQN_FILE <- "2HTSM_Submodel4.eqn"
+DATA_FILE <- "Kuhlmann_dl7.csv"  
+
+
+### if .csv format uses semicolons ";" (German format):
+data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
+### if .csv format uses commata "," (international format):
+# data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
+
+head(data)
+plotFreq(data, boxplot = FALSE, eqn = EQN_FILE)
+
+### Optional:
+### (A) add a person identifier if missing in data [uncomment if necessary]
+# data$Subject <- 1:nrow(data)
+
+### Optional:
+### (B) add a dummy variable if data do not contain a between-subject factor  [uncomment if necessary]
+# data$ExpCond <- "no_condition"
+
+COL_ID <- "Subject"         # name of the variable encoding subject ID
+COL_CONDITION <- "ExpCond"  # name of the variable encoding group membership
+
+# NOTE: experimental condition should be labeled meaningfully!
+unique(data[,COL_CONDITION])
+data[,COL_CONDITION] <- factor(data[,COL_CONDITION],
+                               levels = c(1:2),
+                               labels = c("no_load", "load"))
+
+### check input data frame
+head(data)
+```
+
+
+```{r options}
+mpt_options("test")
+mpt_options()
+```
+
+
+```{r analysis}
+##############################
+## Analysis (do not change) ##
+##############################
+
+res_mptinr <- mpt_mptinr(dataset = DATA_FILE, data = data, model = EQN_FILE,
+                         col_id = COL_ID, col_condition = COL_CONDITION)
+
+res_treebugs <- map(c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"),
+                    mpt_treebugs_safe, 
+                    dataset = DATA_FILE, data = data, model = EQN_FILE,
+                    col_id = COL_ID, col_condition = COL_CONDITION)
+
+results <- bind_rows(res_mptinr, res_treebugs)
+
+# print convergence results
+check_results(results)
+
+# store results
+save(
+  results
+  , data
+  , EQN_FILE
+  , DATA_FILE
+  , getOption("mpt.comparison")
+  , file = "results.RData"
+)
+
+write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
+plot_results(results, save = TRUE)
+```
+
