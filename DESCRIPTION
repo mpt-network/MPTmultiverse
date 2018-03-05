@@ -5,7 +5,7 @@ Description:
 Authors@R: c(
     person("Henrik", "Singmann", email = "", role = c("aut"))
     , person(c("Daniel", "W."), "Heck", email = "heck@uni-mannheim.de", role = c("aut"))
-    , person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
+    , person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("ctb", "cre"))
   )
 URL: https://github.com/methexp/mpt-comparison
 BugReports: https://github.com/methexp/mpt-comparison/issues
