@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
   collapse = TRUE
   , comment = "#>"
   , warning = FALSE
+  , message = FALSE
   , cache = TRUE
 )
 ```
@@ -121,7 +122,7 @@ mpt_options()
 The next lines of code do the basic model estimation---if everything is set up correctly,
 these should remain unchanged.
 
-```{r analysis}
+```{r analysis, eval = FALSE}
 res_mptinr <- mpt_mptinr(dataset = DATA_FILE, data = data, model = EQN_FILE,
                          col_id = COL_ID, col_condition = COL_CONDITION)
 
@@ -134,9 +135,9 @@ results <- bind_rows(res_mptinr, res_treebugs)
 ```
 
 
-### Post-procssing of Results
+### Post-processing of Results
 
-```{r results}
+```{r results, eval = FALSE}
 # print convergence results
 check_results(results)
 
@@ -151,7 +152,7 @@ save(
   , file = "results.RData"
 )
 
-# write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
-# plot_results(results, save = TRUE)
+write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
+plot_results(results, save = TRUE)
 ```
 
