@@ -19,7 +19,7 @@ mpt_options <- function(...){
   args <- c(...)
   
   if(length(args)==0L) return(fetched)
-  if(args=="test"){
+  if(args[[1]]=="test"){
     changed <- set_test()
   } else {
     changed <- lapply(
