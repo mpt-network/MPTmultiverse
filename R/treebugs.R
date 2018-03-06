@@ -16,8 +16,7 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 mpt_treebugs <- function (method, dataset, data, model,
                           col_id = "id", col_condition = "condition"){
   all_options <- getOption("mpt.comparison")
-  call_method <- method
-  
+
   TREEBUGS_MCMC <- all_options$treebugs
   CI_SIZE <- all_options$ci_size
   

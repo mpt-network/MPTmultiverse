@@ -19,8 +19,14 @@ mpt_options <- function(...){
   args <- c(...)
   
   if(length(args)==0L) return(fetched)
-  if(args[[1]]=="test"){
-    changed <- set_test()
+  
+  # Provide some shorthand terms:
+  if(is.character(args[[1]])){
+    changed <- switch(
+      args[[1]]
+      , test = set_test_options()
+      , default = set_default_options()
+    )
   } else {
     changed <- lapply(
       X = fetched
@@ -41,7 +47,7 @@ mpt_options <- function(...){
 
 #' @keywords internal
 
-set_test <- function() { # nocov start
+set_test_options <- function() { # nocov start
   cat("Setting options for a quick test run.\nDo not interpret results!")
   
   list(
@@ -65,5 +71,34 @@ set_test <- function() { # nocov start
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
     , save_models = FALSE
+  )
+}
+
+
+#' @keywords internal
+
+set_default_options <- function() {
+  
+  list(
+    mptinr = list(
+      bootstrap_samples = 2e3
+      , n.optim = 2e1
+      , n.CPU = parallel::detectCores()
+    )
+    , treebugs = list(
+      n.chain = 4
+      , n.iter = 5e4
+      , n.adapt = 1e4
+      , n.burnin = 2e4
+      , n.thin = 1e1
+      , Rhat_max = 1.01
+      , Neff_min = 1e3
+      , extend_max = 2e1
+      , n.PPP = 5e3
+      , n.CPU = parallel::detectCores()
+    )
+    , ci_size = c(.025, .1, .9, .975)
+    , max_ci_indiv = .99
+    , save_models = TRUE
   )
 }
