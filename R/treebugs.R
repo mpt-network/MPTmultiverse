@@ -193,13 +193,19 @@ mpt_treebugs <- function (method, dataset, data, model,
     }
   }
   
-  result_row$gof[[1]] <- add_row(result_row$gof[[1]])   # T1 & T2
-  result_row$gof[[1]]$type <- c("T1_G2", "T2")
-  result_row$gof[[1]]$focus <- c("mean", "cov")
-  result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
-  if (pooling != "complete")
+  # don't save T2 if complete pooling was used ----
+  if (pooling != "complete"){
+    result_row$gof[[1]] <- add_row(result_row$gof[[1]])   # T1 & T2
     result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
+  }
+  result_row$gof[[1]]$type <- c("T1_G2", if(pooling!="complete"){"T2"})
+  result_row$gof[[1]]$focus <- c("mean", if(pooling!="complete"){"cov"})
+  
+  result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
+  
 
+  
+  # save model objects to the working directory if requested by user ----
   if(all_options$save_models){
     save(treebugs_fit, file = paste0(
       paste(
