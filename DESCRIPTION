@@ -1,32 +1,38 @@
-Package: mpt.comparison
-Title: Comparison of MPT Analysis Approaches 
+Package: MPTmultiverse
+Title: Multiverse Analysis of Multinomial Processing Tree Models
 Version: 0.1
-Description: 
+Description:
+    MPTmultiverse provides functions for a multiverse analysis of multinomial
+    processing tree (MPT) models.
 Authors@R: c(
-    person("Henrik", "Singmann", email = "", role = c("aut"))
+    person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
+    , person("Henrik", "Singmann", email = "", role = c("aut"))
     , person(c("Daniel", "W."), "Heck", email = "heck@uni-mannheim.de", role = c("aut"))
-    , person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("ctb", "cre"))
   )
-URL: https://github.com/methexp/mpt-comparison
-BugReports: https://github.com/methexp/mpt-comparison/issues
+URL: https://github.com/methexp/MPTmultiverse
+BugReports: https://github.com/methexp/MPTmultiverse/issues
 Depends:
     R (>= 2.11.1),
+Imports:
+    parallel,
+    magrittr,
     tidyr, 
     dplyr,
     tibble,
     rlang,
     reshape2,
     ggplot2,
-    parallel,
     MPTinR,
     TreeBUGS,
     runjags,
     purrr,
     broom,
-    readr,
-    parallel
+    readr
+Suggests:
+    knitr,
+    rmarkdown
 LazyData: yes
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
-Suggests: knitr,
-    rmarkdown
+License:
+  GPL-2

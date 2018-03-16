@@ -16,6 +16,7 @@
 #   gof_indiv = list(tibble())
 # )
 
+#' @importFrom magrittr %>%
 #' @export
 
 make_results_row <- function(model, dataset, pooling, package, method,
@@ -26,46 +27,46 @@ make_results_row <- function(model, dataset, pooling, package, method,
   data$id <- data[[col_id]]
   data$condition <- data[[col_condition]]
   conditions <- levels(factor(data$condition))
-  parameters <- check.mpt(model)$parameters
+  parameters <- MPTinR::check.mpt(model)$parameters
 
   est_ind <-
-    as_tibble(expand.grid(parameter = parameters,
+    tibble::as_tibble(expand.grid(parameter = parameters,
                           id = data$id))
-  est_ind <- left_join(est_ind, data[, c("id", "condition")], by = "id")
+  est_ind <- dplyr::left_join(est_ind, data[, c("id", "condition")], by = "id")
   est_ind <- est_ind[,c("id", "condition", "parameter")]
-  est_ind <- add_column(est_ind, est = NA_real_, se = NA_real_)
+  est_ind <- tibble::add_column(est_ind, est = NA_real_, se = NA_real_)
   for (i in seq_along(getOption("mpt.comparison")$ci_size)) {
-    est_ind <- add_column(est_ind, xx = NA_real_)
+    est_ind <- tibble::add_column(est_ind, xx = NA_real_)
     colnames(est_ind)[ncol(est_ind)] <- paste0("ci_", getOption("mpt.comparison")$ci_size[i])
   }
   
   
   # create est_group empty df
-  est_group <- as_tibble(expand.grid(parameter = parameters,
+  est_group <- tibble::as_tibble(expand.grid(parameter = parameters,
                                      condition = levels(data$condition)))
   est_group <- est_group[,c("condition", "parameter")]
-  est_group <- as_tibble(data.frame(est_group,
+  est_group <- tibble::as_tibble(data.frame(est_group,
                                     est = NA_real_,
                                     se = NA_real_))
   for (i in seq_along(getOption("mpt.comparison")$ci_size)) {
-    est_group <- add_column(est_group, xx = NA_real_)
+    est_group <- tibble::add_column(est_group, xx = NA_real_)
     colnames(est_group)[ncol(est_group)] <- paste0("ci_", getOption("mpt.comparison")$ci_size[i])
   }
   
   
   # group comparisons
   if (length(conditions) > 1) {
-      pairs <- combn(conditions, 2)
+      pairs <- utils::combn(conditions, 2)
       test_between <- 
-        as_tibble(expand.grid(parameter = parameters, 
+        tibble::as_tibble(expand.grid(parameter = parameters, 
                               condition1 = factor(pairs[1,], levels = conditions),
                               condition2 = factor(pairs[2,], levels = conditions))) %>% 
-        mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
-      tibble_ci <- as_tibble(matrix(NA_real_, nrow(test_between), length(getOption("mpt.comparison")$ci_size),
+        dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
+      tibble_ci <- tibble::as_tibble(matrix(NA_real_, nrow(test_between), length(getOption("mpt.comparison")$ci_size),
                                     dimnames = list(NULL, paste0("ci_", getOption("mpt.comparison")$ci_size))))
-      test_between <- bind_cols(test_between, tibble_ci)
+      test_between <- dplyr::bind_cols(test_between, tibble_ci)
   } else {
-    test_between <- tibble()
+    test_between <- tibble::tibble()
   }
 
   
@@ -73,7 +74,7 @@ make_results_row <- function(model, dataset, pooling, package, method,
   ## est_covariate <- ##MISSING
   
   ## create gof empty df
-  gof <- tibble(
+  gof <- tibble::tibble(
     type = "",
     focus = "",
     stat_obs = NA_real_,
@@ -83,12 +84,12 @@ make_results_row <- function(model, dataset, pooling, package, method,
   )
   
   ## create gof_group empty df
-  gof_group <- as_tibble(data.frame(condition = levels(data$condition),
+  gof_group <- tibble::as_tibble(data.frame(condition = levels(data$condition),
                                     gof))
   ## create gof_groupindiv empty df
-  gof_indiv <- as_tibble(data.frame(data[,c("id", "condition")], gof))
+  gof_indiv <- tibble::as_tibble(data.frame(data[,c("id", "condition")], gof))
   
-  tibble(
+  tibble::tibble(
     model = model,
     dataset = dataset,
     pooling = pooling,
@@ -101,11 +102,11 @@ make_results_row <- function(model, dataset, pooling, package, method,
     gof = list(gof),
     gof_group = list(gof_group),
     gof_indiv = list(gof_indiv),
-    convergence = list(tibble())
+    convergence = list(tibble::tibble())
   )
 }
 
-#' @export
+#' @keywords internal
 
 prep_data_fitting <- function(data, # data.frame 
                               model_file, 
@@ -116,21 +117,21 @@ prep_data_fitting <- function(data, # data.frame
          call. = FALSE)
   }
   
-  data$id <- data[,col_id]
-  data$condition <- data[,col_condition]
+  data$id <- data[, col_id]
+  data$condition <- data[, col_condition]
   col_freq <- get_eqn_categories(model_file)
   
   out <- list(
     conditions = levels(data[[col_condition]]),
-    parameters = check.mpt(model_file)$parameters,
+    parameters = MPTinR::check.mpt(model_file)$parameters,
     col_freq = col_freq,
-    freq_list = split(data[,col_freq], f = data[,col_condition]),
+    freq_list = split(data[, col_freq], f = data[, col_condition]),
     cols_ci = paste0("ci_", getOption("mpt.comparison")$ci_size),
     data = data
   )
 }
 
-#' @export
+#' @keywords internal
 
 get_eqn_categories <- function (model.filename)
 {
@@ -145,17 +146,18 @@ get_eqn_categories <- function (model.filename)
     tree
   }
   #browser()
-  tmp.in <- read.table(model.filename, skip = 1, stringsAsFactors = FALSE)
+  tmp.in <- utils::read.table(model.filename, skip = 1, stringsAsFactors = FALSE)
   tmp.ordered <- tmp.in[order(tmp.in$V1), ]
   tmp.spl <- split(tmp.ordered, factor(tmp.ordered$V1))
-  tmp.spl <- lapply(tmp.spl, function(d.f) d.f[order(d.f[,
-                                                         2]), ])
+  tmp.spl <- lapply(tmp.spl, function(d.f) d.f[order(d.f[, 2]), ])
   unlist(lapply(tmp.spl, function(x) unique(x$V2)))
   # model <- lapply(tmp.spl, parse.eqn)
   # names(model) <- NULL
   # model
 }
 
+#' @importFrom rlang .data
+#' @importFrom magrittr %>%
 #' @export
 
 check_results <- function(results) {
@@ -167,9 +169,9 @@ check_results <- function(results) {
     .Names = c("pooling", "package", "method"), 
     class = c("tbl_df", "tbl", "data.frame"
     ), row.names = c(NA, -8L))
-  missing <- anti_join(expected, results[,3:5], by = c("pooling", "package", "method"))
+  missing <- dplyr::anti_join(expected, results[, 3:5], by = c("pooling", "package", "method"))
   if (nrow(missing) > 0) {
-    cat("## Following analyses approaches missing from results:\n", 
+    cat("## Following analysis approaches missing from results:\n", 
             paste(apply(missing, 1, paste, collapse = ", "), collapse = "\n"), 
         "\n\n\n")
   }
@@ -180,17 +182,17 @@ check_results <- function(results) {
   
   tryCatch({
     conv_mptinr_no <- results %>% 
-      filter(package == "MPTinR" & pooling == "no") %>% 
-      select(convergence) %>% 
-      unnest() 
-    
+      dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no") %>% 
+      dplyr::select("convergence") %>% 
+      tidyr::unnest() 
+
     not_id <- conv_mptinr_no %>% 
-      group_by(condition) %>% 
-      summarise(proportion = mean(!is.na(parameter)))
+      dplyr::group_by(.data$condition) %>% 
+      dplyr::summarise(proportion = mean(!is.na(.parameter)))
     not_id2 <- suppressWarnings(conv_mptinr_no %>% 
-      group_by(condition) %>% 
-      summarise(not_identified = list(tidy(table(parameter)))) %>% 
-      unnest(not_identified)) 
+      dplyr::group_by(.data$condition) %>% 
+      dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
+      tidyr::unnest(.data$not_identified)) 
     if (any(not_id$proportion > 0)) {
       cat("Proportion of participants with non-identified parameters:\n")
       cat(format(not_id)[-c(1,3)], "", sep = "\n")
@@ -213,9 +215,9 @@ check_results <- function(results) {
   
   tryCatch({
     conv_mptinr_comp <- results %>%
-      filter(package == "MPTinR" & pooling == "complete") %>%
-      select(convergence) %>%
-      unnest()
+      dplyr::filter(.data$package == "MPTinR" & .data$pooling == "complete") %>%
+      dplyr::select("convergence") %>%
+      tidyr::unnest()
     
     comp_prob <- (conv_mptinr_comp$convergence != 0) | 
       (conv_mptinr_comp$rank.fisher != conv_mptinr_comp$n.parameters)
@@ -233,14 +235,14 @@ check_results <- function(results) {
   
   ### TreeBUGS
   res_tree <- results %>% 
-    filter(package == "TreeBUGS") %>% 
-    select(!!c("pooling", "package", "method", "convergence"))
+    dplyr::filter(.data$package == "TreeBUGS") %>% 
+    dplyr::select(!!c("pooling", "package", "method", "convergence"))
   
   for (i in seq_len(nrow(res_tree))) {
     cat("## ", paste(res_tree[i, c(2,1,3)], collapse = ", "), ":\n", sep = "")
     
-    tmp_convergence <- res_tree[i,]$convergence[[1]] %>% 
-      filter(Rhat > getOption("mpt.comparison")$treebugs$Rhat_max) 
+    tmp_convergence <- res_tree[i, ]$convergence[[1]] %>% 
+      dplyr::filter(.data$Rhat > getOption("mpt.comparison")$treebugs$Rhat_max) 
     
     if(nrow(tmp_convergence) > 0) {
       cat(nrow(tmp_convergence), "parameters with Rhat >", getOption("mpt.comparison")$treebugs$Rhat_max, ":\n")
@@ -250,7 +252,7 @@ check_results <- function(results) {
     }
     
     tmp_neff <- res_tree[i,]$convergence[[1]] %>% 
-      dplyr::filter(!is.na(Rhat), n.eff < getOption("mpt.comparison")$treebugs$Neff_min)
+      dplyr::filter(!is.na(.data$Rhat), .data$n.eff < getOption("mpt.comparison")$treebugs$Neff_min)
     
     if(nrow(tmp_neff) > 0) {
       cat(nrow(tmp_neff), "parameters with effect sample size n.eff <", 

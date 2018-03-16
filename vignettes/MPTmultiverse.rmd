@@ -44,7 +44,7 @@ required <- c(
 )
 
 install.packages(required, repos = "https://cloud.r-project.org")
-devtools::install_github("methexp/mpt.comparison")
+devtools::install_github("methexp/MPTmultiverse")
 ```
 
 
@@ -55,8 +55,8 @@ devtools::install_github("methexp/mpt.comparison")
 
 ```{r model-and-data}
 # load packages:
-library("mpt.comparison")
-runjags.options(silent.jags = TRUE, silent.runjags = TRUE)
+library("MPTmultiverse")
+runjags::runjags.options(silent.jags = TRUE, silent.runjags = TRUE)
 
 # Make sure that working directory is correct via either:
 # - setwd() / getwd()
@@ -76,7 +76,7 @@ data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
 # data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
 
 head(data)
-plotFreq(data, boxplot = FALSE, eqn = EQN_FILE)
+TreeBUGS::plotFreq(data, boxplot = FALSE, eqn = EQN_FILE)
 
 ### Optional:
 ### (A) add a person identifier if missing in data [uncomment if necessary]
@@ -108,10 +108,10 @@ For testing purposes you can also specify `mpt_options("test")`, which is a shor
 
 ```{r options}
 # How to change a single option:
-mpt_options(n.iter = 1000)
+# mpt_options(n.iter = 1000)
 # How to set all options for testing (uncomment for serious calculations):
 mpt_options("test")
-mpt_options(save_models = TRUE)
+# mpt_options(save_models = TRUE)
 # List all options that were set for the different analysis approaches:
 mpt_options()
 ```
@@ -125,12 +125,12 @@ these should remain unchanged.
 res_mptinr <- mpt_mptinr(dataset = DATA_FILE, data = data, model = EQN_FILE,
                          col_id = COL_ID, col_condition = COL_CONDITION)
 
-res_treebugs <- map(c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"),
+res_treebugs <- purrr::map(c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"),
                     mpt_treebugs_safe, 
                     dataset = DATA_FILE, data = data, model = EQN_FILE,
                     col_id = COL_ID, col_condition = COL_CONDITION)
 
-results <- bind_rows(res_mptinr, res_treebugs)
+results <- dplyr::bind_rows(res_mptinr, res_treebugs)
 ```
 
 
@@ -152,6 +152,8 @@ save(
 )
 
 write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
-plot_results(results, save = TRUE)
+results <- res_mptinr
+class(results) <- c("multiverseMPT", class(results))
+plot(results, save = FALSE)
 ```
 
