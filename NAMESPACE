@@ -2,12 +2,8 @@
 
 S3method(plot,multiverseMPT)
 export(check_results)
-export(get_pb_output)
-export(make_results_row)
-export(mpt_mptinr)
+export(fit_mpt)
 export(mpt_options)
-export(mpt_treebugs)
-export(mpt_treebugs_safe)
 export(write_check_results)
 importFrom(graphics,plot)
 importFrom(magrittr,"%>%")

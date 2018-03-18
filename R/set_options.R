@@ -3,6 +3,8 @@
 #' Set and examine a variety of \emph{options} which affect the way MPT models
 #' are estimated.
 #' 
+#' @param ... Named parameters to set.
+#' 
 #' @examples 
 #' # Examine options:
 #' mpt_options()
@@ -15,7 +17,7 @@
  
 mpt_options <- function(...){
   
-  fetched <- getOption("mpt.comparison")
+  fetched <- getOption("MPTmultiverse")
   args <- c(...)
   
   if(length(args)==0L) return(fetched)
@@ -40,7 +42,7 @@ mpt_options <- function(...){
     sub_args <- args[names(args)%in%names(fetched)]
     changed[names(sub_args)] <- sub_args
   }
-  options(list(mpt.comparison = changed))
+  options(list(MPTmultiverse = changed))
 }
 
 
@@ -52,22 +54,23 @@ set_test_options <- function() { # nocov start
   
   list(
     mptinr = list(
-      bootstrap_samples = 2e1
+      bootstrap_samples = 4e1
       , n.optim = 2
       , n.CPU = parallel::detectCores()
     )
     , treebugs = list(
       n.chain = 4
-      , n.iter = 2e2
-      , n.adapt = 1e1
+      , n.iter = 8e2
+      , n.adapt = 1e2
       , n.burnin = 1e2
       , n.thin = 1e0
       , Rhat_max = 10
-      , Neff_min = 1
-      , extend_max = 0
-      , n.PPP = 20
+      , Neff_min = 2
+      , extend_max = 1
+      , n.PPP = 4e1
       , n.CPU = parallel::detectCores()
     )
+    , silent = FALSE
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
     , save_models = FALSE
@@ -97,6 +100,7 @@ set_default_options <- function() {
       , n.PPP = 5e3
       , n.CPU = parallel::detectCores()
     )
+    , silent = TRUE
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
     , save_models = TRUE

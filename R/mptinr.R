@@ -1,5 +1,5 @@
 
-#' @export
+
 
 mpt_mptinr <- function(dataset,  # name of data file
                        data, # data.frame
@@ -42,7 +42,7 @@ mpt_mptinr_no <- function(dataset,
                           model,
                           col_id, 
                           col_condition) {
-  OPTIONS <- getOption("mpt.comparison")
+  OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
@@ -178,9 +178,9 @@ mpt_mptinr_no <- function(dataset,
       , se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est)))
       , quant = list(as.data.frame(t(stats::quantile(.data$est, prob = CI_SIZE))))
     ) %>%
-    tidyr::unnest(quant) %>%
+    tidyr::unnest(.data$quant) %>%
     dplyr::ungroup() %>%
-    dplyr::rename(est = estN)
+    dplyr::rename(est = .data$estN)
   colnames(est_group)[
     (length(colnames(est_group))-length(CI_SIZE)+1):length(colnames(est_group))
     ] <- prepared$cols_ci
@@ -196,9 +196,9 @@ mpt_mptinr_no <- function(dataset,
     dplyr::summarise(estN = mean(.data$est),
               se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est))),
               quant = list(as.data.frame(t(stats::quantile(.data$est, prob = CI_SIZE))))) %>%
-    tidyr::unnest(quant) %>%
+    tidyr::unnest(.data$quant) %>%
     dplyr::ungroup() %>%
-    dplyr::rename(est = estN)
+    dplyr::rename(est = .data$estN)
   colnames(est_group2)[
     (length(colnames(est_group2))-length(CI_SIZE)+1):length(colnames(est_group2))
     ] <- prepared$cols_ci
@@ -328,7 +328,6 @@ mpt_mptinr_no <- function(dataset,
 }
 
 ## needed for no pooling PB distribution
-#' @export
 
 get_pb_output <- function(
   i
@@ -364,7 +363,7 @@ mpt_mptinr_complete <- function(dataset,
                                 model,
                                 col_id, 
                                 col_condition) {
-  OPTIONS <- getOption("mpt.comparison")
+  OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv

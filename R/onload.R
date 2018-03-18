@@ -2,7 +2,7 @@
 
   op <- options()
   op_mpt <- list(
-    mpt.comparison = set_default_options()
+    MPTmultiverse = set_default_options()
   )
   
   toset <- !(names(op_mpt) %in% names(op))

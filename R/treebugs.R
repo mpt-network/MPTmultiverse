@@ -13,11 +13,10 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
-#' @export
 
 mpt_treebugs <- function (method, dataset, data, model,
                           col_id = "id", col_condition = "condition"){
-  all_options <- getOption("mpt.comparison")
+  all_options <- getOption("MPTmultiverse")
 
   TREEBUGS_MCMC <- all_options$treebugs
   CI_SIZE <- all_options$ci_size
@@ -109,7 +108,7 @@ mpt_treebugs <- function (method, dataset, data, model,
     tsum <- tibble::as_tibble(summ) %>% 
       dplyr::mutate(parameter = rownames(summ),
              condition = as.character(cond)) %>% 
-      dplyr::select(condition, parameter, Mean:Rhat)
+      dplyr::select(.data$condition, .data$parameter, .data$Mean : .data$Rhat)
     result_row$convergence[[1]] <- dplyr::bind_rows(result_row$convergence[[1]], tsum)
     
     # parameter estimates
@@ -230,6 +229,6 @@ mpt_treebugs <- function (method, dataset, data, model,
   result_row
 }
 
-#' @export
+
 
 mpt_treebugs_safe <- purrr::possibly(mpt_treebugs, otherwise = list())

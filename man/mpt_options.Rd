@@ -6,6 +6,9 @@
 \usage{
 mpt_options(...)
 }
+\arguments{
+\item{...}{Named parameters to set.}
+}
 \description{
 Set and examine a variety of \emph{options} which affect the way MPT models
 are estimated.

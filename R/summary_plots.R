@@ -83,6 +83,13 @@
 #   }
 # }
 
+
+#' Plot multiverseMPT
+#' 
+#'  A nice description of the plot method
+#'  
+#' @param An object of class \code{multiverseMPT}.
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @importFrom graphics plot
 #' @export
@@ -93,24 +100,31 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   
   prefix <- paste0(gsub("\\.eqn", "", results$model[1]), "_", 
                    gsub("\\.", "_", paste0(results$dataset[1],"_")))
+  results <- x
   
   if (write.csv){
-    readr::write_csv(tidyr::unnest(results, est_group), paste0(prefix,"estimates.csv"))
-    readr::write_csv(tidyr::unnest(results, gof), paste0(prefix,"gof.csv"))
+    readr::write_csv(tidyr::unnest(results, .data$est_group), paste0(prefix,"estimates.csv"))
+    readr::write_csv(tidyr::unnest(results, .data$gof), paste0(prefix,"gof.csv"))
   }
   
   
   dd <- ggplot2::position_dodge(w = .75)
   
+  est_group <- tidyr::unnest(data = results, .data$est_group)
+  est_group$approach <- interaction(est_group$method, est_group$pooling, est_group$package)
   
-  gg_est1 <- tidyr::unnest(results, est_group) %>%
-    ggplot2::ggplot(ggplot2::aes(y = est, x = parameter, 
-               col=interaction(method, pooling,package),
-               shape=interaction(method, pooling, package))) +
-    ggplot2::facet_grid(.~condition) +
-    ggplot2::geom_errorbar(ggplot2::aes(ymin = est-se, ymax = est+se), position = dd, 
-                  width = 0.4)+
-    ggplot2::geom_point(position = dd) + ggplot2::ylim(0,1) + 
+  gg_est1 <-
+    ggplot2::ggplot(est_group) +
+    ggplot2::aes_(
+      y = ~ est
+      , x = ~ parameter
+      , col = ~ approach
+      # , shape = shapes
+    ) +
+    ggplot2::facet_grid(facets = ". ~ condition") +
+    ggplot2::geom_errorbar(ggplot2::aes_(ymin = ~ci_0.025, ymax = ~ci_0.975), position = dd, width = 0.4) +
+    ggplot2::geom_point(position = dd) + 
+    ggplot2::ylim(0, 1) + 
     ggplot2::scale_shape_manual(values = shapes)
 
   if(save) ggplot2::ggsave(paste0(prefix, "estimates.pdf"), gg_est1, h = 4.5, w = 10)
@@ -118,22 +132,32 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   if("est" %in% which)
     return(gg_est1)
   
-  res_between <-  tidyr::unnest(results, test_between)
-  
+  res_between <-  tidyr::unnest(results, .data$test_between)
+  res_between$approach <- interaction(res_between$method, res_between$pooling, res_between$package)
   
   if (nrow(res_between) > 0){
-    if (write.csv) readr::write_csv(tidyr::unnest(results, test_between), paste0(prefix,"test_between.csv"))
+    if (write.csv) readr::write_csv(res_between, paste0(prefix,"test_between.csv"))
     
     
-    gg_est2 <- ggplot2::ggplot(res_between, ggplot2::aes_(y = ~ est_diff, x = ~ parameter, 
-                                       col=interaction(method, pooling,package),
-                                       shape=interaction(method, pooling,package))) +
-      ggplot2::facet_grid(condition2 ~ condition1) +
-      ggplot2::geom_errorbar(ggplot2::aes_(ymin = ~ ci_0.025, ymax = ~ci_0.975), 
-                    position = dd, width = 0.5)+
-      ggplot2::geom_point(position = dd) + ggplot2::ylim(-1, 1) + 
-      ggplot2::scale_shape_manual(values=shapes) +
-      ggplot2::geom_hline(yintercept = 0, lty = 2)
+    gg_est2 <- ggplot2::ggplot(
+      res_between
+      , ggplot2::aes_(
+        y = ~ est_diff, x = ~ parameter
+        , col = ~ approach
+        , shape = ~ approach
+      )
+    ) +
+    ggplot2::facet_grid("condition2 ~ condition1") +
+    ggplot2::geom_errorbar(
+      ggplot2::aes_(
+        ymin = ~ ci_0.025
+        , ymax = ~ ci_0.975
+      )
+      , position = dd, width = 0.5
+    ) +
+    ggplot2::geom_point(position = dd) + ggplot2::ylim(-1, 1) + 
+    ggplot2::scale_shape_manual(values=shapes) +
+    ggplot2::geom_hline(yintercept = 0, lty = 2)
 
     if(save) ggplot2::ggsave(paste0(prefix,"test_between.pdf"), gg_est2, h = 4.5, w = 8)
     
@@ -142,17 +166,20 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
     }
   }
   
+  gof <- tidyr::unnest(results, .data$gof)
+  gof$approach <- interaction(gof$method, gof$pooling, gof$package)
   
-  gg_gof1 <-  tidyr::unnest(results, gof) %>%
+  gg_gof1 <-
     # filter(focus == "mean") %>%
     ggplot2::ggplot(
-      ggplot2::aes_(y = ~p, x = interaction(method, pooling, package))
+      gof, 
+      ggplot2::aes_(y = ~ p, x = ~ approach)
     ) + 
     ggplot2::geom_point() + 
     ggplot2::ylim(0, 1) + 
     ggplot2::geom_hline(yintercept = .05, lty = 2)+
     ggplot2::coord_flip() +
-    ggplot2::facet_wrap(~focus) +
+    ggplot2::facet_wrap( ~ focus) +
     ggplot2::ggtitle("Goodness of fit")
   
   if(save) ggplot2::ggsave(paste0(prefix,"gof.pdf"), gg_gof1, h = 4, w = 6)
@@ -162,16 +189,19 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   
   
   if (nrow(res_between) > 0){
-    if (write.csv) readr::write_csv(tidyr::unnest(results, gof_group), paste0(prefix,"gof_group.csv"))
+    if (write.csv) readr::write_csv(tidyr::unnest(results, .data$gof_group), paste0(prefix,"gof_group.csv"))
     
-    gg_gof2 <- tidyr::unnest(results, gof_group) %>%
-      ggplot2::ggplot(ggplot2::aes_(y = ~p, 
-                 x = interaction(method, pooling, package), 
-                 col = condition)) + 
+    gg_gof2 <- tidyr::unnest(results, .data$gof_group) %>%
+      ggplot2::ggplot(
+        ggplot2::aes_(
+          y = ~ p
+          , x = interaction( .data$method, .data$pooling, .data$package)
+          , col = ~ condition)
+        ) + 
       ggplot2::geom_point() + ggplot2::ylim(0, 1) + 
       ggplot2::geom_hline(yintercept = .05, lty = 2)+
       ggplot2::coord_flip() +
-      ggplot2::facet_wrap(~focus) +
+      ggplot2::facet_wrap(~ focus) +
       ggplot2::ggtitle("Goodness of fit")
     if(save) ggplot2::ggsave(paste0(prefix,"gof_group.pdf"), gg_gof2, h = 4, w = 8)
     

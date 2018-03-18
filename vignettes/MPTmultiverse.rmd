@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 
 First of all, make sure that you have installed the *latest* version of all necessary `R` packages *and* of `JAGS`.
 To install `JAGS`, go to [mcmc-jags.sourceforge.net](http://mcmc-jags.sourceforge.net/) and follow installation instructions.
-After that, install or update the required packages.
+After that, install or update the required R packages:
 
 ```{r install-packages, eval = FALSE}
 required <- c(
@@ -51,12 +51,10 @@ devtools::install_github("methexp/MPTmultiverse")
 
 ## Example 1: Bayen & Kuhlmann (2011)
 
-
-
 ```{r model-and-data}
 # load packages:
 library("MPTmultiverse")
-runjags::runjags.options(silent.jags = TRUE, silent.runjags = TRUE)
+
 
 # Make sure that working directory is correct via either:
 # - setwd() / getwd()
@@ -78,22 +76,17 @@ data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
 head(data)
 TreeBUGS::plotFreq(data, boxplot = FALSE, eqn = EQN_FILE)
 
-### Optional:
-### (A) add a person identifier if missing in data [uncomment if necessary]
-# data$Subject <- 1:nrow(data)
-
-### Optional:
-### (B) add a dummy variable if data do not contain a between-subject factor  [uncomment if necessary]
-# data$ExpCond <- "no_condition"
-
 COL_ID <- "Subject"         # name of the variable encoding subject ID
 COL_CONDITION <- "ExpCond"  # name of the variable encoding group membership
 
 # NOTE: experimental condition should be labeled meaningfully!
-unique(data[,COL_CONDITION])
-data[,COL_CONDITION] <- factor(data[,COL_CONDITION],
-                               levels = c(1:2),
-                               labels = c("no_load", "load"))
+unique(data[, COL_CONDITION])
+
+data[[COL_CONDITION]] <- factor(
+  data[[COL_CONDITION]]
+  , levels = c(1:2)
+  , labels = c("no_load", "load")
+)
 
 ### check input data frame
 head(data)
@@ -101,16 +94,19 @@ head(data)
 
 ### Options
 
-Every time the package `mpt.comparison` is loaded, it automatically sets some defaults for model estimation, usage of multiple processor cores, 
-number of posterior predictive samples, etc. By calling `mpt_options()` without any parameters, you can inspect these default values.
-If you want to change them call, `mpt_options` with the respective parameter specified, i.e. `mpt_options(n.iter = 1000)`.
-For testing purposes you can also specify `mpt_options("test")`, which is a shorthand for setting fast, but highly unreliable settings.
+Every time the package `MPTmultiverse` is loaded, it automatically sets some more or less useful defaults for model estimation,
+usage of multiple processor cores, number of posterior predictive samples, etc.
+By calling `mpt_options()` without any parameters, you can inspect these default values.
+If you want to change them, call `mpt_options` with the respective parameter specified, i.e. `mpt_options(n.iter = 1000)`.
+For testing purposes, you can also specify `mpt_options("test")`, which is a shorthand for setting fast, but highly unreliable settings.
+You can set options to defaults, again, by typing the shorthand `mpt_options("default")`.
 
 ```{r options}
 # How to change a single option:
 # mpt_options(n.iter = 1000)
 # How to set all options for testing (uncomment for serious calculations):
-mpt_options("test")
+# mpt_options("test")
+# mpt_options(n.optim = 10)
 # mpt_options(save_models = TRUE)
 # List all options that were set for the different analysis approaches:
 mpt_options()
@@ -118,19 +114,18 @@ mpt_options()
 
 ### Estimation
 
-The next lines of code do the basic model estimation---if everything is set up correctly,
-these should remain unchanged.
+In the next chunk, the main computations are done.
+Type `?fit_mpt` in the R console if you want to find out more about the parameters of the function.
 
 ```{r analysis, eval = FALSE}
-res_mptinr <- mpt_mptinr(dataset = DATA_FILE, data = data, model = EQN_FILE,
-                         col_id = COL_ID, col_condition = COL_CONDITION)
-
-res_treebugs <- purrr::map(c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"),
-                    mpt_treebugs_safe, 
-                    dataset = DATA_FILE, data = data, model = EQN_FILE,
-                    col_id = COL_ID, col_condition = COL_CONDITION)
-
-results <- dplyr::bind_rows(res_mptinr, res_treebugs)
+results <- fit_mpt(
+  method = c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated")
+  , dataset = DATA_FILE
+  , data = data
+  , model = EQN_FILE
+  , col_id = COL_ID
+  , col_condition = COL_CONDITION
+)
 ```
 
 
@@ -140,7 +135,7 @@ results <- dplyr::bind_rows(res_mptinr, res_treebugs)
 # print convergence results
 check_results(results)
 
-used_options <- getOption("mpt.comparison")
+used_options <- getOption("MPTmultiverse")
 # store results
 save(
   results
@@ -152,8 +147,7 @@ save(
 )
 
 write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
-results <- res_mptinr
-class(results) <- c("multiverseMPT", class(results))
-plot(results, save = FALSE)
+
+plot(results, save = FALSE, "gof1")
 ```
 

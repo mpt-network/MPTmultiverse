@@ -17,7 +17,6 @@
 # )
 
 #' @importFrom magrittr %>%
-#' @export
 
 make_results_row <- function(model, dataset, pooling, package, method,
                              data, parameters, 
@@ -35,9 +34,9 @@ make_results_row <- function(model, dataset, pooling, package, method,
   est_ind <- dplyr::left_join(est_ind, data[, c("id", "condition")], by = "id")
   est_ind <- est_ind[,c("id", "condition", "parameter")]
   est_ind <- tibble::add_column(est_ind, est = NA_real_, se = NA_real_)
-  for (i in seq_along(getOption("mpt.comparison")$ci_size)) {
+  for (i in seq_along(getOption("MPTmultiverse")$ci_size)) {
     est_ind <- tibble::add_column(est_ind, xx = NA_real_)
-    colnames(est_ind)[ncol(est_ind)] <- paste0("ci_", getOption("mpt.comparison")$ci_size[i])
+    colnames(est_ind)[ncol(est_ind)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
   }
   
   
@@ -48,9 +47,9 @@ make_results_row <- function(model, dataset, pooling, package, method,
   est_group <- tibble::as_tibble(data.frame(est_group,
                                     est = NA_real_,
                                     se = NA_real_))
-  for (i in seq_along(getOption("mpt.comparison")$ci_size)) {
+  for (i in seq_along(getOption("MPTmultiverse")$ci_size)) {
     est_group <- tibble::add_column(est_group, xx = NA_real_)
-    colnames(est_group)[ncol(est_group)] <- paste0("ci_", getOption("mpt.comparison")$ci_size[i])
+    colnames(est_group)[ncol(est_group)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
   }
   
   
@@ -62,8 +61,8 @@ make_results_row <- function(model, dataset, pooling, package, method,
                               condition1 = factor(pairs[1,], levels = conditions),
                               condition2 = factor(pairs[2,], levels = conditions))) %>% 
         dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
-      tibble_ci <- tibble::as_tibble(matrix(NA_real_, nrow(test_between), length(getOption("mpt.comparison")$ci_size),
-                                    dimnames = list(NULL, paste0("ci_", getOption("mpt.comparison")$ci_size))))
+      tibble_ci <- tibble::as_tibble(matrix(NA_real_, nrow(test_between), length(getOption("MPTmultiverse")$ci_size),
+                                    dimnames = list(NULL, paste0("ci_", getOption("MPTmultiverse")$ci_size))))
       test_between <- dplyr::bind_cols(test_between, tibble_ci)
   } else {
     test_between <- tibble::tibble()
@@ -126,7 +125,7 @@ prep_data_fitting <- function(data, # data.frame
     parameters = MPTinR::check.mpt(model_file)$parameters,
     col_freq = col_freq,
     freq_list = split(data[, col_freq], f = data[, col_condition]),
-    cols_ci = paste0("ci_", getOption("mpt.comparison")$ci_size),
+    cols_ci = paste0("ci_", getOption("MPTmultiverse")$ci_size),
     data = data
   )
 }
@@ -188,7 +187,7 @@ check_results <- function(results) {
 
     not_id <- conv_mptinr_no %>% 
       dplyr::group_by(.data$condition) %>% 
-      dplyr::summarise(proportion = mean(!is.na(.parameter)))
+      dplyr::summarise(proportion = mean(!is.na(.data$parameter)))
     not_id2 <- suppressWarnings(conv_mptinr_no %>% 
       dplyr::group_by(.data$condition) %>% 
       dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
@@ -242,24 +241,24 @@ check_results <- function(results) {
     cat("## ", paste(res_tree[i, c(2,1,3)], collapse = ", "), ":\n", sep = "")
     
     tmp_convergence <- res_tree[i, ]$convergence[[1]] %>% 
-      dplyr::filter(.data$Rhat > getOption("mpt.comparison")$treebugs$Rhat_max) 
+      dplyr::filter(.data$Rhat > getOption("MPTmultiverse")$treebugs$Rhat_max) 
     
     if(nrow(tmp_convergence) > 0) {
-      cat(nrow(tmp_convergence), "parameters with Rhat >", getOption("mpt.comparison")$treebugs$Rhat_max, ":\n")
+      cat(nrow(tmp_convergence), "parameters with Rhat >", getOption("MPTmultiverse")$treebugs$Rhat_max, ":\n")
       cat(paste(tmp_convergence$parameter, collapse = ", "))
     } else {
-      cat("All Rhat <", getOption("mpt.comparison")$treebugs$Rhat_max, ".\n")
+      cat("All Rhat <", getOption("MPTmultiverse")$treebugs$Rhat_max, ".\n")
     }
     
     tmp_neff <- res_tree[i,]$convergence[[1]] %>% 
-      dplyr::filter(!is.na(.data$Rhat), .data$n.eff < getOption("mpt.comparison")$treebugs$Neff_min)
+      dplyr::filter(!is.na(.data$Rhat), .data$n.eff < getOption("MPTmultiverse")$treebugs$Neff_min)
     
     if(nrow(tmp_neff) > 0) {
       cat(nrow(tmp_neff), "parameters with effect sample size n.eff <", 
-          getOption("mpt.comparison")$treebugs$Neff_min, ":\n")
+          getOption("MPTmultiverse")$treebugs$Neff_min, ":\n")
       cat(paste(tmp_neff$parameter, collapse = ", "))
     } else {
-      cat("All effect sample sizes >", getOption("mpt.comparison")$treebugs$Neff_min, ".\n")
+      cat("All effect sample sizes >", getOption("MPTmultiverse")$treebugs$Neff_min, ".\n")
     }
     
     cat("\n\n")
@@ -273,10 +272,10 @@ check_results <- function(results) {
 write_check_results <- function(DATA_FILE, results){
   sink(paste0(DATA_FILE, "_check_results.txt"))
   cat("################ OPTIONS ################\n\n")
-  cat("TreeBUGS:\n") ; print(getOption("mpt.comparison")$treebugs)
-  cat("\nMPTinR:\n") ; print(getOption("mpt.comparison")$mptinr)
-  cat("\nCI_SIZE: ", getOption("mpt.comparison")$ci_size, "\n")
-  cat("MAX_CI_INDIV = ", getOption("mpt.comparison")$max_ci_indiv, "\n\n")
+  cat("TreeBUGS:\n") ; print(getOption("MPTmultiverse")$treebugs)
+  cat("\nMPTinR:\n") ; print(getOption("MPTmultiverse")$mptinr)
+  cat("\nCI_SIZE: ", getOption("MPTmultiverse")$ci_size, "\n")
+  cat("MAX_CI_INDIV = ", getOption("MPTmultiverse")$max_ci_indiv, "\n\n")
   cat("################ CHECK RESULTS ################\n\n")
   print(check_results(results))
   sink()
