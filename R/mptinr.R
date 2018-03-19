@@ -187,7 +187,7 @@ mpt_mptinr_no <- function(dataset,
   
   no_pooling$est_group[[1]] <-
     dplyr::right_join(est_group,
-               no_pooling$est_group[[1]][,c("condition", "parameter")],
+               no_pooling$est_group[[1]][, c("condition", "parameter")],
                by = c("condition", "parameter"))
   
   
@@ -213,7 +213,7 @@ mpt_mptinr_no <- function(dataset,
   no_pooling$gof_group[[1]]$focus <- "mean"
   
   tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- prepared$data$condition
+  tmp$condition <- as.factor(prepared$data$condition)
   gof_group <- tmp %>%
     dplyr::group_by(.data$condition) %>%
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
@@ -258,7 +258,7 @@ mpt_mptinr_no <- function(dataset,
                          lower.tail = FALSE)
   gof_group2$condition <- factor(gof_group2$condition)
   no_pooling2$gof_group[[1]] <- 
-    dplyr::right_join(no_pooling2$gof_group[[1]][,c("condition", "type", "focus")],
+    dplyr::right_join(no_pooling2$gof_group[[1]][, c("condition", "type", "focus")],
              gof_group2,
                by = c("condition"))
   

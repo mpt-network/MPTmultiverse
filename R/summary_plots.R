@@ -191,11 +191,15 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   if (nrow(res_between) > 0){
     if (write.csv) readr::write_csv(tidyr::unnest(results, .data$gof_group), paste0(prefix,"gof_group.csv"))
     
-    gg_gof2 <- tidyr::unnest(results, .data$gof_group) %>%
+    gof_group <- tidyr::unnest(results, .data$gof_group)
+    gof_group$approach <- interaction(gof_group$method, gof_group$pooling, gof_group$package)
+    
+    gg_gof2 <-
       ggplot2::ggplot(
-        ggplot2::aes_(
+        gof_group
+        , ggplot2::aes_(
           y = ~ p
-          , x = interaction( .data$method, .data$pooling, .data$package)
+          , x = ~ approach
           , col = ~ condition)
         ) + 
       ggplot2::geom_point() + ggplot2::ylim(0, 1) + 
@@ -203,7 +207,7 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
       ggplot2::coord_flip() +
       ggplot2::facet_wrap(~ focus) +
       ggplot2::ggtitle("Goodness of fit")
-    if(save) ggplot2::ggsave(paste0(prefix,"gof_group.pdf"), gg_gof2, h = 4, w = 8)
+    if(save) ggplot2::ggsave(paste0(prefix, "gof_group.pdf"), gg_gof2, h = 4, w = 8)
     
     if("gof2" %in% which)
       return(gg_gof2)

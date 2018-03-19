@@ -109,6 +109,7 @@ You can set options to defaults, again, by typing the shorthand `mpt_options("de
 # mpt_options(n.optim = 10)
 # mpt_options(save_models = TRUE)
 # List all options that were set for the different analysis approaches:
+mpt_options(bootstrap_samples = 200, n.optim = 5)
 mpt_options()
 ```
 
@@ -123,8 +124,8 @@ results <- fit_mpt(
   , dataset = DATA_FILE
   , data = data
   , model = EQN_FILE
-  , col_id = COL_ID
-  , col_condition = COL_CONDITION
+  , id = COL_ID
+  , condition = COL_CONDITION
 )
 ```
 
@@ -152,16 +153,16 @@ plot(results, save = FALSE, "est")
 ```
 
 
-```{r}
+```{r eval = FALSE}
 plot(results, save = FALSE, "test_between")
 ```
 
 
-```{r}
+```{r eval = FALSE}
 plot(results, save = FALSE, "gof1")
 ```
 
-```{r}
+```{r eval = FALSE}
 plot(results, save = FALSE, "gof2")
 ```
 
