@@ -148,6 +148,22 @@ save(
 
 write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
 
+plot(results, save = FALSE, "est")
+```
+
+
+```{r}
+plot(results, save = FALSE, "test_between")
+```
+
+
+```{r}
 plot(results, save = FALSE, "gof1")
 ```
+
+```{r}
+plot(results, save = FALSE, "gof2")
+```
+
+
 
