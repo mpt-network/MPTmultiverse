@@ -33,12 +33,16 @@ fit_mpt <- function(
   
   # prepare data ----
   if(is.null(condition)) {
-    data$ExpCond <- "no_condition"
+    data$ExpCond <- factor("no_condition")
+    condition <- "ExpCond"
   }
   
   if(is.null(id)) {
     data$Subject <- 1:nrow(data)
+    id <- "Subject"
   }
+  
+  
   
   # extraneous columns, etc. should be removed here
   
@@ -55,7 +59,7 @@ fit_mpt <- function(
   # TreeBUGS part
   res_treebugs <- purrr::map(
     intersect(method, c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"))
-    , mpt_treebugs_safe
+    , mpt_treebugs
     , dataset = dataset
     , data = data
     , model = model
