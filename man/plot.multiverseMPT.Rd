@@ -8,8 +8,18 @@
   write.csv = FALSE, ...)
 }
 \arguments{
-\item{An}{object of class \code{multiverseMPT}.}
+\item{x}{An object of class \code{multiverseMPT}.}
+
+\item{which}{Character. Which information do you want to be plotted? Possible
+values are \code{"est"} for parameter estimates, \code{"gof1"} for goodness-of-fit statistics,
+\code{"test_between"} for ... and \code{"gof2"} for ...}
+
+\item{save}{Logical.}
+
+\item{write.csv}{Logical.}
+
+\item{...}{Further arguments, currently ignored.}
 }
 \description{
-A nice description of the plot method
+Plot the output from a multiverse MPT analysis.
 }

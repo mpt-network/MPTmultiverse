@@ -86,9 +86,16 @@
 
 #' Plot multiverseMPT
 #' 
-#'  A nice description of the plot method
+#' Plot the output from a multiverse MPT analysis.
 #'  
-#' @param An object of class \code{multiverseMPT}.
+#' @param x An object of class \code{multiverseMPT}.
+#' @param which Character. Which information do you want to be plotted? Possible
+#' values are \code{"est"} for parameter estimates, \code{"gof1"} for goodness-of-fit statistics,
+#' \code{"test_between"} for ... and \code{"gof2"} for ...
+#' @param save Logical.
+#' @param write.csv Logical.
+#' @param ... Further arguments, currently ignored.
+#' 
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @importFrom graphics plot

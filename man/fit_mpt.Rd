@@ -16,7 +16,7 @@ fit_mpt(method, dataset, data, model, id = NULL, condition = NULL)
 \item{model}{A model definition, typically the path to an \code{.eqn} file.}
 
 \item{id}{Character. Name of the column that contains the subject identifier.
-If not specified, it is assumed that each row represents observation from one participant.}
+If not specified, it is assumed that each row represents observations from one participant.}
 
 \item{condition}{Character. Name of the column specifying a between-subjects factor.
 If not specified, no between-subjects comparisons are performed.}

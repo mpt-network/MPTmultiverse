@@ -155,6 +155,13 @@ get_eqn_categories <- function (model.filename)
   # model
 }
 
+
+#' Check results from a multiverse analysis
+#' 
+#' This is a helper function to see if the model estimation worked as intended.
+#' 
+#' @param results An object of class multiverseMPT.
+#'
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
@@ -267,6 +274,12 @@ check_results <- function(results) {
   
 }
 
+#' Write check_results
+#'
+#' Helper function to write the output from check_results() to a file.
+#'
+#' @param DATA_FILE Character. File name to use.
+#' @param results An object of class multiverseMPT.
 #' @export
 
 write_check_results <- function(DATA_FILE, results){
