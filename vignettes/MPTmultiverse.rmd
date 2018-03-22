@@ -44,7 +44,7 @@ required <- c(
 )
 
 install.packages(required, repos = "https://cloud.r-project.org")
-devtools::install_github("methexp/MPTmultiverse")
+devtools::install_github("mariusbarth/MPTmultiverse")
 ```
 
 
@@ -59,6 +59,9 @@ library("MPTmultiverse")
 # Make sure that working directory is correct via either:
 # - setwd() / getwd()
 # - Rstudio->Sessions->Set Working Directory->'To Source File Location'
+
+# If you're running the analysis from an .rmd file, you only need to ensure that
+# the .rmd, .eqn, and .csv files are all in the same directory.
 
 
 # ------------------------------------------------------------------------------
@@ -101,15 +104,14 @@ If you want to change them, call `mpt_options` with the respective parameter spe
 For testing purposes, you can also specify `mpt_options("test")`, which is a shorthand for setting fast, but highly unreliable settings.
 You can set options to defaults, again, by typing the shorthand `mpt_options("default")`.
 
-```{r options}
+```{r options, results = 'hide'}
 # How to change a single option:
 # mpt_options(n.iter = 1000)
-# How to set all options for testing (uncomment for serious calculations):
+
+# For testing purposes, you can use this shorthand to set fast, but unreliable options:
 # mpt_options("test")
-# mpt_options(n.optim = 10)
-# mpt_options(save_models = TRUE)
+
 # List all options that were set for the different analysis approaches:
-mpt_options(bootstrap_samples = 200, n.optim = 5)
 mpt_options()
 ```
 
@@ -118,7 +120,7 @@ mpt_options()
 In the next chunk, the main computations are done.
 Type `?fit_mpt` in the R console if you want to find out more about the parameters of the function.
 
-```{r analysis, eval = FALSE}
+```{r analysis, results = 'hide', eval = FALSE}
 results <- fit_mpt(
   method = c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated")
   , dataset = DATA_FILE
@@ -134,7 +136,7 @@ results <- fit_mpt(
 
 ```{r results, eval = FALSE}
 # print convergence results
-check_results(results)
+checks <- (check_results(results))
 
 used_options <- getOption("MPTmultiverse")
 # store results
@@ -144,11 +146,18 @@ save(
   , EQN_FILE
   , DATA_FILE
   , used_options
+  , checks
   , file = "results.RData"
 )
 
-write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
+# Write model checks to a file:
+# write_check_results(paste0(EQN_FILE, "-", DATA_FILE), results)
+```
 
+The analysis output `results` is an object of class `multiverseMPT`, that has its own `plot()` method.
+Type `?plot.multiverseMPT` to see the documentation of possible arguments to this method.
+
+```{r eval = FALSE}
 plot(results, save = FALSE, "est")
 ```
 
