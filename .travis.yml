@@ -17,9 +17,10 @@ r_packages:
   - rmarkdown
 
 
-# addons:
-# apt:
-#   packages:
+addons:
+  apt:
+    packages:
+    - jags
 #   - lmodern
 #   - libgsl0ldbl # GNU scientific library for MBESS
 #   - libgsl0-dev # GNU scientific library for MBESS
