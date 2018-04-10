@@ -187,27 +187,30 @@ check_results <- function(results) {
   cat("## MPTinR: no pooling\n")
   
   tryCatch({
-    conv_mptinr_no <- results %>% 
-      dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no") %>% 
-      dplyr::select("convergence") %>% 
-      tidyr::unnest() 
-
-    not_id <- conv_mptinr_no %>% 
-      dplyr::group_by(.data$condition) %>% 
-      dplyr::summarise(proportion = mean(!is.na(.data$parameter)))
-    not_id2 <- suppressWarnings(conv_mptinr_no %>% 
-      dplyr::group_by(.data$condition) %>% 
-      dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
-      tidyr::unnest(.data$not_identified)) 
-    if (any(not_id$proportion > 0)) {
-      cat("Proportion of participants with non-identified parameters:\n")
-      cat(format(not_id)[-c(1,3)], "", sep = "\n")
-      
-      cat("Table of non-identified parameters:\n")
-      cat(format(not_id2)[-c(1,3)], sep = "\n")
-      
-    } else {
-      cat("All parameters of all participants seem to be identifiable.\n")
+    for(meth in c("asymptotic", "PB/MLE")){
+    
+      conv_mptinr_no <- results %>% 
+        dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
+        dplyr::select("convergence") %>% 
+        tidyr::unnest()
+  
+      not_id <- conv_mptinr_no %>% 
+        dplyr::group_by(.data$condition) %>% 
+        dplyr::summarise(proportion = mean(!is.na(.data$parameter)))
+      not_id2 <- suppressWarnings(conv_mptinr_no %>% 
+        dplyr::group_by(.data$condition) %>% 
+        dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
+        tidyr::unnest(.data$not_identified)) 
+      if (any(not_id$proportion > 0)) {
+        cat("Based on", meth, "CIs, proportion of participants with non-identified parameters:\n")
+        cat(format(not_id)[-c(1,3)], "", sep = "\n")
+        
+        cat("Based on", meth, "CIs, table of non-identified parameters:\n")
+        cat(format(not_id2)[-c(1,3)], sep = "\n")
+        
+      } else {
+        cat("Based on", meth, "CIs, all parameters of all participants seem to be identifiable.\n")
+      }
     }
   }, error = function(e) 
     cat("Convergence checks failed for unkown reason.\n"))
