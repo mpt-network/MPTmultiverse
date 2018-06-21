@@ -77,6 +77,11 @@ set_test_options <- function() { # nocov start
       , n.optim = 2
       , n.CPU = parallel::detectCores()
     )
+    , hmmtree = list(
+      n.optim = 2
+      , max_classes = 3
+      , fisher_information = "expected"
+    )
     , treebugs = list(
       n.chain = 4
       , n.iter = 8e2
