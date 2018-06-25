@@ -1,30 +1,46 @@
 
 
 
-mpt_mptinr <- function(dataset,  # name of data file
-                       data, # data.frame
-                       model, # name of EQN file
-                       col_id = "id", 
-                       col_condition = "condition"){
+mpt_mptinr <- function(
+  dataset    # name of data file
+  , data     # data.frame
+  , model    # name of EQN file
+  , method   # analysis approaches to be conducted
+  , col_id = "id"
+  , col_condition = "condition"
+){
 
   prepared <- prep_data_fitting(data = data,
                             model_file = model,
                             col_id = col_id, 
                             col_condition = col_condition)
   
-  dplyr::bind_rows(
-    mpt_mptinr_no(dataset = dataset,
-                  prepared = prepared,
-                  model = model,
-                  col_id = col_id,
-                  col_condition = col_condition),
-    mpt_mptinr_complete(dataset = dataset,
-                  prepared = prepared,
-                  model = model,
-                  col_id = col_id,
-                  col_condition = col_condition)
-  )
-
+  res <- list()
+  
+  if(any(method %in% c("asymptotic_complete"))) {
+    res[["complete_pooling"]] <- mpt_mptinr_complete(
+      dataset = dataset
+      , prepared = prepared
+      , model = model
+      , method = intersect(method, "asymptotic_complete")
+      , col_id = col_id
+      , col_condition = col_condition
+    )
+  }
+  
+  if(any(method %in% c("asymptotic_no", "pb_no"))) {
+    res[["no_pooling"]] <- mpt_mptinr_no(
+      dataset = dataset
+      , prepared = prepared
+      , model = model
+      , method = intersect(method, c("asymptotic_no", "pb_no"))
+      , col_id = col_id
+      , col_condition = col_condition
+    )
+  }
+  
+  # return
+  dplyr::bind_rows(res)
 }
 
 
@@ -37,11 +53,15 @@ mpt_mptinr <- function(dataset,  # name of data file
 #' @importFrom magrittr %>%
 #' @keywords internal
 
-mpt_mptinr_no <- function(dataset, 
-                          prepared, 
-                          model,
-                          col_id, 
-                          col_condition) {
+mpt_mptinr_no <- function(
+  dataset
+  , prepared
+  , model
+  , method
+  , col_id
+  , col_condition
+) {
+
   OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
   CI_SIZE <- OPTIONS$ci_size
@@ -327,7 +347,12 @@ mpt_mptinr_no <- function(dataset,
   return(dplyr::bind_rows(no_pooling, no_pooling2))
 }
 
-## needed for no pooling PB distribution
+
+#' Parametric Bootstrap for MPT
+#'
+#' Helper function for creating parametric-bootstrap confidence intervals.
+#'
+#' @keywords internal
 
 get_pb_output <- function(
   i
@@ -361,6 +386,7 @@ get_pb_output <- function(
 mpt_mptinr_complete <- function(dataset, 
                                 prepared, 
                                 model,
+                                method,
                                 col_id, 
                                 col_condition) {
   OPTIONS <- getOption("MPTmultiverse")

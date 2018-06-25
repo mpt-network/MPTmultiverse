@@ -226,6 +226,7 @@ mpt_treebugs <- function (method, dataset, data, model,
       )
     )
   }
+  # return ----
   result_row
 }
 

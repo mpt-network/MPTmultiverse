@@ -46,28 +46,50 @@ fit_mpt <- function(
   
   # extraneous columns, etc. should be removed here
   
+  res <- list()
   
   # MPTinR part ----
-  res_mptinr <- mpt_mptinr(
+  res[["mptinr"]] <- mpt_mptinr(
     dataset = dataset
     , data = data
     , model = model
+    , method = intersect(method, c("asymptotic_complete", "asymptotic_no", "pb_no"))
     , col_id = id
     , col_condition = condition
   )
   
-  # TreeBUGS part
-  res_treebugs <- purrr::map(
-    intersect(method, c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"))
-    , mpt_treebugs
-    , dataset = dataset
-    , data = data
-    , model = model
-    , col_id = id
-    , col_condition = condition
-  )
+  # HMMTreeR part ----
+  if("latent_class" %in% method) {
   
-  y <- dplyr::bind_rows(res_mptinr, res_treebugs)
+    running_on_windows <- TRUE # Sys.info()$sysname=="Windows"
+  
+    if(running_on_windows) {
+      res[["hmmtreer"]] <- fit_lc(
+        dataset = dataset
+        , data = data
+        , model = model
+        , col_id = id
+        , col_condition = condition
+      )
+    } else {
+      message("Latent-class multinomial models can currently only be estimated on Windows -- sorry.")
+    }
+  }
+  
+  # TreeBUGS part ----
+  res[["treebugs"]] <- dplyr::bind_rows(
+    purrr::map(
+      intersect(method, c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"))
+      , mpt_treebugs
+      , dataset = dataset
+      , data = data
+      , model = model
+      , col_id = id
+      , col_condition = condition
+    )
+  )
+
+  y <- dplyr::bind_rows(res)
   class(y) <- c("multiverseMPT", class(y))
   y
 }

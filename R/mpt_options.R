@@ -112,6 +112,11 @@ set_default_options <- function() {
       , n.optim = 2e1
       , n.CPU = parallel::detectCores()
     )
+    , hmmtree = list(
+      n.optim = 2e1
+      , max_classes = 2e1
+      , fisher_information = "expected"
+    )
     , treebugs = list(
       n.chain = 4
       , n.iter = 5e4
