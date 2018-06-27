@@ -20,11 +20,11 @@
 
 make_results_row <- function(model, dataset, pooling, package, method,
                              data, parameters, 
-                             col_id = "id", col_condition = "condition") {
+                             id = "id", condition = "condition") {
   
   # prepare data to have the correct columns of id/condition
-  data$id <- data[[col_id]]
-  data$condition <- data[[col_condition]]
+  data$id <- data[[id]]
+  data$condition <- data[[condition]]
   conditions <- levels(factor(data$condition))
   parameters <- MPTinR::check.mpt(model)$parameters
 
@@ -107,24 +107,26 @@ make_results_row <- function(model, dataset, pooling, package, method,
 
 #' @keywords internal
 
-prep_data_fitting <- function(data, # data.frame 
-                              model_file, 
-                              col_id, 
-                              col_condition) {
-  if (!is.factor(data[[col_condition]])) {
-    stop(col_condition, " (condition column) needs to be a factor!", 
+prep_data_fitting <- function(
+  data
+  , model_file
+  , id
+  , condition
+) {
+  if (!is.factor(data[[condition]])) {
+    stop(condition, " (condition column) needs to be a factor!", 
          call. = FALSE)
   }
   
-  data$id <- data[, col_id]
-  data$condition <- data[, col_condition]
+  data$id <- data[, id]
+  data$condition <- data[, condition]
   col_freq <- get_eqn_categories(model_file)
   
   out <- list(
-    conditions = levels(data[[col_condition]]),
+    conditions = levels(data[[condition]]),
     parameters = MPTinR::check.mpt(model_file)$parameters,
     col_freq = col_freq,
-    freq_list = split(data[, col_freq], f = data[, col_condition]),
+    freq_list = split(data[, col_freq], f = data[, condition]),
     cols_ci = paste0("ci_", getOption("MPTmultiverse")$ci_size),
     data = data
   )

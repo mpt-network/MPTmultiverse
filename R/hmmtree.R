@@ -17,8 +17,8 @@ fit_lc <- function(
   dataset
   , data
   , model
-  , col_id = NULL
-  , col_condition = NULL
+  , id = NULL
+  , condition = NULL
 ) {
   
   OPTIONS <- getOption("MPTmultiverse")
@@ -29,8 +29,8 @@ fit_lc <- function(
   prepared <- MPTmultiverse:::prep_data_fitting(
     data = data
     , model_file = model
-    , col_id = col_id
-    , col_condition = col_condition
+    , id = id
+    , condition = condition
   )
   
   results_row <- MPTmultiverse:::make_results_row(
@@ -75,6 +75,8 @@ fit_lc <- function(
   )
   
   results_row$gof[[1]] <- gof
+  
+  
   
   # ----------------------------------------------------------------------------
   # Analyses by between-subjects condition
@@ -125,8 +127,6 @@ fit_lc <- function(
       est_group[[j]][["ci_0.975"]] <- estimates$upper
     }
     
-    
-    
     # goodness-of-fit ----
     fit_stats <- HMMTreeR::fit_statistics(res[[length(res)]]) # choose winning model
     
@@ -146,6 +146,9 @@ fit_lc <- function(
   
   results_row$est_group[[1]] <- dplyr::bind_rows(est_group)
   results_row$gof_group[[1]] <- dplyr::bind_rows(gof_group)
+  
+  # test_between ----
+  # work to do...
   
   # return
   results_row

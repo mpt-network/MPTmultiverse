@@ -6,14 +6,16 @@ mpt_mptinr <- function(
   , data     # data.frame
   , model    # name of EQN file
   , method   # analysis approaches to be conducted
-  , col_id = "id"
-  , col_condition = "condition"
+  , id
+  , condition
 ){
 
-  prepared <- prep_data_fitting(data = data,
-                            model_file = model,
-                            col_id = col_id, 
-                            col_condition = col_condition)
+  prepared <- prep_data_fitting(
+    data = data
+    , model_file = model
+    , id = id
+    , condition = condition
+  )
   
   res <- list()
   
@@ -23,8 +25,8 @@ mpt_mptinr <- function(
       , prepared = prepared
       , model = model
       , method = intersect(method, "asymptotic_complete")
-      , col_id = col_id
-      , col_condition = col_condition
+      , id = id
+      , condition = condition
     )
   }
   
@@ -34,8 +36,8 @@ mpt_mptinr <- function(
       , prepared = prepared
       , model = model
       , method = intersect(method, c("asymptotic_no", "pb_no"))
-      , col_id = col_id
-      , col_condition = col_condition
+      , id = id
+      , condition = condition
     )
   }
   
@@ -58,8 +60,8 @@ mpt_mptinr_no <- function(
   , prepared
   , model
   , method
-  , col_id
-  , col_condition
+  , id
+  , condition
 ) {
 
   OPTIONS <- getOption("MPTmultiverse")
@@ -95,8 +97,8 @@ mpt_mptinr_no <- function(
                         ci = (1 - stats::pnorm(1))*2*100)
   
   convergence <- data.frame(
-    id = prepared$data[, col_id]
-    , condition = prepared$data[,col_condition]
+    id = prepared$data[, id]
+    , condition = prepared$data[, condition]
     , fit_mptinr$model.info$individual[,1:2]
     , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, 0)
   )
@@ -387,8 +389,8 @@ mpt_mptinr_complete <- function(dataset,
                                 prepared, 
                                 model,
                                 method,
-                                col_id, 
-                                col_condition) {
+                                id, 
+                                condition) {
   OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
   CI_SIZE <- OPTIONS$ci_size

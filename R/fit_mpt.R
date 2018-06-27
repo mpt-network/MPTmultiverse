@@ -54,22 +54,22 @@ fit_mpt <- function(
     , data = data
     , model = model
     , method = intersect(method, c("asymptotic_complete", "asymptotic_no", "pb_no"))
-    , col_id = id
-    , col_condition = condition
+    , id = id
+    , condition = condition
   )
   
   # HMMTreeR part ----
   if("latent_class" %in% method) {
   
-    running_on_windows <- TRUE # Sys.info()$sysname=="Windows"
+    running_on_windows <- Sys.info()[["sysname"]]=="Windows"
   
     if(running_on_windows) {
       res[["hmmtreer"]] <- fit_lc(
         dataset = dataset
         , data = data
         , model = model
-        , col_id = id
-        , col_condition = condition
+        , id = id
+        , condition = condition
       )
     } else {
       message("Latent-class multinomial models can currently only be estimated on Windows -- sorry.")
@@ -84,8 +84,8 @@ fit_mpt <- function(
       , dataset = dataset
       , data = data
       , model = model
-      , col_id = id
-      , col_condition = condition
+      , id = id
+      , condition = condition
     )
   )
 

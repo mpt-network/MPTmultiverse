@@ -14,21 +14,28 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 
-mpt_treebugs <- function (method, dataset, data, model,
-                          col_id = "id", col_condition = "condition"){
+mpt_treebugs <- function (
+  method
+  , dataset
+  , data
+  , model
+  , id = "id"
+  , condition = "condition"
+){
   all_options <- getOption("MPTmultiverse")
 
   TREEBUGS_MCMC <- all_options$treebugs
   CI_SIZE <- all_options$ci_size
   
-  # dlist <- prepare_data(model, data, col_id = "id", col_condition = "condition")
-  conditions <- levels(factor(data[[col_condition]]))
+  # dlist <- prepare_data(model, data, id = "id", condition = "condition")
+  conditions <- levels(factor(data[[condition]]))
   parameters <- MPTinR::check.mpt(model)$parameters
   col_freq <- get_eqn_categories(model)
 
-  data$id <- data[, col_id]
-  data$condition <- data[, col_condition]
-  freq_list <- split(data[, col_freq], f = data[, col_condition])
+  data$id <- data[, id]
+  data$condition <- data[, condition]
+  
+  freq_list <- split(data[, col_freq], f = data[, condition])
   pooling <- switch(method, 
                     "simple" = "no", 
                     "simple_pooling" = "complete",
@@ -46,9 +53,9 @@ mpt_treebugs <- function (method, dataset, data, model,
     
     # pooling: aggregate across participants
     data <- stats::aggregate(data[, col_freq], list(condition = data$condition), sum)
-    data[[col_condition]] <- data$condition
-    data[[col_id]] <- data$id <- 1:nrow(data)
-    if(col_condition!="condition"){
+    data[[condition]] <- data$condition
+    data[[id]] <- data$id <- 1:nrow(data)
+    if(condition!="condition"){
       data$condition <- NULL
     }
     
@@ -65,9 +72,9 @@ mpt_treebugs <- function (method, dataset, data, model,
   treebugs_fit <- list()
   for (i in seq_along(conditions)){
     cond <- factor(conditions[i], conditions)
-    sel_condition <- data[[col_condition]] == conditions[i]
+    sel_condition <- data[[condition]] == conditions[i]
     data_group <- data[sel_condition, col_freq]   #freq_list[[i]]
-    rownames(data_group) <- data[[col_id]][sel_condition]
+    rownames(data_group) <- data[[id]][sel_condition]
     
     fit_args <- list(eqnfile=model,
                      data = data_group,
@@ -130,11 +137,11 @@ mpt_treebugs <- function (method, dataset, data, model,
         reshape2::melt() %>% 
         tidyr::spread("Statistic", "value")
       colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:3)])
-      tmp[[col_condition]] <- cond
+      tmp[[condition]] <- cond
       result_row$est_indiv[[1]][sel_ind,] <-
         dplyr::left_join(result_row$est_indiv[[1]][sel_ind,] %>%
                     dplyr::select("id", "condition", "parameter"),
-                  tmp, by = c("parameter", "id", condition = col_condition))
+                  tmp, by = c("parameter", "id", condition = condition))
     }
     
     gof_group[[i]] <- TreeBUGS::PPP(treebugs_fit[[i]], M = TREEBUGS_MCMC$n.PPP, type = "G2",
