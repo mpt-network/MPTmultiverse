@@ -18,13 +18,22 @@
 
 #' @importFrom magrittr %>%
 
-make_results_row <- function(model, dataset, pooling, package, method,
-                             data, parameters, 
-                             id = "id", condition = "condition") {
+make_results_row <- function(
+  model
+  , dataset
+  , pooling
+  , package
+  , method
+  , data
+  , parameters
+  , id
+  , condition
+) {
   
   # prepare data to have the correct columns of id/condition
   data$id <- data[[id]]
   data$condition <- data[[condition]]
+  
   conditions <- levels(factor(data$condition))
   parameters <- MPTinR::check.mpt(model)$parameters
 
@@ -34,6 +43,7 @@ make_results_row <- function(model, dataset, pooling, package, method,
   est_ind <- dplyr::left_join(est_ind, data[, c("id", "condition")], by = "id")
   est_ind <- est_ind[,c("id", "condition", "parameter")]
   est_ind <- tibble::add_column(est_ind, est = NA_real_, se = NA_real_)
+  
   for (i in seq_along(getOption("MPTmultiverse")$ci_size)) {
     est_ind <- tibble::add_column(est_ind, xx = NA_real_)
     colnames(est_ind)[ncol(est_ind)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
@@ -113,20 +123,16 @@ prep_data_fitting <- function(
   , id
   , condition
 ) {
-  if (!is.factor(data[[condition]])) {
-    stop(condition, " (condition column) needs to be a factor!", 
-         call. = FALSE)
-  }
-  
-  data$id <- data[, id]
-  data$condition <- data[, condition]
+
+  data$id <- data[[id]]
+  data$condition <- data[[condition]]
   col_freq <- get_eqn_categories(model_file)
   
   out <- list(
     conditions = levels(data[[condition]]),
     parameters = MPTinR::check.mpt(model_file)$parameters,
     col_freq = col_freq,
-    freq_list = split(data[, col_freq], f = data[, condition]),
+    freq_list = split(data[, col_freq], f = data[[condition]]),
     cols_ci = paste0("ci_", getOption("MPTmultiverse")$ci_size),
     data = data
   )

@@ -79,7 +79,10 @@ mpt_mptinr_no <- function(
                                  package = "MPTinR",
                                  method = "PB/MLE",
                                  data = prepared$data,
-                                 parameters = prepared$parameters)
+                                 parameters = prepared$parameters,
+                                 id = id,
+                                 condition = condition
+                                 )
   
   no_pooling2 <- make_results_row(model = model,
                                  dataset = dataset,
@@ -87,7 +90,9 @@ mpt_mptinr_no <- function(
                                  package = "MPTinR",
                                  method = "asymptotic",
                                  data = prepared$data,
-                                 parameters = prepared$parameters)
+                                 parameters = prepared$parameters,
+                                 id = id,
+                                 condition = condition)
   
   fit_mptinr <- MPTinR::fit.mpt(prepared$data[,prepared$col_freq],
                         model.filename = model,
@@ -397,13 +402,17 @@ mpt_mptinr_complete <- function(dataset,
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
   
-  complete_pooling <- make_results_row(model = model,
-                                       dataset = dataset,
-                                       pooling = "complete",
-                                       package = "MPTinR",
-                                       method = "asymptotic",
-                                       data = prepared$data,
-                                       parameters = prepared$parameters)
+  complete_pooling <- make_results_row(
+    model = model
+    , dataset = dataset
+    , pooling = "complete"
+    , package = "MPTinR"
+    , method = "asymptotic"
+    , data = prepared$data
+    , parameters = prepared$parameters
+    , id = id
+    , condition = condition
+  )
   
   complete_pooling$est_indiv <- list(tibble::tibble())
   complete_pooling$gof_indiv <- list(tibble::tibble())

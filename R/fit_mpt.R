@@ -42,9 +42,14 @@ fit_mpt <- function(
     id <- "Subject"
   }
   
+  # remove extraneous colums
+  valid_cols <- c(id, condition, get_eqn_categories(model))
+  data <- data[, valid_cols]
   
-  
-  # extraneous columns, etc. should be removed here
+  # Ensure that id and condition are factors, also drops unused levels
+  # data[[id]] <- factor(data[[id]])
+  data[[condition]] <- factor(data[[condition]])
+
   
   res <- list()
   
