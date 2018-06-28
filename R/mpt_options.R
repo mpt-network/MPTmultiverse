@@ -42,7 +42,7 @@ mpt_options <- function(...){
   if(length(args)==0L) return(fetched)
   
   # Provide some shorthand terms:
-  if(is.character(args[[1]])){
+  if(args[[1]]%in%c("test", "default")){
     changed <- switch(
       args[[1]]
       , test = set_test_options()
@@ -52,14 +52,18 @@ mpt_options <- function(...){
     changed <- lapply(
       X = fetched
       , FUN = function(x, args){
-        sub_args <- args[names(args)%in%names(x)]
-        x[names(sub_args)] <- sub_args
+        if(is.list(x)) {
+          sub_args <- args[names(args)%in%names(x)]
+          x[names(sub_args)] <- sub_args
+        }
         x
       }
       , args = args
     )
+
     sub_args <- args[names(args)%in%names(fetched)]
     changed[names(sub_args)] <- sub_args
+
   }
   options(list(MPTmultiverse = changed))
 }
