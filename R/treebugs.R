@@ -72,6 +72,9 @@ mpt_treebugs <- function (
   
   gof_group <- list()
   treebugs_fit <- list()
+  estimation_time <- list()
+  
+  
   for (i in seq_along(conditions)){
     cond <- factor(conditions[i], conditions)
     sel_condition <- data[[condition]] == conditions[i]
@@ -90,6 +93,7 @@ mpt_treebugs <- function (
       fit_args <- c(fit_args, cores = unname(TREEBUGS_MCMC$n.CPU))
     }
     # print(c(fit_args, prior_args))
+    t0 <- Sys.time()
     treebugs_fit[[i]] <- do.call(eval(parse(text = paste0("TreeBUGS::", method, "MPT"))), args = c(fit_args, prior_args))
     summ <- treebugs_fit[[i]]$mcmc.summ
     
@@ -112,6 +116,8 @@ mpt_treebugs <- function (
         ext_cnt <- ext_cnt + 1
       }
     })
+    
+    estimation_time[[conditions[i]]] <- Sys.time() - t0
     
     # convergence summary (n.eff / Rhat / all estimates)
     tsum <- tibble::as_tibble(summ) %>% 
@@ -208,15 +214,21 @@ mpt_treebugs <- function (
   }
   
   # don't save T2 if complete pooling was used ----
+  # Why? I think it would be worthwhile
   if (pooling != "complete"){
     result_row$gof[[1]] <- tibble::add_row(result_row$gof[[1]])   # T1 & T2
     result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
   }
-  result_row$gof[[1]]$type <- c("T1_G2", if(pooling!="complete"){"T2"})
+  result_row$gof[[1]]$type <- c("T1", if(pooling!="complete"){"T2"})
   result_row$gof[[1]]$focus <- c("mean", if(pooling!="complete"){"cov"})
   
   result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
   
+  estimation_time <- unlist(estimation_time)
+  result_row$estimation[[1]] <- tibble::tibble(
+    condition = names(estimation_time)
+    , time_difference = unname(estimation_time)
+  )
 
   
   # save model objects to the working directory if requested by user ----

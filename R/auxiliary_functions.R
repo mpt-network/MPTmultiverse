@@ -78,8 +78,6 @@ make_results_row <- function(
     test_between <- tibble::tibble()
   }
 
-  
-  
   ## est_covariate <- ##MISSING
   
   ## create gof empty df
@@ -111,7 +109,8 @@ make_results_row <- function(
     gof = list(gof),
     gof_group = list(gof_group),
     gof_indiv = list(gof_indiv),
-    convergence = list(tibble::tibble())
+    convergence = list(tibble::tibble()),
+    estimation = list(tibble::tibble())
   )
 }
 

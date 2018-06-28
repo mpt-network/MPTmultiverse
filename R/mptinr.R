@@ -94,12 +94,14 @@ mpt_mptinr_no <- function(
                                  id = id,
                                  condition = condition)
   
+  t0 <- Sys.time()
   fit_mptinr <- MPTinR::fit.mpt(prepared$data[,prepared$col_freq],
                         model.filename = model,
                         n.optim = MPTINR_OPTIONS$n.optim,
                         fit.aggregated = FALSE,
                         show.messages = FALSE, output = "full", 
                         ci = (1 - stats::pnorm(1))*2*100)
+  t1 <- Sys.time()
   
   convergence <- data.frame(
     id = prepared$data[, id]
@@ -119,6 +121,7 @@ mpt_mptinr_no <- function(
   no_pooling2$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
   no_pooling2$gof_indiv[[1]]$p <- fit_mptinr$goodness.of.fit$individual$p.value
 
+  t2 <- Sys.time()
   fit_pb <- parallel::clusterApplyLB(
     cl
     , seq_len(nrow(prepared$data))
@@ -129,6 +132,7 @@ mpt_mptinr_no <- function(
     , col_freq = prepared$col_freq
     , MPTINR_OPTIONS = MPTINR_OPTIONS
   )
+  t3 <- Sys.time()
   
   ## make est_indiv and gof_indiv
   for (i in seq_len(nrow(prepared$data))) {
@@ -345,11 +349,22 @@ mpt_mptinr_no <- function(
     
   }
   
-  ### copy information
+  ### copy information that is same ----
   no_pooling2$convergence <- no_pooling$convergence
   no_pooling2$test_between <- no_pooling$test_between
   
+  # write estimation time to results_row ----
+  no_pooling$estimation[[1]] <- tibble::tibble(
+    condition = "complete_data"
+    , time_difference = (t3 - t2) + (t1 - t0)
+  )
+  no_pooling2$estimation[[1]] <- tibble::tibble(
+    condition = "complete_data"
+    , time_difference = t1 - t0
+  )
+  
   parallel::stopCluster(cl)
+  
   
   return(dplyr::bind_rows(no_pooling, no_pooling2))
 }
@@ -419,11 +434,12 @@ mpt_mptinr_complete <- function(dataset,
   
   #### fully aggregated:
   
+  t0 <- Sys.time()
   fit_mptinr_agg <- MPTinR::fit.mpt(colSums(prepared$data[,prepared$col_freq]),
                             model.filename = model,
                             n.optim = MPTINR_OPTIONS$n.optim,
                             show.messages = FALSE, output = "full")
-  
+  t_complete_data <- Sys.time() - t0
   ## gof
   
   complete_pooling$gof[[1]][1,"type"] <- "G2"
@@ -446,15 +462,17 @@ mpt_mptinr_complete <- function(dataset,
              fit_mptinr_agg$model.info[,1:2],
              convergence = fit_mptinr_agg$best.fits[[1]]$convergence))
   
+  t_cond <- list()
   
   for (i in seq_along(prepared$conditions)) {
+    t0 <- Sys.time()
     fit_mptinr_tmp <- MPTinR::fit.mpt(colSums(
       prepared$freq_list[[prepared$conditions[i]]][,prepared$col_freq]),
                               model.filename = model,
                               n.optim = MPTINR_OPTIONS$n.optim,
                               show.messages = FALSE,
                               output = "full")
-    
+    t_cond[[prepared$conditions[i]]] <- Sys.time() - t0
     
     complete_pooling$gof_group[[1]][
       complete_pooling$gof_group[[1]]$condition == 
@@ -530,6 +548,11 @@ mpt_mptinr_complete <- function(dataset,
             paste0(names(warn_conv)[warn_conv], collapse = ", "), 
             call. = FALSE)
   }
+  
+  complete_pooling$estimation[[1]] <- tibble::tibble(
+    condition = c("complete_data", names(t_cond))
+    , time_difference = as.numeric(c(t_complete_data, unlist(t_cond)))
+  )
   
   return(complete_pooling)
 }

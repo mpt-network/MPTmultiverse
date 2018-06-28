@@ -41,6 +41,8 @@ fit_lc <- function(
     , method = "latent_class"
     , data = prepared$data
     , parameters = prepared$parameters
+    , id = id
+    , condition = condition
   )
   
   # Currently, no individual parameter estimates (and model fits) are calculated.
@@ -51,7 +53,7 @@ fit_lc <- function(
   
   # ----------------------------------------------------------------------------
   # Aggregate analyses: Ignore between-subjects condition
-    
+  t0 <- Sys.time()
   res <- HMMTreeR::lc(
     model = model
     , data = data_file
@@ -60,7 +62,7 @@ fit_lc <- function(
     , nruns = getOption("MPTmultiverse")$hmmtree$n.optim
     , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
   )
-  
+  t1 <- as.numeric(Sys.time() - t0)
   fit_stats <- HMMTreeR::fit_statistics(res[[length(res)]]) # choose winning model
   
   required_stats <- c("M1", "M2", "S1", "S2")
@@ -83,6 +85,7 @@ fit_lc <- function(
   
   est_group <- list()
   gof_group <- list()
+  estimation_time <- list()
   
   for (j in prepared$conditions) {
     # create a temporary directory
@@ -96,6 +99,7 @@ fit_lc <- function(
     data_file <- file.path(tmp_dir_name, dataset)
     write.table(file = data_file, x = prepared$freq_list[[j]], sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
     
+    t0 <- Sys.time()
     res <- HMMTreeR::lc(
       model = model
       , data = data_file
@@ -104,6 +108,7 @@ fit_lc <- function(
       , nruns = getOption("MPTmultiverse")$hmmtree$n.optim
       , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
     )
+    estimation_time[[j]] <- as.numeric(Sys.time() - t0)
     
     # parameter estimates ----
     estimates <- HMMTreeR::weighted_means(res[[length(res)]])
@@ -144,12 +149,45 @@ fit_lc <- function(
     
   }
   
-  results_row$est_group[[1]] <- dplyr::bind_rows(est_group)
-  results_row$gof_group[[1]] <- dplyr::bind_rows(gof_group)
+  est_group <- dplyr::bind_rows(est_group)
+  gof_group <- dplyr::bind_rows(gof_group)
   
+  results_row$est_group[[1]] <- est_group
+  results_row$gof_group[[1]] <- gof_group
+  
+
   # test_between ----
-  # work to do...
+  test_between <- results_row$test_between[[1]]
   
-  # return
+  for (i in seq_len(nrow(test_between))) {
+    
+    p <- test_between$parameter[i]
+    c1 <- test_between$condition1[i]
+    c2 <- test_between$condition2[i]
+    
+    test_between[i, "est_diff"] <- 
+      est_group[est_group$condition == c1 & est_group$parameter == p, ]$est -
+      est_group[est_group$condition == c2 & est_group$parameter == p, ]$est
+    
+    test_between[i, "se"] <- sqrt(
+      (est_group[est_group$condition == c1 & est_group$parameter == p, ]$se)^2 +
+      (est_group[est_group$condition == c2 & est_group$parameter == p, ]$se)^2
+    )
+  }
+  
+  for (k in OPTIONS$ci_size) {
+    test_between[[paste0("ci_", k)]] <- test_between$est_diff + test_between$se * qnorm(p = k)
+  }
+
+  results_row$test_between[[1]] <- test_between
+
+  estimation_time <- unlist(estimation_time)
+  
+  result_row$estimation[[1]] <- tibble::tibble(
+    condition = c("complete_data", names(estimation_time))
+    , time_difference = c(t1, unname(estimation_time))
+  )
+  
+  # return ----
   results_row
 }
