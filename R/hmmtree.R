@@ -80,6 +80,15 @@ fit_lc <- function(
     , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
   )
   t1 <- as.numeric(Sys.time() - t0)
+  
+  # remove the temporary directory that was used for HMMTree
+  unlink(x = tmp_dir_name, recursive = TRUE)
+  
+  # extract failcodes of all models, so that only models with estimable CIs
+  # are included in the output object
+  failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
+  res <- res[failcodes==0]
+  
   fit_stats <- HMMTreeR::fit_statistics(res[[length(res)]]) # choose winning model
   
   required_stats <- c("M1", "M2", "S1", "S2")
@@ -126,7 +135,15 @@ fit_lc <- function(
       , runs = getOption("MPTmultiverse")$hmmtree$n.optim
       , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
     )
+    
     estimation_time[[j]] <- as.numeric(Sys.time() - t0)
+    
+    # remove the temporary directory that was used for HMMTree
+    unlink(x = tmp_dir_name, recursive = TRUE)
+    
+    # remove models where Fisher Information Matrix was not estimable.
+    failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
+    res <- res[failcodes==0]
     
     # parameter estimates ----
     estimates <- HMMTreeR::weighted_means(res[[length(res)]])
