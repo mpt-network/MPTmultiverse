@@ -18,13 +18,22 @@
 
 #' @importFrom magrittr %>%
 
-make_results_row <- function(model, dataset, pooling, package, method,
-                             data, parameters, 
-                             col_id = "id", col_condition = "condition") {
+make_results_row <- function(
+  model
+  , dataset
+  , pooling
+  , package
+  , method
+  , data
+  , parameters
+  , id
+  , condition
+) {
   
   # prepare data to have the correct columns of id/condition
-  data$id <- data[[col_id]]
-  data$condition <- data[[col_condition]]
+  data$id <- data[[id]]
+  data$condition <- data[[condition]]
+  
   conditions <- levels(factor(data$condition))
   parameters <- MPTinR::check.mpt(model)$parameters
 
@@ -34,6 +43,7 @@ make_results_row <- function(model, dataset, pooling, package, method,
   est_ind <- dplyr::left_join(est_ind, data[, c("id", "condition")], by = "id")
   est_ind <- est_ind[,c("id", "condition", "parameter")]
   est_ind <- tibble::add_column(est_ind, est = NA_real_, se = NA_real_)
+  
   for (i in seq_along(getOption("MPTmultiverse")$ci_size)) {
     est_ind <- tibble::add_column(est_ind, xx = NA_real_)
     colnames(est_ind)[ncol(est_ind)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
@@ -68,8 +78,6 @@ make_results_row <- function(model, dataset, pooling, package, method,
     test_between <- tibble::tibble()
   }
 
-  
-  
   ## est_covariate <- ##MISSING
   
   ## create gof empty df
@@ -101,30 +109,29 @@ make_results_row <- function(model, dataset, pooling, package, method,
     gof = list(gof),
     gof_group = list(gof_group),
     gof_indiv = list(gof_indiv),
-    convergence = list(tibble::tibble())
+    convergence = list(tibble::tibble()),
+    estimation = list(tibble::tibble())
   )
 }
 
 #' @keywords internal
 
-prep_data_fitting <- function(data, # data.frame 
-                              model_file, 
-                              col_id, 
-                              col_condition) {
-  if (!is.factor(data[[col_condition]])) {
-    stop(col_condition, " (condition column) needs to be a factor!", 
-         call. = FALSE)
-  }
-  
-  data$id <- data[, col_id]
-  data$condition <- data[, col_condition]
+prep_data_fitting <- function(
+  data
+  , model_file
+  , id
+  , condition
+) {
+
+  data$id <- data[[id]]
+  data$condition <- data[[condition]]
   col_freq <- get_eqn_categories(model_file)
   
   out <- list(
-    conditions = levels(data[[col_condition]]),
+    conditions = levels(data[[condition]]),
     parameters = MPTinR::check.mpt(model_file)$parameters,
     col_freq = col_freq,
-    freq_list = split(data[, col_freq], f = data[, col_condition]),
+    freq_list = split(data[, col_freq], f = data[[condition]]),
     cols_ci = paste0("ci_", getOption("MPTmultiverse")$ci_size),
     data = data
   )

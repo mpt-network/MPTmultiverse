@@ -8,6 +8,7 @@ Authors@R: c(
     person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
     , person("Henrik", "Singmann", email = "singmann@psychologie.uzh.ch", role = c("aut"))
     , person(c("Daniel", "W."), "Heck", email = "heck@uni-mannheim.de", role = c("aut"))
+    , person("Frederik", "Aust", email = "frederik.aust@uni-koeln.de", role = c("ctb"))
   )
 URL: https://github.com/methexp/MPTmultiverse
 BugReports: https://github.com/methexp/MPTmultiverse/issues

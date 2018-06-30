@@ -14,21 +14,28 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 
-mpt_treebugs <- function (method, dataset, data, model,
-                          col_id = "id", col_condition = "condition"){
+mpt_treebugs <- function (
+  method
+  , dataset
+  , data
+  , model
+  , id = "id"
+  , condition = "condition"
+){
   all_options <- getOption("MPTmultiverse")
 
   TREEBUGS_MCMC <- all_options$treebugs
   CI_SIZE <- all_options$ci_size
   
-  # dlist <- prepare_data(model, data, col_id = "id", col_condition = "condition")
-  conditions <- levels(factor(data[[col_condition]]))
+  # dlist <- prepare_data(model, data, id = "id", condition = "condition")
+  conditions <- levels(factor(data[[condition]]))
   parameters <- MPTinR::check.mpt(model)$parameters
   col_freq <- get_eqn_categories(model)
 
-  data$id <- data[, col_id]
-  data$condition <- data[, col_condition]
-  freq_list <- split(data[, col_freq], f = data[, col_condition])
+  data$id <- data[, id]
+  data$condition <- data[, condition]
+  
+  freq_list <- split(data[, col_freq], f = data[, condition])
   pooling <- switch(method, 
                     "simple" = "no", 
                     "simple_pooling" = "complete",
@@ -40,15 +47,17 @@ mpt_treebugs <- function (method, dataset, data, model,
                                  package = "TreeBUGS",
                                  method = sub("_pooling","", method, fixed = TRUE),
                                  data = data,
-                                 parameters = parameters)
+                                 parameters = parameters,
+                                 id = id,
+                                 condition = condition)
   if (method == "simple_pooling"){
     method <- "simple"
     
     # pooling: aggregate across participants
     data <- stats::aggregate(data[, col_freq], list(condition = data$condition), sum)
-    data[[col_condition]] <- data$condition
-    data[[col_id]] <- data$id <- 1:nrow(data)
-    if(col_condition!="condition"){
+    data[[condition]] <- data$condition
+    data[[id]] <- data$id <- 1:nrow(data)
+    if(condition!="condition"){
       data$condition <- NULL
     }
     
@@ -63,11 +72,14 @@ mpt_treebugs <- function (method, dataset, data, model,
   
   gof_group <- list()
   treebugs_fit <- list()
+  estimation_time <- list()
+  
+  
   for (i in seq_along(conditions)){
     cond <- factor(conditions[i], conditions)
-    sel_condition <- data[[col_condition]] == conditions[i]
+    sel_condition <- data[[condition]] == conditions[i]
     data_group <- data[sel_condition, col_freq]   #freq_list[[i]]
-    rownames(data_group) <- data[[col_id]][sel_condition]
+    rownames(data_group) <- data[[id]][sel_condition]
     
     fit_args <- list(eqnfile=model,
                      data = data_group,
@@ -81,6 +93,7 @@ mpt_treebugs <- function (method, dataset, data, model,
       fit_args <- c(fit_args, cores = unname(TREEBUGS_MCMC$n.CPU))
     }
     # print(c(fit_args, prior_args))
+    t0 <- Sys.time()
     treebugs_fit[[i]] <- do.call(eval(parse(text = paste0("TreeBUGS::", method, "MPT"))), args = c(fit_args, prior_args))
     summ <- treebugs_fit[[i]]$mcmc.summ
     
@@ -103,6 +116,8 @@ mpt_treebugs <- function (method, dataset, data, model,
         ext_cnt <- ext_cnt + 1
       }
     })
+    
+    estimation_time[[conditions[i]]] <- Sys.time() - t0
     
     # convergence summary (n.eff / Rhat / all estimates)
     tsum <- tibble::as_tibble(summ) %>% 
@@ -131,11 +146,11 @@ mpt_treebugs <- function (method, dataset, data, model,
         reshape2::melt() %>% 
         tidyr::spread("Statistic", "value")
       colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:3)])
-      tmp[[col_condition]] <- cond
+      tmp[[condition]] <- cond
       result_row$est_indiv[[1]][sel_ind,] <-
         dplyr::left_join(result_row$est_indiv[[1]][sel_ind,] %>%
                     dplyr::select("id", "condition", "parameter"),
-                  tmp, by = c("parameter", "id", condition = col_condition))
+                  tmp, by = c("parameter", "id", condition = condition))
     }
     
     gof_group[[i]] <- TreeBUGS::PPP(treebugs_fit[[i]], M = TREEBUGS_MCMC$n.PPP, type = "G2",
@@ -200,15 +215,21 @@ mpt_treebugs <- function (method, dataset, data, model,
   }
   
   # don't save T2 if complete pooling was used ----
+  # Why? I think it would be worthwhile
   if (pooling != "complete"){
     result_row$gof[[1]] <- tibble::add_row(result_row$gof[[1]])   # T1 & T2
     result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
   }
-  result_row$gof[[1]]$type <- c("T1_G2", if(pooling!="complete"){"T2"})
+  result_row$gof[[1]]$type <- c("T1", if(pooling!="complete"){"T2"})
   result_row$gof[[1]]$focus <- c("mean", if(pooling!="complete"){"cov"})
   
   result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
   
+  estimation_time <- unlist(estimation_time)
+  result_row$estimation[[1]] <- tibble::tibble(
+    condition = names(estimation_time)
+    , time_difference = unname(estimation_time)
+  )
 
   
   # save model objects to the working directory if requested by user ----
@@ -227,6 +248,7 @@ mpt_treebugs <- function (method, dataset, data, model,
       )
     )
   }
+  # return ----
   result_row
 }
 
