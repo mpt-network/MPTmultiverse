@@ -162,7 +162,7 @@ mpt_treebugs <- function (
       dplyr::filter(.data$condition == conditions[i]) %>%
       dplyr::mutate(
         condition = conditions[i],
-        type = "T1_G2",
+        type = "T1",
         focus = "mean",
         stat_obs = mean(gof_group[[i]]$T1.obs),
         stat_pred = mean(gof_group[[i]]$T1.pred),

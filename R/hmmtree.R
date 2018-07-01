@@ -9,7 +9,6 @@
 #'   If not specified, it is assumed that each row represents observations from one participant.
 #' @param condition Character. Name of the column specifying a between-subjects factor.
 #'   If not specified, no between-subjects comparisons are performed.
-<<<<<<< HEAD
 #' 
 #' @importFrom HMMTreeR lc
 #' @importFrom stats pchisq qnorm
