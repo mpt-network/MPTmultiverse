@@ -9,10 +9,11 @@
 #'   If not specified, it is assumed that each row represents observations from one participant.
 #' @param condition Character. Name of the column specifying a between-subjects factor.
 #'   If not specified, no between-subjects comparisons are performed.
+<<<<<<< HEAD
 #' 
 #' @importFrom HMMTreeR lc
 #' @importFrom stats pchisq qnorm
-#' @importFrom utils write.table
+
 #' @keywords internal
 
 
@@ -29,6 +30,7 @@ fit_lc <- function(
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
+
   prepared <- prep_data_fitting(
     data = data
     , model_file = model
@@ -69,10 +71,10 @@ fit_lc <- function(
   data_file <- file.path(tmp_dir_name, dataset)
   id_col <- data.frame(id = rep(dataset, nrow(data)), stringsAsFactors = FALSE)
   write.table(file = data_file, x = cbind(id_col, data[, setdiff(colnames(data), c(id, condition))]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
-  # print(data_file)
+
+    # print(data_file)
   # print(file.path(tmp_dir_name, model))
-  
-  
+
   t0 <- Sys.time()
   res <- HMMTreeR::lc(
     model = file.path(tmp_dir_name, model)
@@ -83,6 +85,15 @@ fit_lc <- function(
     , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
   )
   t1 <- as.numeric(Sys.time() - t0)
+
+  # remove the temporary directory that was used for HMMTree
+  unlink(x = tmp_dir_name, recursive = TRUE)
+  
+  # extract failcodes of all models, so that only models with estimable CIs
+  # are included in the output object
+  failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
+  res <- res[failcodes==0]
+  
   fit_stats <- HMMTreeR::fit_statistics(res[[length(res)]]) # choose winning model
   
   required_stats <- c("M1", "M2", "S1", "S2")
@@ -118,7 +129,9 @@ fit_lc <- function(
     # write data of condition group to tab-separated file
     data_file <- file.path(tmp_dir_name, dataset)
     id_col <- data.frame(id = rep(dataset, nrow(prepared$freq_list[[j]])))
+
     utils::write.table(file = data_file, x = cbind(id_col, prepared$freq_list[[j]]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
     
     t0 <- Sys.time()
     res <- HMMTreeR::lc(
@@ -129,8 +142,17 @@ fit_lc <- function(
       , runs = getOption("MPTmultiverse")$hmmtree$n.optim
       , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
     )
+
     estimation_time[[j]] <- as.numeric(Sys.time() - t0)
     
+    # remove the temporary directory that was used for HMMTree
+    unlink(x = tmp_dir_name, recursive = TRUE)
+    
+    # remove models where Fisher Information Matrix was not estimable.
+    failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
+    res <- res[failcodes==0]
+    
+
     # parameter estimates ----
     estimates <- HMMTreeR::weighted_means(res[[length(res)]])
     
@@ -212,7 +234,6 @@ fit_lc <- function(
   # return ----
   results_row
 }
-
 
 
 #' @keywords internal

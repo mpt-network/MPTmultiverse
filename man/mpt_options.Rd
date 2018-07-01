@@ -16,11 +16,11 @@ mpt_options(...)
   \item{\strong{n.burnin}}{Numeric. The number of burn-in/warm-up iterations.}
   \item{\strong{n.iter}}{Numeric. The total number of iterations to be drawn \emph{after} adaptation (including burnin).}
   \item{\strong{n.thin}}{Numeric. Thinning interval.}
-  \item{\strong{Rhat_max}}{Numeric. The maximum \eqn{hat(R)}.}
-  \item{\strong{Neff_min}}{Numeric.}
+  \item{\strong{Rhat_max}}{Numeric. The maximum rhat.}
+  \item{\strong{Neff_min}}{Numeric. The minimum number of effective samples you are willing to accept.}
   \item{\strong{extend_max}}{Numeric.}
-  \item{\strong{n.PPP}}{Numeric.}
-  \item{\strong{n.CPU}}{Numeric.}
+  \item{\strong{n.PPP}}{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
+  \item{\strong{n.CPU}}{Numeric. The number of CPU cores to use. Defaults to the number of available cores on your machine.}
   \item{\strong{ci_size}}{Numeric.}
   \item{\strong{max_ci_indiv}}{Numeric.}
   \item{\strong{silent}}{Logical.}

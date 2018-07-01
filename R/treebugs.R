@@ -129,7 +129,8 @@ mpt_treebugs <- function (
     # parameter estimates
     summMPT <- TreeBUGS::summarizeMPT(treebugs_fit[[i]]$runjags$mcmc,
                             mptInfo = treebugs_fit[[i]]$mptInfo,
-                            probs = CI_SIZE)
+                            probs = CI_SIZE,
+                            summ = treebugs_fit[[i]]$mcmc.summ)
     
     sel_group <- result_row$est_group[[1]]$condition == conditions[i]
     result_row$est_group[[1]][sel_group,-(1:2)] <-

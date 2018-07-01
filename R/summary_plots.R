@@ -131,7 +131,8 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
     ggplot2::facet_grid(facets = ". ~ condition") +
     ggplot2::geom_errorbar(ggplot2::aes_(ymin = ~ci_0.025, ymax = ~ci_0.975), position = dd, width = 0.4) +
     ggplot2::geom_point(position = dd) + 
-    ggplot2::ylim(0, 1) + 
+    ggplot2::coord_cartesian(ylim = c(0, 1)) +
+    # ggplot2::ylim(0, 1) + 
     ggplot2::scale_shape_manual(values = shapes)
 
   if(save) ggplot2::ggsave(paste0(prefix, "estimates.pdf"), gg_est1, h = 4.5, w = 10)
