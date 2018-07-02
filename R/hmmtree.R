@@ -58,25 +58,21 @@ fit_lc <- function(
   # ----------------------------------------------------------------------------
   # Aggregate analyses: Ignore between-subjects condition
   
-  # create a temporary directory
-  tmp_dir_name <- paste(c("HMMTreeR-tmp-directory-", sample(c(letters, LETTERS), 20, replace = TRUE)), collapse = "")
-  dir.create(tmp_dir_name)
-  
-  # copy .eqn file to tmp dir
-  file.copy(from = model, to = tmp_dir_name, copy.mode = FALSE)
-  simplify_eqn(model_filename = model, eqn_filename = file.path(tmp_dir_name, model), data = data, id = id, condition = condition)
+  tmp_file_suffix <- "-HMMTreeR-tmp-file"
+  model_file <- paste0(model, tmp_file_suffix)
+
+  # ensure the eqn file corresponds to the rather restrictive definition of HMMTree
+  simplify_eqn(model_filename = model, eqn_filename = model_file, data = data, id = id, condition = condition)
   
   # write data of condition group to tab-separated file
-  data_file <- file.path(tmp_dir_name, dataset)
+  data_file <- paste0(dataset, tmp_file_suffix)
   id_col <- data.frame(id = rep(dataset, nrow(data)), stringsAsFactors = FALSE)
   write.table(file = data_file, x = cbind(id_col, data[, setdiff(colnames(data), c(id, condition))]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
-  # print(data_file)
-  # print(file.path(tmp_dir_name, model))
 
   t0 <- Sys.time()
   res <- HMMTreeR::lc(
-    model = file.path(tmp_dir_name, model)
+    model = model_file
     , data = data_file
     , nsubj = nrow(data)
     , max_classes = getOption("MPTmultiverse")$hmmtree$max_classes
@@ -85,8 +81,9 @@ fit_lc <- function(
   )
   t1 <- as.numeric(Sys.time() - t0)
 
-  # remove the temporary directory that was used for HMMTree
-  unlink(x = tmp_dir_name, recursive = TRUE)
+  # remove temporary files
+  file.remove(model_file, data_file)
+  
   
   # extract failcodes of all models, so that only models with estimable CIs
   # are included in the output object
@@ -118,22 +115,18 @@ fit_lc <- function(
   estimation_time <- list()
   
   for (j in prepared$conditions) {
-    # create a temporary directory
-    tmp_dir_name <- paste(c("HMMTreeR-tmp-directory-", sample(c(letters, LETTERS), 20, replace = TRUE)), collapse = "")
-    dir.create(tmp_dir_name)
     
-    # copy .eqn file to tmp dir
-    simplify_eqn(model_filename = model, eqn_filename = file.path(tmp_dir_name, model), data = data, id = id, condition = condition)
+    # ensure HMMTree compatible eqn file
+    simplify_eqn(model_filename = model, eqn_filename = model_file, data = data, id = id, condition = condition)
     
     # write data of condition group to tab-separated file
-    data_file <- file.path(tmp_dir_name, dataset)
     id_col <- data.frame(id = rep(dataset, nrow(prepared$freq_list[[j]])))
 
     utils::write.table(file = data_file, x = cbind(id_col, prepared$freq_list[[j]]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
     t0 <- Sys.time()
     res <- HMMTreeR::lc(
-      model = file.path(tmp_dir_name, model)
+      model = model_file
       , data = data_file
       , nsubj = nrow(prepared$freq_list[[j]])
       , max_classes = getOption("MPTmultiverse")$hmmtree$max_classes
@@ -143,8 +136,8 @@ fit_lc <- function(
 
     estimation_time[[j]] <- as.numeric(Sys.time() - t0)
     
-    # remove the temporary directory that was used for HMMTree
-    unlink(x = tmp_dir_name, recursive = TRUE)
+    # remove temporary files
+    file.remove(model_file, data_file)
     
     # remove models where Fisher Information Matrix was not estimable.
     failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
