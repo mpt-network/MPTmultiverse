@@ -33,7 +33,7 @@ fit_lc <- function(
     , condition = condition
   )
   
-  results_row <- MPTmultiverse:::make_results_row(
+  results_row <- make_results_row(
     model = model
     , dataset = dataset
     , pooling = "partial"
@@ -53,16 +53,42 @@ fit_lc <- function(
   
   # ----------------------------------------------------------------------------
   # Aggregate analyses: Ignore between-subjects condition
+  
+  # create a temporary directory
+  tmp_dir_name <- paste(c("HMMTreeR-tmp-directory-", sample(c(letters, LETTERS), 20, replace = TRUE)), collapse = "")
+  dir.create(tmp_dir_name)
+  
+  # copy .eqn file to tmp dir
+  file.copy(from = model, to = tmp_dir_name, copy.mode = FALSE)
+  simplify_eqn(model_filename = model, eqn_filename = file.path(tmp_dir_name, model), data = data, id = id, condition = condition)
+  
+  # write data of condition group to tab-separated file
+  data_file <- file.path(tmp_dir_name, dataset)
+  id_col <- data.frame(id = rep(dataset, nrow(data)), stringsAsFactors = FALSE)
+  write.table(file = data_file, x = cbind(id_col, data[, setdiff(colnames(data), c(id, condition))]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+  print(data_file)
+  print(file.path(tmp_dir_name, model))
+  
+  
   t0 <- Sys.time()
   res <- HMMTreeR::lc(
-    model = model
+    model = file.path(tmp_dir_name, model)
     , data = data_file
     , nsubj = nrow(data)
     , max_classes = getOption("MPTmultiverse")$hmmtree$max_classes
-    , nruns = getOption("MPTmultiverse")$hmmtree$n.optim
+    , runs = getOption("MPTmultiverse")$hmmtree$n.optim
     , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
   )
   t1 <- as.numeric(Sys.time() - t0)
+  
+  # remove the temporary directory that was used for HMMTree
+  unlink(x = tmp_dir_name, recursive = TRUE)
+  
+  # extract failcodes of all models, so that only models with estimable CIs
+  # are included in the output object
+  failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
+  res <- res[failcodes==0]
+  
   fit_stats <- HMMTreeR::fit_statistics(res[[length(res)]]) # choose winning model
   
   required_stats <- c("M1", "M2", "S1", "S2")
@@ -93,22 +119,31 @@ fit_lc <- function(
     dir.create(tmp_dir_name)
     
     # copy .eqn file to tmp dir
-    file.copy(from = model, to = tmp_dir_name, copy.mode = FALSE)
+    simplify_eqn(model_filename = model, eqn_filename = file.path(tmp_dir_name, model), data = data, id = id, condition = condition)
     
     # write data of condition group to tab-separated file
     data_file <- file.path(tmp_dir_name, dataset)
-    write.table(file = data_file, x = prepared$freq_list[[j]], sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+    id_col <- data.frame(id = rep(dataset, nrow(prepared$freq_list[[j]])))
+    write.table(file = data_file, x = cbind(id_col, prepared$freq_list[[j]]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
     
     t0 <- Sys.time()
     res <- HMMTreeR::lc(
-      model = model
+      model = file.path(tmp_dir_name, model)
       , data = data_file
-      , nsubj = nrow(data)
+      , nsubj = nrow(prepared$freq_list[[j]])
       , max_classes = getOption("MPTmultiverse")$hmmtree$max_classes
-      , nruns = getOption("MPTmultiverse")$hmmtree$n.optim
+      , runs = getOption("MPTmultiverse")$hmmtree$n.optim
       , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
     )
+    
     estimation_time[[j]] <- as.numeric(Sys.time() - t0)
+    
+    # remove the temporary directory that was used for HMMTree
+    unlink(x = tmp_dir_name, recursive = TRUE)
+    
+    # remove models where Fisher Information Matrix was not estimable.
+    failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
+    res <- res[failcodes==0]
     
     # parameter estimates ----
     estimates <- HMMTreeR::weighted_means(res[[length(res)]])
@@ -183,11 +218,50 @@ fit_lc <- function(
 
   estimation_time <- unlist(estimation_time)
   
-  result_row$estimation[[1]] <- tibble::tibble(
+  results_row$estimation[[1]] <- tibble::tibble(
     condition = c("complete_data", names(estimation_time))
     , time_difference = c(t1, unname(estimation_time))
   )
   
   # return ----
   results_row
+}
+
+#' @keywords internal
+
+simplify_eqn <- function(model_filename, eqn_filename, data = data, id, condition) {
+  read_lines <- readLines(model_filename, warn = FALSE)
+  n_terms <- as.integer(read_lines[[1]])
+  if(n_terms!=(length(read_lines)-1)) stop("eqn file seems to be corrupted")
+  repeat{
+    read_lines <- gsub(read_lines, pattern = "  |\t", replacement = " ")
+    if(!any(grepl(read_lines, pattern = "  |\t"))) {
+      break
+    }
+  }
+  read_lines <- sub(read_lines, pattern = " ", replacement = ";")
+  read_lines <- sub(read_lines, pattern = " ", replacement = ";")
+  read_lines <- strsplit(read_lines[-1], split = ";")
+  
+  model <- data.frame(
+    tree = unlist(lapply(X = read_lines, FUN = function(x){x[1]}))
+    , cat = unlist(lapply(X = read_lines, FUN = function(x){x[2]}))
+    , term = unlist(lapply(X = read_lines, FUN = function(x){x[3]}))
+    , stringsAsFactors = FALSE
+  )
+  cat_cols <- setdiff(colnames(data), c(id, condition))
+  cat_id <- seq_along(cat_cols)
+  names(cat_id) <- cat_cols
+  
+  for(i in 1:length(unique(model$tree))) {
+    model$tree[model$tree==unique(model$tree)[i]] <- i
+  }
+
+  model$cat <- cat_id[model$cat]
+  writeLines(
+    text = paste(c(n_terms, paste(model$tree, model$cat, model$term, sep = " ")), collapse = "\n")
+    , con = eqn_filename
+    , sep=""
+  )
+
 }

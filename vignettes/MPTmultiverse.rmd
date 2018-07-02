@@ -109,10 +109,10 @@ You can set options to defaults, again, by typing the shorthand `mpt_options("de
 # mpt_options(n.iter = 1000)
 
 # For testing purposes, you can use this shorthand to set fast, but unreliable options:
-# mpt_options("test")
+mpt_options("test")
 
 # List all options that were set for the different analysis approaches:
-mpt_options()
+# mpt_options()
 ```
 
 ### Estimation
@@ -121,8 +121,20 @@ In the next chunk, the main computations are done.
 Type `?fit_mpt` in the R console if you want to find out more about the parameters of the function.
 
 ```{r analysis, results = 'hide', eval = FALSE}
+all_supported_methods <- c(
+  "asymptotic_complete"
+  , "asymptotic_no"
+  , "pb_no"
+  , "latent_class"
+  , "simple"
+  , "simple_pooling"
+  , "trait"
+  , "trait_uncorrelated"
+  , "beta"
+)
+data$junk <- NA_complex_
 results <- fit_mpt(
-  method = c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated")
+  method = all_supported_methods
   , dataset = DATA_FILE
   , data = data
   , model = EQN_FILE
