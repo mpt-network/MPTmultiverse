@@ -245,7 +245,9 @@ mpt_mptinr_no <- function(
                res[["asymptotic_no"]]$est_group[[1]][,c("condition", "parameter")],
                by = c("condition", "parameter"))
   
-  #### make gof_group ####
+  # ----------------------------------------------------------------------------
+  # make gof_group for parametric-bootstrap approach
+  
   res[["pb_no"]]$gof_group[[1]]$type <- "pb-G2"
   res[["pb_no"]]$gof_group[[1]]$focus <- "mean"
   
@@ -281,7 +283,9 @@ mpt_mptinr_no <- function(
              g2_cond[[i]]) + 1) / (MPTINR_OPTIONS$bootstrap_samples + 1)
   }
   
-  #### make gof_group2 ####
+  # ----------------------------------------------------------------------------
+  # make gof_group for asymptotic approach
+  
   res[["asymptotic_no"]]$gof_group[[1]]$type <- "G2"
   res[["asymptotic_no"]]$gof_group[[1]]$focus <- "mean"
   
@@ -290,15 +294,26 @@ mpt_mptinr_no <- function(
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
               stat_pred = NA_real_,
               stat_df = sum(.data$df))
-  gof_group2$p <- stats::pchisq(q = gof_group2$stat_obs, 
-                         df = gof_group2$stat_df, 
-                         lower.tail = FALSE)
-  gof_group2$condition <- factor(gof_group2$condition)
+  
+  gof_group2$p <- stats::pchisq(
+    q = gof_group2$stat_obs
+    , df = gof_group2$stat_df
+    , lower.tail = FALSE
+  )
+  # ensure that factor levels fit:
+  gof_group2$condition <- factor(
+    gof_group2$condition
+    , levels = levels(res[["asymptotic_no"]]$gof_group[[1]]$condition)
+  )
+  
   res[["asymptotic_no"]]$gof_group[[1]] <- 
     dplyr::right_join(res[["asymptotic_no"]]$gof_group[[1]][, c("condition", "type", "focus")],
              gof_group2,
                by = c("condition"))
+
   
+  # ----------------------------------------------------------------------------
+  # make gof
   
   gof <- tibble::tibble(
     type = "G2"
@@ -336,8 +351,8 @@ mpt_mptinr_no <- function(
     (MPTINR_OPTIONS$bootstrap_samples + 1)
 
   
-  
-  # test_between ----
+  # ----------------------------------------------------------------------------  
+  # make test_between
   
   for (i in seq_len(nrow(res[["pb_no"]]$test_between[[1]]))) {
     tmp_par <- res[["pb_no"]]$test_between[[1]]$parameter[i]
