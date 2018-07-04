@@ -483,8 +483,8 @@ mpt_mptinr_complete <- function(dataset,
   
   #### aggregated by condition
   
-  res$gof_group[[1]][,"type"] <- "G2"
-  res$gof_group[[1]][,"focus"] <- "mean"
+  res$gof_group[[1]][, "type"] <- "G2"
+  res$gof_group[[1]][, "focus"] <- "mean"
   
   convergence <- vector("list", 1 + length(prepared$conditions))
   names(convergence) <- c("aggregated", prepared$conditions)
@@ -506,25 +506,9 @@ mpt_mptinr_complete <- function(dataset,
     
     res$gof_group[[1]][
       res$gof_group[[1]]$condition == 
-        prepared$conditions[i] ,"stat_obs"] <-
-      fit_mptinr_tmp$goodness.of.fit$G.Squared
-    res$gof_group[[1]][
-      res$gof_group[[1]]$condition == 
-        prepared$conditions[i], "stat_df"] <-
-      fit_mptinr_tmp$goodness.of.fit$df
-    res$gof_group[[1]][
-      res$gof_group[[1]]$condition == 
-        prepared$conditions[i], "p"] <-
-      fit_mptinr_tmp$goodness.of.fit$p
+        prepared$conditions[i] , c("stat_obs", "stat_df", "p")] <-
+      fit_mptinr_tmp$goodness.of.fit[, c("G.Squared", "df", "p.value")]
     
-    res$est_group[[1]][
-      res$est_group[[1]]$condition == 
-        prepared$conditions[i], "est"
-      ] <- fit_mptinr_tmp$parameters[
-        res$est_group[[1]][
-          res$est_group[[1]]$condition == 
-            prepared$conditions[i],
-          ]$parameter, "estimates" ]
     
     par_se <- sqrt(diag(solve(fit_mptinr_tmp$hessian[[1]])))
     names(par_se) <- rownames(fit_mptinr_tmp$parameters)
