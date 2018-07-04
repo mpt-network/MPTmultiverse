@@ -10,9 +10,8 @@
 #' @param condition Character. Name of the column specifying a between-subjects factor.
 #'   If not specified, no between-subjects comparisons are performed.
 #' 
-#' @importFrom HMMTreeR lc
 #' @importFrom stats pchisq qnorm
-
+#' @importFrom utils write.table
 #' @keywords internal
 
 
@@ -100,8 +99,9 @@ fit_lc <- function(
     , stat_obs = as.numeric(fit_stats[, required_stats])
     , stat_pred = NA_real_
     , stat_df = as.numeric(fit_stats[, paste0("df_", required_stats)])
-    , p = ifelse(stat_df <= 0, NA_real_, stats::pchisq(q = stat_obs, df = stat_df))
   )
+  gof$p <- ifelse(gof$stat_df <= 0, NA_real_, stats::pchisq(q = gof$stat_obs, df = gof$stat_df))
+  
   
   results_row$gof[[1]] <- gof
   
@@ -177,9 +177,12 @@ fit_lc <- function(
       , stat_obs = as.numeric(fit_stats[, required_stats])
       , stat_pred = NA_real_
       , stat_df = as.numeric(fit_stats[, paste0("df_", required_stats)])
-      , p = ifelse(stat_df <= 0, NA_real_, pchisq(q = stat_obs, df = stat_df))
     )
-    
+    gof_group[[j]]$p = ifelse(
+      gof_group[[j]]$stat_df <= 0
+      , NA_real_
+      , pchisq(q = gof_group[[j]]$stat_obs, df = gof_group[[j]]$stat_df)
+    )
   }
   
   est_group <- dplyr::bind_rows(est_group)
