@@ -125,14 +125,13 @@ all_supported_methods <- c(
   "asymptotic_complete"
   , "asymptotic_no"
   , "pb_no"
-  , "latent_class"
   , "simple"
   , "simple_pooling"
   , "trait"
   , "trait_uncorrelated"
   , "beta"
 )
-data$junk <- NA_complex_
+
 results <- fit_mpt(
   method = all_supported_methods
   , dataset = DATA_FILE

@@ -36,9 +36,6 @@ If these prerequisites are met, type `devtools::install_github("mpt-network/MPTm
   MCMC samples are drawn to achieve the desired level of convergence (e.g., `Rhat < 1.05`).
   This might be addressed in future versions of TreeBUGS. 
   As a remedy, the number of MCMC iterations can be increased a priori (via `mpt_options()`).
-* For latent-class multinomial models, the `.eqn` file must not contain fixed parameter values.
-  If the `.eqn` file contains such a fixed value, estimation of latent-class models will be
-  skipped.
   
 ---
 

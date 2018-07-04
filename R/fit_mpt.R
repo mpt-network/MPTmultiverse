@@ -63,48 +63,6 @@ fit_mpt <- function(
     , condition = condition
   )
   
-  # HMMTreeR part ----
-  if("latent_class" %in% method) {
-    
-    # HMMTreeR installed?
-    if(suppressWarnings(requireNamespace("HMMTreeR"))) {
-  
-    running_on_windows <- Sys.info()[["sysname"]]=="Windows"
-    
-      # ensure that no fixed parameter values are present
-      test <- 1
-      test <- tryCatch(simplify_eqn(
-        model_filename = model
-        , eqn_filename = "tmp_eqn_HMMTree.eqn"
-        , data = data
-        , id = id
-        , condition = condition
-      ))
-      file.remove("tmp_eqn_HMMTree.eqn")
-
-      if(test==0) {
-    
-        if(running_on_windows) {
-          res[["hmmtreer"]] <- fit_lc(
-            dataset = dataset
-            , data = data
-            , model = model
-            , id = id
-            , condition = condition
-          )
-        } else {
-          message("Latent-class multinomial models can currently only be estimated on Windows -- sorry.")
-        }
-      } else {
-        message("The specified .eqn file seems to contain fixed parameter values:
-                The current implementation of latent-class models does not support this type of .eqn files.
-                Therefore, latant-class models are not estimated.")
-      }
-    } else {
-      message("HMMTreeR is not installed on your system. Therefore, latent-class analyses are skipped.")
-    }
-  }
-  
   # TreeBUGS part ----
   res[["treebugs"]] <- dplyr::bind_rows(
     purrr::map(
