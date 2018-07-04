@@ -258,10 +258,19 @@ simplify_eqn <- function(model_filename, eqn_filename, data = data, id, conditio
   }
 
   model$cat <- cat_id[model$cat]
+  
+  # check if fixed parameter values are present in the model definition
+  splitted_terms <- strsplit(model$term, split = "*")
+  splitted_stripped <- gsub(splitted_terms, pattern = "(1-|)", replacement = "")
+  try_conversion <- suppressWarnings(as.numeric(splitted_stripped))
+  if(!all(is.na(try_conversion))) {
+    stop("There seem to be fixed parameter values in your .eqn file. Conversion to a legacy .eqn file is thus not possible.")
+  }
+  
   writeLines(
     text = paste(c(n_terms, paste(model$tree, model$cat, model$term, sep = " ")), collapse = "\n")
     , con = eqn_filename
     , sep=""
   )
-
+  return(0)
 }
