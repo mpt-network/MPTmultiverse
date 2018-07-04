@@ -341,8 +341,8 @@ mpt_mptinr_no <- function(
   
   for (i in seq_len(nrow(res[["pb_no"]]$test_between[[1]]))) {
     tmp_par <- res[["pb_no"]]$test_between[[1]]$parameter[i]
-    tmp_c1 <- res[["pb_no"]]$test_between[[1]]$condition1[i]
-    tmp_c2 <- res[["pb_no"]]$test_between[[1]]$condition2[i]
+    tmp_c1 <- as.character(res[["pb_no"]]$test_between[[1]]$condition1[i])
+    tmp_c2 <- as.character(res[["pb_no"]]$test_between[[1]]$condition2[i])
     
     tmp_df <- droplevels(res[["pb_no"]]$est_indiv[[1]][ 
       res[["pb_no"]]$est_indiv[[1]]$parameter == tmp_par & 
@@ -356,18 +356,12 @@ mpt_mptinr_no <- function(
     
     tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
     
-    res[["pb_no"]]$test_between[[1]][ 
-      res[["pb_no"]]$test_between[[1]]$parameter == tmp_par , 
-      c("est_diff" , "se", "p") ] <- 
+    res[["pb_no"]]$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
       c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
     
-    res[["pb_no"]]$test_between[[1]][ 
-      res[["pb_no"]]$test_between[[1]]$parameter == tmp_par, prepared$cols_ci] <- 
-      res[["pb_no"]]$test_between[[1]][ 
-        res[["pb_no"]]$test_between[[1]]$parameter == tmp_par ,]$est_diff + 
-      stats::qnorm(CI_SIZE)* res[["pb_no"]]$test_between[[1]][ 
-        res[["pb_no"]]$test_between[[1]]$parameter == tmp_par ,]$se
-    
+    res[["pb_no"]]$test_between[[1]][i, prepared$cols_ci] <- 
+      res[["pb_no"]]$test_between[[1]][i, ]$est_diff + 
+      stats::qnorm(CI_SIZE)* res[["pb_no"]]$test_between[[1]][i, ]$se
   }
   
   ### copy information that is same ----
@@ -554,6 +548,8 @@ mpt_mptinr_complete <- function(dataset,
                tmp_pars$parameter == tmp_par, ]$est -
       tmp_pars[tmp_pars$condition == tmp_c2 & 
                tmp_pars$parameter == tmp_par, ]$est
+    
+    # to do: implement standard errors and CIs
     
   }
   

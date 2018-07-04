@@ -66,14 +66,21 @@ make_results_row <- function(
   # group comparisons
   if (length(conditions) > 1) {
       pairs <- utils::combn(conditions, 2)
-      test_between <- 
-        tibble::as_tibble(expand.grid(parameter = parameters, 
-                              condition1 = factor(pairs[1,], levels = conditions),
-                              condition2 = factor(pairs[2,], levels = conditions))) %>% 
-        dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
-      tibble_ci <- tibble::as_tibble(matrix(NA_real_, nrow(test_between), length(getOption("MPTmultiverse")$ci_size),
-                                    dimnames = list(NULL, paste0("ci_", getOption("MPTmultiverse")$ci_size))))
-      test_between <- dplyr::bind_cols(test_between, tibble_ci)
+      tmp_test_between <- vector("list", ncol(pairs))
+      
+      for (i in seq_len(ncol(pairs))) {
+        tmp_test_between[[i]] <- tibble::as_tibble(
+          expand.grid(parameter = parameters, 
+                      condition1 = factor(pairs[1,i], levels = conditions),
+                      condition2 = factor(pairs[2,i], levels = conditions))) %>% 
+          dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
+        tibble_ci <- tibble::as_tibble(
+          matrix(NA_real_, nrow(tmp_test_between[[i]]), 
+                 length(getOption("MPTmultiverse")$ci_size),
+                 dimnames = list(NULL, paste0("ci_", getOption("MPTmultiverse")$ci_size))))
+        tmp_test_between[[i]] <- dplyr::bind_cols( tmp_test_between[[i]], tibble_ci)
+      }
+      test_between <- dplyr::bind_rows(tmp_test_between) 
   } else {
     test_between <- tibble::tibble()
   }
