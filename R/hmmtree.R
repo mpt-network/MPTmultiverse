@@ -261,12 +261,12 @@ simplify_eqn <- function(model_filename, eqn_filename, data = data, id, conditio
   }
 
   model$cat <- cat_id[model$cat]
-  print(model)
+  # print(model)
   # check if fixed parameter values are present in the model definition
   splitted_terms <- strsplit(model$term, split = "*", fixed = TRUE)
   splitted_stripped <- lapply(X = splitted_terms, FUN = gsub, pattern = "(1-", replacement = "", fixed = TRUE)
   splitted_stripped <- unlist(lapply(X = splitted_stripped, FUN = gsub, pattern = ")", replacement = "", fixed = TRUE))
-  # print(splitted_stripped)
+  
   try_conversion <- suppressWarnings(as.numeric(splitted_stripped))
   
   if(!all(is.na(try_conversion))) {

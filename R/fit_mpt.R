@@ -67,7 +67,7 @@ fit_mpt <- function(
   if("latent_class" %in% method) {
     
     # HMMTreeR installed?
-    if(suppressWarnings(require("HMMTreeR"))) {
+    if(suppressWarnings(requireNamespace("HMMTreeR"))) {
   
     running_on_windows <- Sys.info()[["sysname"]]=="Windows"
     
@@ -81,8 +81,8 @@ fit_mpt <- function(
         , condition = condition
       ))
       file.remove("tmp_eqn_HMMTree.eqn")
-      
-      if(test!=0) {
+
+      if(test==0) {
     
         if(running_on_windows) {
           res[["hmmtreer"]] <- fit_lc(
