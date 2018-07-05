@@ -3,7 +3,7 @@
 #' Does a lot of nice stuff
 #'
 #' @param method Character. A vector specifying which analysis approaches should be performed.
-#' @param dataset Character.
+#' @param dataset Character. The name of the dataset to be analyzed. 
 #' @param data A \code{data.frame} containing the data.
 #' @param model A model definition, typically the path to an \code{.eqn} file.
 #' @param id Character. Name of the column that contains the subject identifier.

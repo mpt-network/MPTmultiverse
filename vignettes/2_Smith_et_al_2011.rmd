@@ -20,36 +20,8 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Prerequisites
 
-First of all, make sure that you have installed the *latest* version of all necessary `R` packages *and* of `JAGS`.
-To install `JAGS`, go to [mcmc-jags.sourceforge.net](http://mcmc-jags.sourceforge.net/) and follow installation instructions.
-After that, install or update the required R packages:
-
-```{r install-packages, eval = FALSE}
-required <- c(
-  "devtools"
-  , "tidyr"
-  , "dplyr"
-  , "tibble"
-  , "rlang"
-  , "reshape2"
-  , "ggplot2"
-  , "MPTinR"
-  , "TreeBUGS"
-  , "runjags"
-  , "purrr"
-  , "readr"
-  , "broom"
-)
-
-install.packages(required, repos = "https://cloud.r-project.org")
-devtools::install_github("mariusbarth/MPTmultiverse")
-```
-
-
-
-## Example 1: Bayen & Kuhlmann (2011)
+## Example 2: Smith et al. (2011)
 
 ```{r model-and-data}
 # load packages:
@@ -67,31 +39,31 @@ library("MPTmultiverse")
 # ------------------------------------------------------------------------------
 # MPT model definition & Data
 
-EQN_FILE <- "2HTSM_Submodel4.eqn"
-DATA_FILE <- "Kuhlmann_dl7.csv"  
+EQN_FILE <- "prospective_memory.eqn"
+DATA_FILE <- "smith_et_al_2011.csv"
 
 
 ### if .csv format uses semicolons ";" (German format):
-data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
+# data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
 ### if .csv format uses commata "," (international format):
-# data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
+data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
 
 head(data)
 TreeBUGS::plotFreq(data, boxplot = FALSE, eqn = EQN_FILE)
 
-COL_ID <- "Subject"         # name of the variable encoding subject ID
-COL_CONDITION <- "ExpCond"  # name of the variable encoding group membership
+COL_CONDITION <- "WM_EX"  # name of the variable encoding group membership
 
-# NOTE: experimental condition should be labeled meaningfully!
-unique(data[, COL_CONDITION])
+# experimental condition should be labeled meaningfully ----
+unique(data[[COL_CONDITION]])
 
 data[[COL_CONDITION]] <- factor(
   data[[COL_CONDITION]]
-  , levels = c(1:2)
-  , labels = c("no_load", "load")
+  , levels = 1:2
+  , labels = c("low_WM", "high_WM")
 )
 
-### check input data frame
+
+# check input data.frame ----
 head(data)
 ```
 
@@ -106,13 +78,13 @@ You can set options to defaults, again, by typing the shorthand `mpt_options("de
 
 ```{r options, results = 'hide'}
 # How to change a single option:
-# mpt_options(n.iter = 1000)
+mpt_options(n.iter = 1e3)
 
 # For testing purposes, you can use this shorthand to set fast, but unreliable options:
 mpt_options("test")
 
 # List all options that were set for the different analysis approaches:
-# mpt_options()
+mpt_options()
 ```
 
 ### Estimation
@@ -120,7 +92,7 @@ mpt_options("test")
 In the next chunk, the main computations are done.
 Type `?fit_mpt` in the R console if you want to find out more about the parameters of the function.
 
-```{r analysis, results = 'hide', eval = FALSE}
+```{r analysis, results = 'hide'}
 all_supported_methods <- c(
   "asymptotic_complete"
   , "asymptotic_no"
@@ -136,8 +108,7 @@ results <- fit_mpt(
   method = all_supported_methods
   , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
-  , id = COL_ID
+  , model = "prospective_memory.eqn"
   , condition = COL_CONDITION
 )
 ```
@@ -168,21 +139,27 @@ save(
 The analysis output `results` is an object of class `multiverseMPT`, that has its own `plot()` method.
 Type `?plot.multiverseMPT` to see the documentation of possible arguments to this method.
 
-```{r eval = FALSE}
+To plot group-level parameter estimates, type:
+
+```{r}
 plot(results, save = FALSE, "est")
 ```
 
+To plot between-subjects comparisons, type:
 
-```{r eval = FALSE}
+```{r}
 plot(results, save = FALSE, "test_between")
 ```
 
+To plot overall goodness-of-fit, type:
 
-```{r eval = FALSE}
+```{r}
 plot(results, save = FALSE, "gof1")
 ```
 
-```{r eval = FALSE}
+To plot group-wise goodness-of-fit, type:
+
+```{r}
 plot(results, save = FALSE, "gof2")
 ```
 
