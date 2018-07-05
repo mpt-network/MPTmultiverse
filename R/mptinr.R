@@ -428,9 +428,9 @@ get_pb_output <- function(
 }
 
 
-######################
-## complete pooling ##
-######################
+# ------------------------------------------------------------------------------
+# Complete-pooling (maximum-likelihood) approach
+
 
 #' @importFrom magrittr %>%
 #' @keywords internal
@@ -447,7 +447,7 @@ mpt_mptinr_complete <- function(dataset,
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
   
-  complete_pooling <- make_results_row(
+  res <- make_results_row(
     model = model
     , dataset = dataset
     , pooling = "complete"
@@ -459,8 +459,8 @@ mpt_mptinr_complete <- function(dataset,
     , condition = condition
   )
   
-  complete_pooling$est_indiv <- list(tibble::tibble())
-  complete_pooling$gof_indiv <- list(tibble::tibble())
+  res$est_indiv <- list(tibble::tibble())
+  res$gof_indiv <- list(tibble::tibble())
   
   #### fully aggregated:
   
@@ -472,19 +472,19 @@ mpt_mptinr_complete <- function(dataset,
   t_complete_data <- Sys.time() - t0
   ## gof
   
-  complete_pooling$gof[[1]][1,"type"] <- "G2"
-  complete_pooling$gof[[1]][1,"focus"] <- "mean"
-  complete_pooling$gof[[1]][1,"stat_obs"] <-
+  res$gof[[1]][1,"type"] <- "G2"
+  res$gof[[1]][1,"focus"] <- "mean"
+  res$gof[[1]][1,"stat_obs"] <-
     fit_mptinr_agg$goodness.of.fit$G.Squared
-  complete_pooling$gof[[1]][1,"stat_df"] <-
+  res$gof[[1]][1,"stat_df"] <-
     fit_mptinr_agg$goodness.of.fit$df
-  complete_pooling$gof[[1]][1,"p"] <-
+  res$gof[[1]][1,"p"] <-
     fit_mptinr_agg$goodness.of.fit$p
   
   #### aggregated by condition
   
-  complete_pooling$gof_group[[1]][,"type"] <- "G2"
-  complete_pooling$gof_group[[1]][,"focus"] <- "mean"
+  res$gof_group[[1]][, "type"] <- "G2"
+  res$gof_group[[1]][, "focus"] <- "mean"
   
   convergence <- vector("list", 1 + length(prepared$conditions))
   names(convergence) <- c("aggregated", prepared$conditions)
@@ -504,37 +504,21 @@ mpt_mptinr_complete <- function(dataset,
                               output = "full")
     t_cond[[prepared$conditions[i]]] <- Sys.time() - t0
     
-    complete_pooling$gof_group[[1]][
-      complete_pooling$gof_group[[1]]$condition == 
-        prepared$conditions[i] ,"stat_obs"] <-
-      fit_mptinr_tmp$goodness.of.fit$G.Squared
-    complete_pooling$gof_group[[1]][
-      complete_pooling$gof_group[[1]]$condition == 
-        prepared$conditions[i], "stat_df"] <-
-      fit_mptinr_tmp$goodness.of.fit$df
-    complete_pooling$gof_group[[1]][
-      complete_pooling$gof_group[[1]]$condition == 
-        prepared$conditions[i], "p"] <-
-      fit_mptinr_tmp$goodness.of.fit$p
+    res$gof_group[[1]][
+      res$gof_group[[1]]$condition == 
+        prepared$conditions[i] , c("stat_obs", "stat_df", "p")] <-
+      fit_mptinr_tmp$goodness.of.fit[, c("G.Squared", "df", "p.value")]
     
-    complete_pooling$est_group[[1]][
-      complete_pooling$est_group[[1]]$condition == 
-        prepared$conditions[i], "est"
-      ] <- fit_mptinr_tmp$parameters[
-        complete_pooling$est_group[[1]][
-          complete_pooling$est_group[[1]]$condition == 
-            prepared$conditions[i],
-          ]$parameter, "estimates" ]
     
     par_se <- sqrt(diag(solve(fit_mptinr_tmp$hessian[[1]])))
     names(par_se) <- rownames(fit_mptinr_tmp$parameters)
     
-    complete_pooling$est_group[[1]][
-      complete_pooling$est_group[[1]]$condition == 
+    res$est_group[[1]][
+      res$est_group[[1]]$condition == 
         prepared$conditions[i], "se"
       ] <- par_se[
-        complete_pooling$est_group[[1]][
-          complete_pooling$est_group[[1]]$condition == 
+        res$est_group[[1]][
+          res$est_group[[1]]$condition == 
             prepared$conditions[i],
           ]$parameter]
     
@@ -544,36 +528,49 @@ mpt_mptinr_complete <- function(dataset,
   }
   
   for (i in seq_along(CI_SIZE)) {
-    complete_pooling$est_group[[1]][, prepared$cols_ci[i]] <-
-      complete_pooling$est_group[[1]][,"est"] +
-      stats::qnorm(CI_SIZE[i])*complete_pooling$est_group[[1]][,"se"]
+    res$est_group[[1]][, prepared$cols_ci[i]] <-
+      res$est_group[[1]][,"est"] +
+      stats::qnorm(CI_SIZE[i])*res$est_group[[1]][,"se"]
   }
   
-  ### test between ###
-  tmp_pars <- complete_pooling$est_group[[1]]
+  # ----------------------------------------------------------------------------
+  # test_between
+  est_group <- res$est_group[[1]]
+  test_between <- res$test_between[[1]]
   
-  for (i in seq_len(nrow(complete_pooling$test_between[[1]]))) {
+  for (i in seq_len(nrow(test_between))) {
     
-    tmp_par <- complete_pooling$test_between[[1]]$parameter[i]
-    tmp_c1 <- complete_pooling$test_between[[1]]$condition1[i]
-    tmp_c2 <- complete_pooling$test_between[[1]]$condition2[i]
+    p <- test_between$parameter[i]
+    c1 <- test_between$condition1[i]
+    c2 <- test_between$condition2[i]
   
-    complete_pooling$test_between[[1]][i, "est_diff"] <- 
-      tmp_pars[tmp_pars$condition == tmp_c1 & 
-               tmp_pars$parameter == tmp_par, ]$est -
-      tmp_pars[tmp_pars$condition == tmp_c2 & 
-               tmp_pars$parameter == tmp_par, ]$est
+    test_between[i, "est_diff"] <- 
+      est_group[est_group$condition == c1 & est_group$parameter == p, ]$est -
+      est_group[est_group$condition == c2 & est_group$parameter == p, ]$est
     
-    # to do: implement standard errors and CIs
-    
+    # standard errors
+    test_between[i, "se"] <- sqrt(
+      (est_group[est_group$condition == c1 & est_group$parameter == p, ]$se)^2 +
+      (est_group[est_group$condition == c2 & est_group$parameter == p, ]$se)^2
+    )
   }
+  
+  # CIs from standard errors
+  for(k in CI_SIZE) {
+    test_between[[paste0("ci_", k)]] <- test_between$est_diff + test_between$se * qnorm(p = k)
+  }
+  
+  res$test_between[[1]] <- test_between
+  
+  # ----------------------------------------------------------------------------
+  # convergence
   
   tmp <- names(convergence)
   convergence <- do.call("rbind", convergence)
   convergence <- dplyr::bind_cols(condition = factor(tmp), 
                            convergence)
   
-  complete_pooling$convergence <- list(convergence)
+  res$convergence <- list(convergence)
   warn_conv <- convergence$convergence != 0
   if (any(warn_conv)) {
     warning("MPTinR-complete: Convergence code != 0 for: ", 
@@ -581,10 +578,10 @@ mpt_mptinr_complete <- function(dataset,
             call. = FALSE)
   }
   
-  complete_pooling$estimation[[1]] <- tibble::tibble(
+  res$estimation[[1]] <- tibble::tibble(
     condition = c("complete_data", names(t_cond))
     , time_difference = as.numeric(c(t_complete_data, unlist(t_cond)))
   )
   
-  return(complete_pooling)
+  return(res)
 }
