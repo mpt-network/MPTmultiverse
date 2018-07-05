@@ -115,7 +115,7 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   }
   
   
-  dd <- ggplot2::position_dodge(w = .75)
+  dd <- ggplot2::position_dodge(width = .75)
   
   est_group <- tidyr::unnest(data = results, .data$est_group)
   est_group$approach <- interaction(est_group$method, est_group$pooling, est_group$package)

@@ -87,7 +87,7 @@ set_test_options <- function() { # nocov start
       , fisher_information = "expected"
     )
     , treebugs = list(
-      n.chain = 4
+      n.chains = 4
       , n.iter = 8e2
       , n.adapt = 1e2
       , n.burnin = 1e2
@@ -122,7 +122,7 @@ set_default_options <- function() {
       , fisher_information = "expected"
     )
     , treebugs = list(
-      n.chain = 4
+      n.chains = 4
       , n.iter = 5e4
       , n.adapt = 1e4
       , n.burnin = 2e4

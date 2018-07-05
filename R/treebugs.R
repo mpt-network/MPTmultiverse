@@ -83,7 +83,7 @@ mpt_treebugs <- function (
     
     fit_args <- list(eqnfile=model,
                      data = data_group,
-                     n.chain = TREEBUGS_MCMC$n.chain,
+                     n.chains = TREEBUGS_MCMC$n.chains,
                      n.iter = TREEBUGS_MCMC$n.iter,
                      n.adapt = TREEBUGS_MCMC$n.adapt,
                      n.burnin = TREEBUGS_MCMC$n.burnin,
