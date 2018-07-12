@@ -30,14 +30,15 @@ mpt_mptinr <- function(
     )
   }
   
-  if(any(method %in% c("asymptotic_no", "pb_no"))) {
+  if(any(method %in% c("asymptotic_no", "pb_no", "npb_no"))) {
     res[["no_pooling"]] <- mpt_mptinr_no(
       dataset = dataset
       , prepared = prepared
       , model = model
-      , method = intersect(method, c("asymptotic_no", "pb_no"))
+      , method = intersect(method, c("asymptotic_no", "pb_no", "npb_no"))
       , id = id
       , condition = condition
+      , bootstrap = gsub("_no", "", intersect(method, c("pb_no", "npb_no")))
     )
   }
   
@@ -62,6 +63,7 @@ mpt_mptinr_no <- function(
   , method
   , id
   , condition
+  , bootstrap
 ) {
 
   OPTIONS <- getOption("MPTmultiverse")
@@ -69,23 +71,9 @@ mpt_mptinr_no <- function(
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
+  bootstrap <- match.arg(bootstrap, c("none", "pb", "npb"), several.ok = TRUE)
   
-  cl <- parallel::makeCluster(rep("localhost", MPTINR_OPTIONS$n.CPU))
-  parallel::clusterEvalQ(cl, library("MPTinR"))
-  
-  res <- list()
-  
-  res[["pb_no"]] <- make_results_row(
-    model = model
-    , dataset = dataset
-    , pooling = "no"
-    , package = "MPTinR"
-    , method = "PB/MLE"
-    , data = prepared$data
-    , parameters = prepared$parameters
-    , id = id
-    , condition = condition
-  )
+  res <- list(asymptotic_no = NULL)
   
   res[["asymptotic_no"]] <- make_results_row(model = model,
                                  dataset = dataset,
@@ -113,39 +101,17 @@ mpt_mptinr_no <- function(
     , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, 0)
   )
   
-  
-  res[["pb_no"]]$gof_indiv[[1]]$type <- "G2"
-  res[["pb_no"]]$gof_indiv[[1]]$focus <- "mean"
-  res[["pb_no"]]$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
-  res[["pb_no"]]$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
-  
   res[["asymptotic_no"]]$gof_indiv[[1]]$type <- "G2"
   res[["asymptotic_no"]]$gof_indiv[[1]]$focus <- "mean"
   res[["asymptotic_no"]]$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
   res[["asymptotic_no"]]$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
   res[["asymptotic_no"]]$gof_indiv[[1]]$p <- fit_mptinr$goodness.of.fit$individual$p.value
 
-  t2 <- Sys.time()
-  fit_pb <- parallel::clusterApplyLB(
-    cl
-    , seq_len(nrow(prepared$data))
-    , get_pb_output
-    , fit_mptinr = fit_mptinr
-    , data = prepared$data
-    , model_file = model
-    , col_freq = prepared$col_freq
-    , MPTINR_OPTIONS = MPTINR_OPTIONS
-  )
-  t3 <- Sys.time()
   
   ## make est_indiv and gof_indiv
   for (i in seq_len(nrow(prepared$data))) {
     
     for (p in prepared$parameters) {
-      res[["pb_no"]]$est_indiv[[1]][
-        res[["pb_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          res[["pb_no"]]$est_indiv[[1]]$parameter == p, "est" ] <-
-        fit_mptinr$parameters$individual[p,"estimates",i]
       
       res[["asymptotic_no"]]$est_indiv[[1]][
         res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
@@ -157,25 +123,7 @@ mpt_mptinr_no <- function(
           res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "se" ] <-
         fit_mptinr$parameters$individual[p, "upper.conf",i] - 
         fit_mptinr$parameters$individual[p,"estimates",i]
-      
-      res[["pb_no"]]$est_indiv[[1]][
-        res[["pb_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          res[["pb_no"]]$est_indiv[[1]]$parameter == p, prepared$cols_ci ] <-
-        stats::quantile(fit_pb[[i]]$parameters$individual[p,"estimates",], probs = CI_SIZE)
-      
-      res[["pb_no"]]$est_indiv[[1]][
-        res[["pb_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          res[["pb_no"]]$est_indiv[[1]]$parameter == p, "se" ] <-
-        stats::sd(fit_pb[[i]]$parameters$individual[p,"estimates",]) 
     }
-    
-    # gof_indiv
-    res[["pb_no"]]$gof_indiv[[1]][
-      res[["pb_no"]]$gof_indiv[[1]]$id == prepared$data[i,"id"], "p" ] <-
-      (sum(fit_pb[[i]]$goodness.of.fit$individual$G.Squared >
-             fit_mptinr$goodness.of.fit$individual[i,"G.Squared"]) + 1) /
-      (MPTINR_OPTIONS$bootstrap_samples + 1)
-    
   }
   
   for (i in seq_along(CI_SIZE)) {
@@ -186,53 +134,12 @@ mpt_mptinr_no <- function(
   
   #### make est_group ####
   
-  tmp <- res[["pb_no"]]$est_indiv[[1]]
-  tmp$range_ci <- tmp[, prepared$cols_ci[length(prepared$cols_ci)]][[1]] - 
-    tmp[, prepared$cols_ci[1]][[1]]
-  
-  non_identified_pars <-  tmp %>%
-    dplyr::filter(.data$range_ci > MAX_CI_INDIV) %>% 
-    dplyr::group_by(.data$id) %>% 
-    dplyr::summarise(parameter = paste0(.data$parameter, collapse = ", ")) %>% 
-    dplyr::ungroup()
-  
-  res[["pb_no"]]$convergence <- 
-    list(tibble::as_tibble(dplyr::left_join(convergence, non_identified_pars, by = "id")))
-  
-  if (nrow(non_identified_pars) > 0) {
-    warning("MPTinR-no: IDs and parameters with PB-CIs > ",
-            MAX_CI_INDIV, " (i.e., non-identified):\n", 
-            apply(non_identified_pars, 
-                  1, function(x) paste0(x[["id"]], ": ", x[["parameter"]], "\n") ),
-            call. = FALSE)    
-  }
-
-  est_group <- tmp %>%
-    dplyr::filter(.data$range_ci < MAX_CI_INDIV) %>%
-    dplyr::group_by(.data$condition, .data$parameter) %>%
-    dplyr::summarise(
-      estN = mean(.data$est)
-      , se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est)))
-      , quant = list(as.data.frame(t(stats::quantile(.data$est, probs = CI_SIZE))))
-    ) %>%
-    tidyr::unnest(.data$quant) %>%
-    dplyr::ungroup() %>%
-    dplyr::rename(est = .data$estN)
-  colnames(est_group)[
-    (length(colnames(est_group))-length(CI_SIZE)+1):length(colnames(est_group))
-    ] <- prepared$cols_ci
-  
-  res[["pb_no"]]$est_group[[1]] <-
-    dplyr::right_join(est_group,
-               res[["pb_no"]]$est_group[[1]][, c("condition", "parameter")],
-               by = c("condition", "parameter"))
-  
-  
-    est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
+  est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
     dplyr::group_by(.data$condition, .data$parameter) %>%
     dplyr::summarise(estN = mean(.data$est),
-              se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est))),
-              quant = list(as.data.frame(t(stats::quantile(.data$est, probs = CI_SIZE))))) %>%
+                     se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est))),
+                     quant = list(as.data.frame(
+                       t(stats::quantile(.data$est, probs = CI_SIZE))))) %>%
     tidyr::unnest(.data$quant) %>%
     dplyr::ungroup() %>%
     dplyr::rename(est = .data$estN)
@@ -245,43 +152,7 @@ mpt_mptinr_no <- function(
                res[["asymptotic_no"]]$est_group[[1]][,c("condition", "parameter")],
                by = c("condition", "parameter"))
   
-  # ----------------------------------------------------------------------------
-  # make gof_group for parametric-bootstrap approach
-  
-  res[["pb_no"]]$gof_group[[1]]$type <- "pb-G2"
-  res[["pb_no"]]$gof_group[[1]]$focus <- "mean"
-  
-  tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- as.factor(prepared$data$condition)
-  gof_group <- tmp %>%
-    dplyr::group_by(.data$condition) %>%
-    dplyr::summarise(stat_obs = sum(.data$G.Squared),
-              stat_df = sum(.data$df))
-  gof_group$p <- NA_real_
-  
-  g2_all <- vapply(fit_pb,
-                   function(x) x$goodness.of.fit$individual$G.Squared,
-                   rep(0, MPTINR_OPTIONS$bootstrap_samples))
-  
-  g2_cond <- vector("list", length(prepared$conditions))
-  
-  for (i in seq_along(prepared$conditions)) {
-    g2_cond[[i]] <- apply(g2_all[ , 
-                                 prepared$data$condition == 
-                                   prepared$conditions[i]], 1, sum)
-    res[["pb_no"]]$gof_group[[1]][ 
-      res[["pb_no"]]$gof_group[[1]]$condition == 
-        prepared$conditions[i], "stat_obs" ] <- 
-      gof_group[ gof_group$condition == prepared$conditions[i], "stat_obs"]
-    res[["pb_no"]]$gof_group[[1]][ res[["pb_no"]]$gof_group[[1]]$condition == 
-                                 prepared$conditions[i], "stat_df" ] <- 
-      gof_group[ gof_group$condition == prepared$conditions[i], "stat_df"]
-    res[["pb_no"]]$gof_group[[1]][ res[["pb_no"]]$gof_group[[1]]$condition == 
-                                 prepared$conditions[i], "p" ] <-
-      (sum(gof_group[ gof_group$condition == 
-                        prepared$conditions[i], "stat_obs"][[1]] <
-             g2_cond[[i]]) + 1) / (MPTINR_OPTIONS$bootstrap_samples + 1)
-  }
+
   
   # ----------------------------------------------------------------------------
   # make gof_group for asymptotic approach
@@ -289,6 +160,8 @@ mpt_mptinr_no <- function(
   res[["asymptotic_no"]]$gof_group[[1]]$type <- "G2"
   res[["asymptotic_no"]]$gof_group[[1]]$focus <- "mean"
   
+  tmp <- fit_mptinr$goodness.of.fit$individual
+  tmp$condition <- as.factor(prepared$data$condition)
   gof_group2 <- tmp %>%
     dplyr::group_by(.data$condition) %>%
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
@@ -332,8 +205,280 @@ mpt_mptinr_no <- function(
     , lower.tail = FALSE
   )
   
+  # ----------------------------------------------------------------------------  
+  # make test_between
+
+  for (i in seq_len(nrow(res[["asymptotic_no"]]$test_between[[1]]))) {
+    tmp_par <- res[["asymptotic_no"]]$test_between[[1]]$parameter[i]
+    tmp_c1 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition1[i])
+    tmp_c2 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition2[i])
+    
+    tmp_df <- droplevels(res[["asymptotic_no"]]$est_indiv[[1]][ 
+      res[["asymptotic_no"]]$est_indiv[[1]]$parameter == tmp_par & 
+        res[["asymptotic_no"]]$est_indiv[[1]]$condition %in% 
+        c(as.character(tmp_c1), as.character(tmp_c2)) , ])
+    
+    tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
+                    tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
+    
+    tmp_lm <- stats::lm(est ~ condition, tmp_df)
+    
+    tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
+    
+    res[["asymptotic_no"]]$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
+      c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
+    
+    res[["asymptotic_no"]]$test_between[[1]][i, prepared$cols_ci] <- 
+      res[["asymptotic_no"]]$test_between[[1]][i, ]$est_diff + 
+      stats::qnorm(CI_SIZE) * res[["asymptotic_no"]]$test_between[[1]][i, ]$se
+  }
+  
+  ### copy information that is same ----
+  
+  res[["asymptotic_no"]]$convergence <- list(convergence)
+  res[["asymptotic_no"]]$test_between <- res[["pb_no"]]$test_between
+  
+  additional_time <- t1 - t0
+  
+  # write estimation time to results_row ----
+  res[["asymptotic_no"]]$estimation[[1]] <- tibble::tibble(
+    condition = "complete_data"
+    , time_difference = additional_time
+  )
+  
+  
+  
+  if ("pb" %in% bootstrap) {
+    res[["pb_no"]] <- get_pb_results(dataset = dataset
+                                     , prepared = prepared
+                                     , model = model
+                                     , id = id
+                                     , condition = condition
+                                     , bootstrap = "pb"
+                                     , fit_mptinr = fit_mptinr
+                                     , additional_time = additional_time
+                                     , convergence = convergence)
+  }
+  if ("npb" %in% bootstrap) {
+    res[["npb_no"]] <- get_pb_results(dataset = dataset
+                                     , prepared = prepared
+                                     , model = model
+                                     , id = id
+                                     , condition = condition
+                                     , bootstrap = "npb"
+                                     , fit_mptinr = fit_mptinr
+                                     , additional_time = additional_time
+                                     , convergence = convergence)
+  }
+  # return
+  dplyr::bind_rows(res)
+}
+
+get_pb_results <- function(dataset
+  , prepared
+  , model
+  , id
+  , condition
+  , bootstrap
+  , fit_mptinr
+  , additional_time
+  , convergence) {
+  
+  OPTIONS <- getOption("MPTmultiverse")
+  MPTINR_OPTIONS <- OPTIONS$mptinr
+  CI_SIZE <- OPTIONS$ci_size
+  MAX_CI_INDIV <- OPTIONS$max_ci_indiv
+  
+  cl <- parallel::makeCluster(rep("localhost", MPTINR_OPTIONS$n.CPU))
+  parallel::clusterEvalQ(cl, library("MPTinR"))
+  
+  if (bootstrap == "pb") {
+    res <- make_results_row(
+      model = model
+      , dataset = dataset
+      , pooling = "no"
+      , package = "MPTinR"
+      , method = "PB/MLE"
+      , data = prepared$data
+      , parameters = prepared$parameters
+      , id = id
+      , condition = condition
+    )
+    t1 <- Sys.time()
+    fit_pb <- parallel::clusterApplyLB(
+      cl
+      , seq_len(nrow(prepared$data))
+      , get_pb_output
+      , fit_mptinr = fit_mptinr
+      , data = prepared$data
+      , model_file = model
+      , col_freq = prepared$col_freq
+      , MPTINR_OPTIONS = MPTINR_OPTIONS
+    )
+    t2 <- Sys.time()
+  }
+  if (bootstrap == "npb") {
+    res <- make_results_row(
+      model = model
+      , dataset = dataset
+      , pooling = "no"
+      , package = "MPTinR"
+      , method = "NPB/MLE"
+      , data = prepared$data
+      , parameters = prepared$parameters
+      , id = id
+      , condition = condition
+    )
+    t1 <- Sys.time()
+    fit_pb <- parallel::clusterApplyLB(
+      cl
+      , seq_len(nrow(prepared$data))
+      , get_npb_output
+      , fit_mptinr = fit_mptinr
+      , data = prepared$data
+      , model_file = model
+      , col_freq = prepared$col_freq
+      , MPTINR_OPTIONS = MPTINR_OPTIONS
+    )
+    t2 <- Sys.time()
+  }
+  
+  res$gof_indiv[[1]]$type <- "G2"
+  res$gof_indiv[[1]]$focus <- "mean"
+  res$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
+  res$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
+  
+  ## make est_indiv and gof_indiv
+  for (i in seq_len(nrow(prepared$data))) {
+    
+    for (p in prepared$parameters) {
+      res$est_indiv[[1]][
+        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res$est_indiv[[1]]$parameter == p, "est" ] <-
+        fit_mptinr$parameters$individual[p,"estimates",i]
+      
+      res$est_indiv[[1]][
+        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res$est_indiv[[1]]$parameter == p, prepared$cols_ci ] <-
+        stats::quantile(fit_pb[[i]]$parameters$individual[p,"estimates",], probs = CI_SIZE)
+      
+      res$est_indiv[[1]][
+        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res$est_indiv[[1]]$parameter == p, "se" ] <-
+        stats::sd(fit_pb[[i]]$parameters$individual[p,"estimates",]) 
+    }
+    # gof_indiv
+    res$gof_indiv[[1]][
+      res$gof_indiv[[1]]$id == prepared$data[i,"id"], "p" ] <-
+      (sum(fit_pb[[i]]$goodness.of.fit$individual$G.Squared >
+             fit_mptinr$goodness.of.fit$individual[i,"G.Squared"]) + 1) /
+      (MPTINR_OPTIONS$bootstrap_samples + 1)
+    
+  }
+  
+    #### make est_group ####
+  
+  tmp <- res$est_indiv[[1]]
+  tmp$range_ci <- tmp[, prepared$cols_ci[length(prepared$cols_ci)]][[1]] - 
+    tmp[, prepared$cols_ci[1]][[1]]
+  
+  non_identified_pars <-  tmp %>%
+    dplyr::filter(.data$range_ci > MAX_CI_INDIV) %>% 
+    dplyr::group_by(.data$id) %>% 
+    dplyr::summarise(parameter = paste0(.data$parameter, collapse = ", ")) %>% 
+    dplyr::ungroup()
+  
+  res$convergence <- 
+    list(tibble::as_tibble(dplyr::left_join(convergence, non_identified_pars, by = "id")))
+  
+  if (nrow(non_identified_pars) > 0) {
+    warning("MPTinR-no: IDs and parameters with ", bootstrap, "-CIs > ",
+            MAX_CI_INDIV, " (i.e., non-identified):\n", 
+            apply(non_identified_pars, 
+                  1, function(x) paste0(x[["id"]], ": ", x[["parameter"]], "\n") ),
+            call. = FALSE)    
+  }
+  
+  est_group <- tmp %>%
+    dplyr::filter(.data$range_ci < MAX_CI_INDIV) %>%
+    dplyr::group_by(.data$condition, .data$parameter) %>%
+    dplyr::summarise(
+      estN = mean(.data$est)
+      , se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est)))
+      , quant = list(as.data.frame(t(stats::quantile(.data$est, probs = CI_SIZE))))
+    ) %>%
+    tidyr::unnest(.data$quant) %>%
+    dplyr::ungroup() %>%
+    dplyr::rename(est = .data$estN)
+  colnames(est_group)[
+    (length(colnames(est_group))-length(CI_SIZE)+1):length(colnames(est_group))
+    ] <- prepared$cols_ci
+  
+  res$est_group[[1]] <-
+    dplyr::right_join(est_group,
+               res$est_group[[1]][, c("condition", "parameter")],
+               by = c("condition", "parameter"))
+  
+    # make gof_group for parametric-bootstrap approach
+  
+  res$gof_group[[1]]$type <- paste0(bootstrap, "-G2")
+  res$gof_group[[1]]$focus <- "mean"
+  
+  tmp <- fit_mptinr$goodness.of.fit$individual
+  tmp$condition <- as.factor(prepared$data$condition)
+  gof_group <- tmp %>%
+    dplyr::group_by(.data$condition) %>%
+    dplyr::summarise(stat_obs = sum(.data$G.Squared),
+              stat_df = sum(.data$df))
+  gof_group$p <- NA_real_
+  
+  
+  # ----------------------------------------------------------------------------
+  # make gof_group for parametric-bootstrap approach
+  
+  tmp <- fit_mptinr$goodness.of.fit$individual
+  tmp$condition <- as.factor(prepared$data$condition)
+  gof_group <- tmp %>%
+    dplyr::group_by(.data$condition) %>%
+    dplyr::summarise(stat_obs = sum(.data$G.Squared),
+              stat_df = sum(.data$df))
+  gof_group$p <- NA_real_
+  
+  g2_all <- vapply(fit_pb,
+                   function(x) x$goodness.of.fit$individual$G.Squared,
+                   rep(0, MPTINR_OPTIONS$bootstrap_samples))
+  
+  g2_cond <- vector("list", length(prepared$conditions))
+  
+  for (i in seq_along(prepared$conditions)) {
+    g2_cond[[i]] <- apply(g2_all[ , 
+                                 prepared$data$condition == 
+                                   prepared$conditions[i]], 1, sum)
+    res$gof_group[[1]][ 
+      res$gof_group[[1]]$condition == 
+        prepared$conditions[i], "stat_obs" ] <- 
+      gof_group[ gof_group$condition == prepared$conditions[i], "stat_obs"]
+    res$gof_group[[1]][ res$gof_group[[1]]$condition == 
+                                 prepared$conditions[i], "stat_df" ] <- 
+      gof_group[ gof_group$condition == prepared$conditions[i], "stat_df"]
+    res$gof_group[[1]][ res$gof_group[[1]]$condition == 
+                                 prepared$conditions[i], "p" ] <-
+      (sum(gof_group[ gof_group$condition == 
+                        prepared$conditions[i], "stat_obs"][[1]] <
+             g2_cond[[i]]) + 1) / (MPTINR_OPTIONS$bootstrap_samples + 1)
+  }
+  
+  gof <- tibble::tibble(
+    type = "G2"
+    , focus = "mean"
+    , stat_obs = fit_mptinr$goodness.of.fit$sum$G.Squared
+    , stat_pred = NA_real_
+    , stat_df = fit_mptinr$goodness.of.fit$sum$df
+    , p = NA_real_
+  )
+  
   # Calculate *p* value from distribution of bootstrapped G2 values
-  res[["pb_no"]]$gof[[1]] <- gof
+  res$gof[[1]] <- gof
   
   g2_all <- vapply(
     X = fit_pb
@@ -346,22 +491,21 @@ mpt_mptinr_no <- function(
     , FUN = sum
   )
   
-  res[["pb_no"]]$gof[[1]]$p <-
-    (sum(res[["pb_no"]]$gof[[1]]$stat_obs < g2_cond) + 1) /
+  res$gof[[1]]$p <-
+    (sum(res$gof[[1]]$stat_obs < g2_cond) + 1) /
     (MPTINR_OPTIONS$bootstrap_samples + 1)
-
   
   # ----------------------------------------------------------------------------  
   # make test_between
   
-  for (i in seq_len(nrow(res[["pb_no"]]$test_between[[1]]))) {
-    tmp_par <- res[["pb_no"]]$test_between[[1]]$parameter[i]
-    tmp_c1 <- as.character(res[["pb_no"]]$test_between[[1]]$condition1[i])
-    tmp_c2 <- as.character(res[["pb_no"]]$test_between[[1]]$condition2[i])
+  for (i in seq_len(nrow(res$test_between[[1]]))) {
+    tmp_par <- res$test_between[[1]]$parameter[i]
+    tmp_c1 <- as.character(res$test_between[[1]]$condition1[i])
+    tmp_c2 <- as.character(res$test_between[[1]]$condition2[i])
     
-    tmp_df <- droplevels(res[["pb_no"]]$est_indiv[[1]][ 
-      res[["pb_no"]]$est_indiv[[1]]$parameter == tmp_par & 
-        res[["pb_no"]]$est_indiv[[1]]$condition %in% 
+    tmp_df <- droplevels(res$est_indiv[[1]][ 
+      res$est_indiv[[1]]$parameter == tmp_par & 
+        res$est_indiv[[1]]$condition %in% 
         c(as.character(tmp_c1), as.character(tmp_c2)) , ])
     
     tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
@@ -371,33 +515,26 @@ mpt_mptinr_no <- function(
     
     tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
     
-    res[["pb_no"]]$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
+    res$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
       c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
     
-    res[["pb_no"]]$test_between[[1]][i, prepared$cols_ci] <- 
-      res[["pb_no"]]$test_between[[1]][i, ]$est_diff + 
-      stats::qnorm(CI_SIZE)* res[["pb_no"]]$test_between[[1]][i, ]$se
+    res$test_between[[1]][i, prepared$cols_ci] <- 
+      res$test_between[[1]][i, ]$est_diff + 
+      stats::qnorm(CI_SIZE)* res$test_between[[1]][i, ]$se
   }
   
-  ### copy information that is same ----
-  res[["asymptotic_no"]]$convergence <- res[["pb_no"]]$convergence
-  res[["asymptotic_no"]]$test_between <- res[["pb_no"]]$test_between
-  
-  # write estimation time to results_row ----
-  res[["pb_no"]]$estimation[[1]] <- tibble::tibble(
+   # write estimation time to results_row ----
+  res$estimation[[1]] <- tibble::tibble(
     condition = "complete_data"
-    , time_difference = (t3 - t2) + (t1 - t0)
-  )
-  res[["asymptotic_no"]]$estimation[[1]] <- tibble::tibble(
-    condition = "complete_data"
-    , time_difference = t1 - t0
+    , time_difference = (t2 - t1) + additional_time
   )
   
   parallel::stopCluster(cl)
   
-  # return
-  dplyr::bind_rows(res)
+  return(res)
+  
 }
+
 
 
 #' Parametric Bootstrap for MPT
@@ -419,6 +556,26 @@ get_pb_output <- function(
     , samples = MPTINR_OPTIONS$bootstrap_samples
     , model.filename = model_file
     , data = unlist(data[i, col_freq])
+  )
+  MPTinR::fit.mpt(gen_data,
+            model.filename = model_file,
+            fit.aggregated = FALSE,
+            n.optim = MPTINR_OPTIONS$n.optim,
+            show.messages = FALSE)
+}
+
+get_npb_output <- function(
+  i
+  , fit_mptinr
+  , data
+  , model_file
+  , col_freq
+  , MPTINR_OPTIONS) {
+  
+  gen_data <- MPTinR::sample.data(
+    data = unlist(data[i, col_freq])
+    , samples = MPTINR_OPTIONS$bootstrap_samples
+    , model.filename = model_file
   )
   MPTinR::fit.mpt(gen_data,
             model.filename = model_file,

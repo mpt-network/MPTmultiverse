@@ -10,6 +10,7 @@
 #'   If not specified, it is assumed that each row represents observations from one participant.
 #' @param condition Character. Name of the column specifying a between-subjects factor.
 #'   If not specified, no between-subjects comparisons are performed.
+#' @examples examples/examples.fit_mpt.R
 #'
 #' @export
 
@@ -93,7 +94,7 @@ fit_mpt <- function(
     dataset = dataset
     , data = data
     , model = model
-    , method = intersect(method, c("asymptotic_complete", "asymptotic_no", "pb_no"))
+    , method = intersect(method, c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no"))
     , id = id
     , condition = condition
   )
