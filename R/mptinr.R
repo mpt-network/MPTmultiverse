@@ -80,15 +80,7 @@ mpt_mptinr_no <- function(
   
   res <- list(asymptotic_no = NULL)
   
-  res[["asymptotic_no"]] <- make_results_row(model = model,
-                                 dataset = dataset,
-                                 pooling = "no",
-                                 package = "MPTinR",
-                                 method = "asymptotic",
-                                 data = prepared$data,
-                                 parameters = prepared$parameters,
-                                 id = id,
-                                 condition = condition)
+  
   
   t0 <- Sys.time()
   fit_mptinr <- MPTinR::fit.mpt(prepared$data[,prepared$col_freq],
@@ -98,6 +90,7 @@ mpt_mptinr_no <- function(
                         show.messages = FALSE, output = "full", 
                         ci = (1 - stats::pnorm(1))*2*100)
   t1 <- Sys.time()
+  additional_time <- t1 - t0
   
   convergence <- data.frame(
     id = prepared$data[, id]
@@ -106,151 +99,166 @@ mpt_mptinr_no <- function(
     , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, 0)
   )
   
-  res[["asymptotic_no"]]$gof_indiv[[1]]$type <- "G2"
-  res[["asymptotic_no"]]$gof_indiv[[1]]$focus <- "mean"
-  res[["asymptotic_no"]]$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
-  res[["asymptotic_no"]]$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
-  res[["asymptotic_no"]]$gof_indiv[[1]]$p <- fit_mptinr$goodness.of.fit$individual$p.value
-
+  res <- list()
   
-  ## make est_indiv and gof_indiv
-  for (i in seq_len(nrow(prepared$data))) {
+  if ("asymptotic_no" %in% method) {
     
-    for (p in prepared$parameters) {
+    res[["asymptotic_no"]] <- make_results_row(model = model,
+                                               dataset = dataset,
+                                               pooling = "no",
+                                               package = "MPTinR",
+                                               method = "asymptotic",
+                                               data = prepared$data,
+                                               parameters = prepared$parameters,
+                                               id = id,
+                                               condition = condition)
+    
+    
+    
+    res[["asymptotic_no"]]$gof_indiv[[1]]$type <- "G2"
+    res[["asymptotic_no"]]$gof_indiv[[1]]$focus <- "mean"
+    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
+    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
+    res[["asymptotic_no"]]$gof_indiv[[1]]$p <- fit_mptinr$goodness.of.fit$individual$p.value
+    
+    
+    ## make est_indiv and gof_indiv
+    for (i in seq_len(nrow(prepared$data))) {
       
-      res[["asymptotic_no"]]$est_indiv[[1]][
-        res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "est" ] <-
-        fit_mptinr$parameters$individual[p,"estimates",i]
-      
-      res[["asymptotic_no"]]$est_indiv[[1]][
-        res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "se" ] <-
-        fit_mptinr$parameters$individual[p, "upper.conf",i] - 
-        fit_mptinr$parameters$individual[p,"estimates",i]
+      for (p in prepared$parameters) {
+        
+        res[["asymptotic_no"]]$est_indiv[[1]][
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "est" ] <-
+          fit_mptinr$parameters$individual[p,"estimates",i]
+        
+        res[["asymptotic_no"]]$est_indiv[[1]][
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "se" ] <-
+          fit_mptinr$parameters$individual[p, "upper.conf",i] - 
+          fit_mptinr$parameters$individual[p,"estimates",i]
+      }
     }
+    
+    for (i in seq_along(CI_SIZE)) {
+      res[["asymptotic_no"]]$est_indiv[[1]][, prepared$cols_ci[i]] <-
+        res[["asymptotic_no"]]$est_indiv[[1]][,"est"] +
+        stats::qnorm(CI_SIZE[i])*res[["asymptotic_no"]]$est_indiv[[1]][,"se"]
+    }
+    
+    #### make est_group ####
+    
+    est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
+      dplyr::group_by(.data$condition, .data$parameter) %>%
+      dplyr::summarise(estN = mean(.data$est),
+                       se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est))),
+                       quant = list(as.data.frame(
+                         t(stats::quantile(.data$est, probs = CI_SIZE))))) %>%
+      tidyr::unnest(.data$quant) %>%
+      dplyr::ungroup() %>%
+      dplyr::rename(est = .data$estN)
+    colnames(est_group2)[
+      (length(colnames(est_group2))-length(CI_SIZE)+1):length(colnames(est_group2))
+      ] <- prepared$cols_ci
+    
+    res[["asymptotic_no"]]$est_group[[1]] <-
+      dplyr::right_join(est_group2,
+                        res[["asymptotic_no"]]$est_group[[1]][,c("condition", "parameter")],
+                        by = c("condition", "parameter"))
+    
+    
+    
+    # ----------------------------------------------------------------------------
+    # make gof_group for asymptotic approach
+    
+    res[["asymptotic_no"]]$gof_group[[1]]$type <- "G2"
+    res[["asymptotic_no"]]$gof_group[[1]]$focus <- "mean"
+    
+    tmp <- fit_mptinr$goodness.of.fit$individual
+    tmp$condition <- as.factor(prepared$data$condition)
+    gof_group2 <- tmp %>%
+      dplyr::group_by(.data$condition) %>%
+      dplyr::summarise(stat_obs = sum(.data$G.Squared),
+                       stat_pred = NA_real_,
+                       stat_df = sum(.data$df))
+    
+    gof_group2$p <- stats::pchisq(
+      q = gof_group2$stat_obs
+      , df = gof_group2$stat_df
+      , lower.tail = FALSE
+    )
+    # ensure that factor levels fit:
+    gof_group2$condition <- factor(
+      gof_group2$condition
+      , levels = levels(res[["asymptotic_no"]]$gof_group[[1]]$condition)
+    )
+    
+    res[["asymptotic_no"]]$gof_group[[1]] <- 
+      dplyr::right_join(res[["asymptotic_no"]]$gof_group[[1]][, c("condition", "type", "focus")],
+                        gof_group2,
+                        by = c("condition"))
+    
+    
+    # ----------------------------------------------------------------------------
+    # make gof
+    
+    gof <- tibble::tibble(
+      type = "G2"
+      , focus = "mean"
+      , stat_obs = fit_mptinr$goodness.of.fit$sum$G.Squared
+      , stat_pred = NA_real_
+      , stat_df = fit_mptinr$goodness.of.fit$sum$df
+      , p = NA_real_
+    )
+    
+    # Calculate *p* value from Chi-squared distribution
+    res[["asymptotic_no"]]$gof[[1]] <- gof
+    res[["asymptotic_no"]]$gof[[1]]$p <- stats::pchisq(
+      q = res[["asymptotic_no"]]$gof[[1]]$stat_obs
+      , df = res[["asymptotic_no"]]$gof[[1]]$stat_df
+      , lower.tail = FALSE
+    )
+    
+    # ----------------------------------------------------------------------------  
+    # make test_between
+    
+    for (i in seq_len(nrow(res[["asymptotic_no"]]$test_between[[1]]))) {
+      tmp_par <- res[["asymptotic_no"]]$test_between[[1]]$parameter[i]
+      tmp_c1 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition1[i])
+      tmp_c2 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition2[i])
+      
+      tmp_df <- droplevels(res[["asymptotic_no"]]$est_indiv[[1]][ 
+        res[["asymptotic_no"]]$est_indiv[[1]]$parameter == tmp_par & 
+          res[["asymptotic_no"]]$est_indiv[[1]]$condition %in% 
+          c(as.character(tmp_c1), as.character(tmp_c2)) , ])
+      
+      tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
+                             tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
+      
+      tmp_lm <- stats::lm(est ~ condition, tmp_df)
+      
+      tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
+      
+      res[["asymptotic_no"]]$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
+        c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
+      
+      res[["asymptotic_no"]]$test_between[[1]][i, prepared$cols_ci] <- 
+        res[["asymptotic_no"]]$test_between[[1]][i, ]$est_diff + 
+        stats::qnorm(CI_SIZE) * res[["asymptotic_no"]]$test_between[[1]][i, ]$se
+    }
+    
+    ### copy information that is same ----
+    
+    res[["asymptotic_no"]]$convergence <- list(convergence)
+    res[["asymptotic_no"]]$test_between <- res[["pb_no"]]$test_between
+    
+    # write estimation time to results_row ----
+    res[["asymptotic_no"]]$estimation[[1]] <- tibble::tibble(
+      condition = "complete_data"
+      , time_difference = additional_time
+    )
+    
   }
-  
-  for (i in seq_along(CI_SIZE)) {
-    res[["asymptotic_no"]]$est_indiv[[1]][, prepared$cols_ci[i]] <-
-      res[["asymptotic_no"]]$est_indiv[[1]][,"est"] +
-      stats::qnorm(CI_SIZE[i])*res[["asymptotic_no"]]$est_indiv[[1]][,"se"]
-  }
-  
-  #### make est_group ####
-  
-  est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
-    dplyr::group_by(.data$condition, .data$parameter) %>%
-    dplyr::summarise(estN = mean(.data$est),
-                     se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est))),
-                     quant = list(as.data.frame(
-                       t(stats::quantile(.data$est, probs = CI_SIZE))))) %>%
-    tidyr::unnest(.data$quant) %>%
-    dplyr::ungroup() %>%
-    dplyr::rename(est = .data$estN)
-  colnames(est_group2)[
-    (length(colnames(est_group2))-length(CI_SIZE)+1):length(colnames(est_group2))
-    ] <- prepared$cols_ci
-  
-  res[["asymptotic_no"]]$est_group[[1]] <-
-    dplyr::right_join(est_group2,
-               res[["asymptotic_no"]]$est_group[[1]][,c("condition", "parameter")],
-               by = c("condition", "parameter"))
-  
-
-  
-  # ----------------------------------------------------------------------------
-  # make gof_group for asymptotic approach
-  
-  res[["asymptotic_no"]]$gof_group[[1]]$type <- "G2"
-  res[["asymptotic_no"]]$gof_group[[1]]$focus <- "mean"
-  
-  tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- as.factor(prepared$data$condition)
-  gof_group2 <- tmp %>%
-    dplyr::group_by(.data$condition) %>%
-    dplyr::summarise(stat_obs = sum(.data$G.Squared),
-              stat_pred = NA_real_,
-              stat_df = sum(.data$df))
-  
-  gof_group2$p <- stats::pchisq(
-    q = gof_group2$stat_obs
-    , df = gof_group2$stat_df
-    , lower.tail = FALSE
-  )
-  # ensure that factor levels fit:
-  gof_group2$condition <- factor(
-    gof_group2$condition
-    , levels = levels(res[["asymptotic_no"]]$gof_group[[1]]$condition)
-  )
-  
-  res[["asymptotic_no"]]$gof_group[[1]] <- 
-    dplyr::right_join(res[["asymptotic_no"]]$gof_group[[1]][, c("condition", "type", "focus")],
-             gof_group2,
-               by = c("condition"))
-
-  
-  # ----------------------------------------------------------------------------
-  # make gof
-  
-  gof <- tibble::tibble(
-    type = "G2"
-    , focus = "mean"
-    , stat_obs = fit_mptinr$goodness.of.fit$sum$G.Squared
-    , stat_pred = NA_real_
-    , stat_df = fit_mptinr$goodness.of.fit$sum$df
-    , p = NA_real_
-  )
-  
-  # Calculate *p* value from Chi-squared distribution
-  res[["asymptotic_no"]]$gof[[1]] <- gof
-  res[["asymptotic_no"]]$gof[[1]]$p <- stats::pchisq(
-    q = res[["asymptotic_no"]]$gof[[1]]$stat_obs
-    , df = res[["asymptotic_no"]]$gof[[1]]$stat_df
-    , lower.tail = FALSE
-  )
-  
-  # ----------------------------------------------------------------------------  
-  # make test_between
-
-  for (i in seq_len(nrow(res[["asymptotic_no"]]$test_between[[1]]))) {
-    tmp_par <- res[["asymptotic_no"]]$test_between[[1]]$parameter[i]
-    tmp_c1 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition1[i])
-    tmp_c2 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition2[i])
-    
-    tmp_df <- droplevels(res[["asymptotic_no"]]$est_indiv[[1]][ 
-      res[["asymptotic_no"]]$est_indiv[[1]]$parameter == tmp_par & 
-        res[["asymptotic_no"]]$est_indiv[[1]]$condition %in% 
-        c(as.character(tmp_c1), as.character(tmp_c2)) , ])
-    
-    tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
-                    tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
-    
-    tmp_lm <- stats::lm(est ~ condition, tmp_df)
-    
-    tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
-    
-    res[["asymptotic_no"]]$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
-      c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
-    
-    res[["asymptotic_no"]]$test_between[[1]][i, prepared$cols_ci] <- 
-      res[["asymptotic_no"]]$test_between[[1]][i, ]$est_diff + 
-      stats::qnorm(CI_SIZE) * res[["asymptotic_no"]]$test_between[[1]][i, ]$se
-  }
-  
-  ### copy information that is same ----
-  
-  res[["asymptotic_no"]]$convergence <- list(convergence)
-  res[["asymptotic_no"]]$test_between <- res[["pb_no"]]$test_between
-  
-  additional_time <- t1 - t0
-  
-  # write estimation time to results_row ----
-  res[["asymptotic_no"]]$estimation[[1]] <- tibble::tibble(
-    condition = "complete_data"
-    , time_difference = additional_time
-  )
-  
   
   
   if ("pb" %in% bootstrap) {
