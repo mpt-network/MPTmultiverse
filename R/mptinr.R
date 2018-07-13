@@ -78,10 +78,6 @@ mpt_mptinr_no <- function(
     bootstrap <- c(bootstrap, "npb")
   }
   
-  res <- list(asymptotic_no = NULL)
-  
-  
-  
   t0 <- Sys.time()
   fit_mptinr <- MPTinR::fit.mpt(prepared$data[,prepared$col_freq],
                         model.filename = model,
