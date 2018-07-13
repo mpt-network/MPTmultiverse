@@ -99,7 +99,8 @@ mpt_mptinr_no <- function(
     , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, 0)
   )
   
-  res <- list()
+  res <- vector("list", length(method))
+  names(res) <- method
   
   if ("asymptotic_no" %in% method) {
     
