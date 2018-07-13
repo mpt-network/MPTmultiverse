@@ -38,7 +38,6 @@ mpt_mptinr <- function(
       , method = intersect(method, c("asymptotic_no", "pb_no", "npb_no"))
       , id = id
       , condition = condition
-      , bootstrap = gsub("_no", "", intersect(method, c("pb_no", "npb_no")))
     )
   }
   
@@ -63,7 +62,6 @@ mpt_mptinr_no <- function(
   , method
   , id
   , condition
-  , bootstrap
 ) {
 
   OPTIONS <- getOption("MPTmultiverse")
@@ -71,7 +69,14 @@ mpt_mptinr_no <- function(
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
-  bootstrap <- match.arg(bootstrap, c("none", "pb", "npb"), several.ok = TRUE)
+  bootstrap <- c()
+  
+  if ("pb_no" %in% method) {
+    bootstrap <- c(bootstrap, "pb")
+  }
+  if ("npb_no" %in% method) {
+    bootstrap <- c(bootstrap, "npb")
+  }
   
   res <- list(asymptotic_no = NULL)
   
