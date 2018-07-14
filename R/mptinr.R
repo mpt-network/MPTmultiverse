@@ -148,21 +148,19 @@ mpt_mptinr_no <- function(
     est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
       dplyr::group_by(.data$condition, .data$parameter) %>%
       dplyr::summarise(estN = mean(.data$est),
-                       se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est))),
-                       quant = list(as.data.frame(
-                         t(stats::quantile(.data$est, probs = CI_SIZE))))) %>%
-      tidyr::unnest(.data$quant) %>%
+                       se = stats::sd(.data$est) / 
+                         sqrt(sum(!is.na(.data$est)))) %>%
       dplyr::ungroup() %>%
-      dplyr::rename(est = .data$estN)
-    colnames(est_group2)[
-      (length(colnames(est_group2))-length(CI_SIZE)+1):length(colnames(est_group2))
-      ] <- prepared$cols_ci
+      dplyr::rename(est = estN)
+    for (i in seq_along(CI_SIZE)) {
+      est_group2[, prepared$cols_ci[i]] <- est_group2[,"est"] + 
+        stats::qnorm(CI_SIZE[i])*est_group2[,"se"]
+    }
     
-    res[["asymptotic_no"]]$est_group[[1]] <-
-      dplyr::right_join(est_group2,
-                        res[["asymptotic_no"]]$est_group[[1]][,c("condition", "parameter")],
-                        by = c("condition", "parameter"))
-    
+    res[["asymptotic_no"]]$est_group[[1]] <- dplyr::right_join(
+      est_group2, res[["asymptotic_no"]]$est_group[[1]][,c("condition", 
+                                                           "parameter")],
+      by = c("condition", "parameter"))
     
     
     # ----------------------------------------------------------------------------
@@ -410,26 +408,23 @@ get_pb_results <- function(dataset
   }
   
   est_group <- tmp %>%
-    dplyr::filter(.data$range_ci < MAX_CI_INDIV) %>%
     dplyr::group_by(.data$condition, .data$parameter) %>%
-    dplyr::summarise(
-      estN = mean(.data$est)
-      , se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est)))
-      , quant = list(as.data.frame(t(stats::quantile(.data$est, probs = CI_SIZE))))
-    ) %>%
-    tidyr::unnest(.data$quant) %>%
+    dplyr::summarise(estN = mean(.data$est),
+                     se = stats::sd(.data$est) / 
+                       sqrt(sum(!is.na(.data$est)))) %>%
     dplyr::ungroup() %>%
-    dplyr::rename(est = .data$estN)
-  colnames(est_group)[
-    (length(colnames(est_group))-length(CI_SIZE)+1):length(colnames(est_group))
-    ] <- prepared$cols_ci
+    dplyr::rename(est = estN)
+  for (i in seq_along(CI_SIZE)) {
+    est_group[, prepared$cols_ci[i]] <- est_group[,"est"] + 
+      stats::qnorm(CI_SIZE[i])*est_group[,"se"]
+  }
   
   res$est_group[[1]] <-
     dplyr::right_join(est_group,
-               res$est_group[[1]][, c("condition", "parameter")],
-               by = c("condition", "parameter"))
+                      res$est_group[[1]][, c("condition", "parameter")],
+                      by = c("condition", "parameter"))
   
-    # make gof_group for parametric-bootstrap approach
+  # make gof_group for parametric-bootstrap approach
   
   res$gof_group[[1]]$type <- paste0(bootstrap, "-G2")
   res$gof_group[[1]]$focus <- "mean"
