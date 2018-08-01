@@ -24,7 +24,7 @@ mpt_treebugs <- function (
   , core = NULL
 ){
   all_options <- getOption("MPTmultiverse")
-
+  
   TREEBUGS_MCMC <- all_options$treebugs
   CI_SIZE <- all_options$ci_size
   
@@ -90,13 +90,16 @@ mpt_treebugs <- function (
                      n.adapt = TREEBUGS_MCMC$n.adapt,
                      n.burnin = TREEBUGS_MCMC$n.burnin,
                      n.thin = TREEBUGS_MCMC$n.thin)
-    if (method == "simple"){
+    if (method %in% c("simple", "betacpp")){
       fit_args["n.adapt"] <- NULL
       fit_args <- c(fit_args, cores = unname(TREEBUGS_MCMC$n.CPU))
     }
     # print(c(fit_args, prior_args))
     t0 <- Sys.time()
-    treebugs_fit[[i]] <- do.call(eval(parse(text = paste0("TreeBUGS::", method, "MPT"))), 
+    treebugs_function <- ifelse(method == "betacpp", 
+                                "TreeBUGS::betaMPTcpp",
+                                paste0("TreeBUGS::", method, "MPT"))
+    treebugs_fit[[i]] <- do.call(eval(parse(text = treebugs_function)), 
                                  args = c(fit_args, prior_args))
     summ <- treebugs_fit[[i]]$mcmc.summ
     

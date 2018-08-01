@@ -23,7 +23,7 @@ mpt_options(...)
   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use. Defaults to the number of available cores on your machine.}
   \item{\code{ci_size}: }{Numeric.}
   \item{\code{max_ci_indiv}: }{Numeric.}
-  \item{\code{silent}: }{Logical.}
+  \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
   \item{\code{save_models}: }{Logical.}
 }}
 }

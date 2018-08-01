@@ -39,11 +39,12 @@ Maximum-likelihood estimation with MPTinR:
  
 Bayesian estimation with TreeBUGS
 \itemize{
-  \item{\code{"simple"}: }{Bayesian estimation, no pooling}
-  \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling}
-  \item{\code{"beta"}: }{beta-MPT model, partial pooling}
-  \item{\code{"trait"}: }{latent-trait model, partial pooling}
-  \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation parameters, partial pooling}
+  \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++, \link[TreeBUGS]{simpleMPT})}
+  \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling (C++, \link[TreeBUGS]{simpleMPT})}
+  \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
+  \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation parameters, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
+  \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, \link[TreeBUGS]{betaMPT})}
+  \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, \link[TreeBUGS]{betaMPTcpp})}
 }
 }
 \examples{

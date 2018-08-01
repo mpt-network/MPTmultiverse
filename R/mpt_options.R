@@ -19,7 +19,8 @@
 #'   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use. Defaults to the number of available cores on your machine.}
 #'   \item{\code{ci_size}: }{Numeric.}
 #'   \item{\code{max_ci_indiv}: }{Numeric.}
-#'   \item{\code{silent}: }{Logical.}
+#'   \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
+# ' TODO  \item{\code{catch_warnings}: }{Logical. Whether to store warnings and errors as additional coluumns in the output.}
 #'   \item{\code{save_models}: }{Logical.}
 #' }
 #'   
@@ -99,6 +100,7 @@ set_test_options <- function() { # nocov start
       , n.CPU = parallel::detectCores()
     )
     , silent = FALSE
+    # , catch_warnings = TRUE
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
     , save_models = FALSE
@@ -133,7 +135,8 @@ set_default_options <- function() {
       , n.PPP = 5e3
       , n.CPU = parallel::detectCores()
     )
-    , silent = TRUE
+    , silent_jags = TRUE
+    # , catch_warnings = TRUE
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
     , save_models = TRUE

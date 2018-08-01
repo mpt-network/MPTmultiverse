@@ -25,11 +25,12 @@
 #'  
 #' Bayesian estimation with TreeBUGS
 #' \itemize{
-#'   \item{\code{"simple"}: }{Bayesian estimation, no pooling}
-#'   \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling}
-#'   \item{\code{"beta"}: }{beta-MPT model, partial pooling}
-#'   \item{\code{"trait"}: }{latent-trait model, partial pooling}
-#'   \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation parameters, partial pooling}
+#'   \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++, \link[TreeBUGS]{simpleMPT})}
+#'   \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling (C++, \link[TreeBUGS]{simpleMPT})}
+#'   \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
+#'   \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation parameters, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
+#'   \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, \link[TreeBUGS]{betaMPT})}
+#'   \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, \link[TreeBUGS]{betaMPTcpp})}
 #' }
 #'
 #' @export
@@ -44,14 +45,15 @@ fit_mpt <- function(
   , core = NULL
 ) {
   
+  method = match.arg(method, c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no",
+                               "simple", "simple_pooling", 
+                               "trait", "trait_uncorrelated", "beta", "betacpp"))
+  
   
   # set options ----
-  silent <- getOption("MPTmultiverse")$silent
-  
-  runjags::runjags.options(
-    silent.jags = silent
-    , silent.runjags = silent
-  )
+  silent_jags <- getOption("MPTmultiverse")$silent_jags
+  runjags::runjags.options(silent.jags = silent_jags, 
+                           silent.runjags = silent_jags)
   
   # prepare data ----
   if(is.null(condition)) {
@@ -124,7 +126,7 @@ fit_mpt <- function(
   # TreeBUGS part ----
   res[["treebugs"]] <- dplyr::bind_rows(
     purrr::map(
-      intersect(method, c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated"))
+      intersect(method, c("simple", "simple_pooling", "trait", "trait_uncorrelated", "beta", "betacpp"))
       , mpt_treebugs
       , dataset = dataset
       , data = data
