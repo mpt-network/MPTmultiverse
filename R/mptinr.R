@@ -307,6 +307,7 @@ get_pb_results <- function(dataset
   
   cl <- parallel::makeCluster(rep("localhost", MPTINR_OPTIONS$n.CPU))
   parallel::clusterEvalQ(cl, library("MPTinR"))
+  parallel::clusterSetRNGStream(cl, iseed = sample.int(.Machine$integer.max, 1))
   
   if (bootstrap == "pb") {
     res <- make_results_row(
