@@ -82,11 +82,6 @@ set_test_options <- function() { # nocov start
       , n.optim = 2
       , n.CPU = parallel::detectCores()
     )
-    , hmmtree = list(
-      n.optim = 2
-      , max_classes = 3
-      , fisher_information = "expected"
-    )
     , treebugs = list(
       n.chains = 4
       , n.iter = 8e2
@@ -99,7 +94,7 @@ set_test_options <- function() { # nocov start
       , n.PPP = 4e1
       , n.CPU = parallel::detectCores()
     )
-    , silent = FALSE
+    , silent_jags = FALSE
     # , catch_warnings = TRUE
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
@@ -117,11 +112,6 @@ set_default_options <- function() {
       bootstrap_samples = 2e3
       , n.optim = 2e1
       , n.CPU = parallel::detectCores()
-    )
-    , hmmtree = list(
-      n.optim = 2e1
-      , max_classes = 2e1
-      , fisher_information = "expected"
     )
     , treebugs = list(
       n.chains = 4
