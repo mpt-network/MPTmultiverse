@@ -23,6 +23,9 @@ data[[COL_CONDITION]] <- factor(
   , labels = c("low_WM", "high_WM")
 )
 
+# define core parameters:
+CORE <- c("C1", "C2")
+
 # set test options for a quick and unreliable run:
 mpt_options("test")
 mpt_options() # to
@@ -46,6 +49,7 @@ only_asymptotic <- fit_mpt(
   , data = data
   , model = EQN_FILE
   , condition = COL_CONDITION
+  , core = CORE
 )
 
 dplyr::glimpse(only_asymptotic)
@@ -56,6 +60,7 @@ all_bootstrap <- fit_mpt(
   , data = data
   , model = EQN_FILE
   , condition = COL_CONDITION
+  , core = CORE
 )
 
 dplyr::glimpse(all_bootstrap)

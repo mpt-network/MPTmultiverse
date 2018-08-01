@@ -19,15 +19,16 @@
 #' @importFrom magrittr %>%
 
 make_results_row <- function(
-  model
-  , dataset
-  , pooling
-  , package
-  , method
-  , data
-  , parameters
-  , id
-  , condition
+  model, 
+  dataset,
+  pooling,
+  package,
+  method,
+  data,
+  parameters,
+  id,
+  condition,
+  core = NULL  # character vector specifying which are core parameters
 ) {
   
   # prepare data to have the correct columns of id/condition
@@ -36,12 +37,20 @@ make_results_row <- function(
   
   conditions <- levels(factor(data$condition))
   parameters <- MPTinR::check.mpt(model)$parameters
-
+  
+  # check list of core parameters 
+  if (!missing(core) && !is.null(core)){
+    stopifnot(is.vector(core) && is.character(core))
+    stopifnot(all(core %in% parameters))
+  } 
+  
   est_ind <-
     tibble::as_tibble(expand.grid(parameter = parameters,
-                          id = data$id))
+                                  id = data$id))
+
   est_ind <- dplyr::left_join(est_ind, data[, c("id", "condition")], by = "id")
-  est_ind <- est_ind[,c("id", "condition", "parameter")]
+  est_ind$core <- est_ind$parameter %in% core
+  est_ind <- est_ind[,c("id", "condition", "parameter", "core")]
   est_ind <- tibble::add_column(est_ind, est = NA_real_, se = NA_real_)
   
   for (i in seq_along(getOption("MPTmultiverse")$ci_size)) {
@@ -52,11 +61,12 @@ make_results_row <- function(
   
   # create est_group empty df
   est_group <- tibble::as_tibble(expand.grid(parameter = parameters,
-                                     condition = levels(data$condition)))
-  est_group <- est_group[,c("condition", "parameter")]
+                                             condition = levels(data$condition)))
+  est_group$core <- est_group$parameter %in% core
+  est_group <- est_group[,c("condition", "parameter", "core")]
   est_group <- tibble::as_tibble(data.frame(est_group,
-                                    est = NA_real_,
-                                    se = NA_real_))
+                                            est = NA_real_,
+                                            se = NA_real_))
   for (i in seq_along(getOption("MPTmultiverse")$ci_size)) {
     est_group <- tibble::add_column(est_group, xx = NA_real_)
     colnames(est_group)[ncol(est_group)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
@@ -65,26 +75,28 @@ make_results_row <- function(
   
   # group comparisons
   if (length(conditions) > 1) {
-      pairs <- utils::combn(conditions, 2)
-      tmp_test_between <- vector("list", ncol(pairs))
-      
-      for (i in seq_len(ncol(pairs))) {
-        tmp_test_between[[i]] <- tibble::as_tibble(
-          expand.grid(parameter = parameters, 
-                      condition1 = factor(pairs[1,i], levels = conditions),
-                      condition2 = factor(pairs[2,i], levels = conditions))) %>% 
-          dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
-        tibble_ci <- tibble::as_tibble(
-          matrix(NA_real_, nrow(tmp_test_between[[i]]), 
-                 length(getOption("MPTmultiverse")$ci_size),
-                 dimnames = list(NULL, paste0("ci_", getOption("MPTmultiverse")$ci_size))))
-        tmp_test_between[[i]] <- dplyr::bind_cols( tmp_test_between[[i]], tibble_ci)
-      }
-      test_between <- dplyr::bind_rows(tmp_test_between) 
+    pairs <- utils::combn(conditions, 2)
+    tmp_test_between <- vector("list", ncol(pairs))
+    
+    for (i in seq_len(ncol(pairs))) {
+      tmp_test_between[[i]] <- tibble::as_tibble(
+        expand.grid(parameter = parameters, 
+                    condition1 = factor(pairs[1,i], levels = conditions),
+                    condition2 = factor(pairs[2,i], levels = conditions))) %>% 
+        dplyr::mutate(core = parameter %in% core) %>%  
+        dplyr::select(parameter, core, condition1, condition2) %>% 
+        dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
+      tibble_ci <- tibble::as_tibble(
+        matrix(NA_real_, nrow(tmp_test_between[[i]]), 
+               length(getOption("MPTmultiverse")$ci_size),
+               dimnames = list(NULL, paste0("ci_", getOption("MPTmultiverse")$ci_size))))
+      tmp_test_between[[i]] <- dplyr::bind_cols( tmp_test_between[[i]], tibble_ci)
+    }
+    test_between <- dplyr::bind_rows(tmp_test_between) 
   } else {
     test_between <- tibble::tibble()
   }
-
+  
   ## est_covariate <- ##MISSING
   
   ## create gof empty df
@@ -99,10 +111,11 @@ make_results_row <- function(
   
   ## create gof_group empty df
   gof_group <- tibble::as_tibble(data.frame(condition = levels(data$condition),
-                                    gof))
+                                            gof))
   ## create gof_groupindiv empty df
   gof_indiv <- tibble::as_tibble(data.frame(data[,c("id", "condition")], gof))
   
+  ## data structure for results
   tibble::tibble(
     model = model,
     dataset = dataset,
@@ -124,12 +137,12 @@ make_results_row <- function(
 #' @keywords internal
 
 prep_data_fitting <- function(
-  data
-  , model_file
-  , id
-  , condition
+  data, 
+  model_file,
+  id,
+  condition
 ) {
-
+  
   data$id <- data[[id]]
   data$condition <- data[[condition]]
   col_freq <- get_eqn_categories(model_file)
@@ -192,7 +205,7 @@ check_results <- function(results) {
   missing <- dplyr::anti_join(expected, results[, 3:5], by = c("pooling", "package", "method"))
   if (nrow(missing) > 0) {
     cat("## Following analysis approaches missing from results:\n", 
-            paste(apply(missing, 1, paste, collapse = ", "), collapse = "\n"), 
+        paste(apply(missing, 1, paste, collapse = ", "), collapse = "\n"), 
         "\n\n\n")
   }
   
@@ -202,19 +215,19 @@ check_results <- function(results) {
   
   tryCatch({
     for(meth in c("asymptotic", "PB/MLE")){
-    
+      
       conv_mptinr_no <- results %>% 
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
         dplyr::select("convergence") %>% 
         tidyr::unnest()
-  
+      
       not_id <- conv_mptinr_no %>% 
         dplyr::group_by(.data$condition) %>% 
         dplyr::summarise(proportion = mean(!is.na(.data$parameter)))
       not_id2 <- suppressWarnings(conv_mptinr_no %>% 
-        dplyr::group_by(.data$condition) %>% 
-        dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
-        tidyr::unnest(.data$not_identified)) 
+                                    dplyr::group_by(.data$condition) %>% 
+                                    dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
+                                    tidyr::unnest(.data$not_identified)) 
       if (any(not_id$proportion > 0)) {
         cat("Based on", meth, "CIs, proportion of participants with non-identified parameters:\n")
         cat(format(not_id)[-c(1,3)], "", sep = "\n")
@@ -253,7 +266,7 @@ check_results <- function(results) {
     }
   }, error = function(e) 
     cat("Convergence checks failed for unkown reason.\n"))
-
+  
   cat("\n\n")
   
   ### TreeBUGS

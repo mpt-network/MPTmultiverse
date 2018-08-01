@@ -4,12 +4,13 @@
 \alias{fit_mpt}
 \title{Main function}
 \usage{
-fit_mpt(method, dataset, data, model, id = NULL, condition = NULL)
+fit_mpt(method, dataset, data, model, id = "id",
+  condition = "condition", core = NULL)
 }
 \arguments{
-\item{method}{Character. A vector specifying which analysis approaches should be performed.}
+\item{method}{Character. A vector specifying which analysis approaches should be performed (see Description below).}
 
-\item{dataset}{Character.}
+\item{dataset}{Character. The name of the dataset to be analyzed.}
 
 \item{data}{A \code{data.frame} containing the data.}
 
@@ -20,7 +21,32 @@ If not specified, it is assumed that each row represents observations from one p
 
 \item{condition}{Character. Name of the column specifying a between-subjects factor.
 If not specified, no between-subjects comparisons are performed.}
+
+\item{core}{character vector defining the core parameters of interest, e.g.,
+\code{core=c("Dn", "Do")}. All other parameters are treated as auxiliary parameters.}
 }
 \description{
 Does a lot of nice stuff
+}
+\details{
+Maximum-likelihood estimation with MPTinR:
+\itemize{
+  \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete pooling}
+  \item{\code{"asymptotic_no"}: }{ Asymptotitc ML theory, no pooling}
+  \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
+  \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
+}
+ 
+Bayesian estimation with TreeBUGS
+\itemize{
+  \item{\code{"simple"}: }{Bayesian estimation, no pooling}
+  \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling}
+  \item{\code{"beta"}: }{beta-MPT model, partial pooling}
+  \item{\code{"trait"}: }{latent-trait model, partial pooling}
+  \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation parameters, partial pooling}
+}
+}
+\examples{
+examples/examples.fit_mpt.R
+
 }

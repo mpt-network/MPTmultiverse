@@ -4,23 +4,23 @@
 #' are estimated.
 #' 
 #' @param ... Named parameters to set. Possible values are:
-#' \describe{
-#'   \item{\strong{bootstrap_samples}}{Numeric. The number of bootstrap samples to be drawn for the calculation parametric bootstrap confidence intervals.}
-#'   \item{\strong{n.optim}}{Numeric. The number of optimization runs for the models estimated with maximum-likelihood methods.}
-#'   \item{\strong{n.chain}}{Numeric. The number of MCMC chains for the Bayesian models.}
-#'   \item{\strong{n.adapt}}{Numeric. The number of iterations for adaptation.}
-#'   \item{\strong{n.burnin}}{Numeric. The number of burn-in/warm-up iterations.}
-#'   \item{\strong{n.iter}}{Numeric. The total number of iterations to be drawn \emph{after} adaptation (including burnin).}
-#'   \item{\strong{n.thin}}{Numeric. Thinning interval.}
-#'   \item{\strong{Rhat_max}}{Numeric. The maximum rhat.}
-#'   \item{\strong{Neff_min}}{Numeric. The minimum number of effective samples you are willing to accept.}
-#'   \item{\strong{extend_max}}{Numeric.}
-#'   \item{\strong{n.PPP}}{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
-#'   \item{\strong{n.CPU}}{Numeric. The number of CPU cores to use. Defaults to the number of available cores on your machine.}
-#'   \item{\strong{ci_size}}{Numeric.}
-#'   \item{\strong{max_ci_indiv}}{Numeric.}
-#'   \item{\strong{silent}}{Logical.}
-#'   \item{\strong{save_models}}{Logical.}
+#' \itemize{
+#'   \item{\code{bootstrap_samples}: }{Numeric. The number of bootstrap samples to be drawn for the calculation parametric bootstrap confidence intervals.}
+#'   \item{\code{n.optim}: }{Numeric. The number of optimization runs for the models estimated with maximum-likelihood methods.}
+#'   \item{\code{n.chains}: }{Numeric. The number of MCMC chains for the Bayesian models.}
+#'   \item{\code{n.adapt}: }{Numeric. The number of iterations for adaptation.}
+#'   \item{\code{n.burnin}: }{Numeric. The number of burn-in/warm-up iterations.}
+#'   \item{\code{n.iter}: }{Numeric. The total number of iterations to be drawn \emph{after} adaptation (including burnin).}
+#'   \item{\code{n.thin}: }{Numeric. Thinning interval.}
+#'   \item{\code{Rhat_max}: }{Numeric. The maximum rhat.}
+#'   \item{\code{Neff_min}: }{Numeric. The minimum number of effective samples you are willing to accept.}
+#'   \item{\code{extend_max}: }{Numeric.}
+#'   \item{\code{n.PPP}: }{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
+#'   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use. Defaults to the number of available cores on your machine.}
+#'   \item{\code{ci_size}: }{Numeric.}
+#'   \item{\code{max_ci_indiv}: }{Numeric.}
+#'   \item{\code{silent}: }{Logical.}
+#'   \item{\code{save_models}: }{Logical.}
 #' }
 #'   
 #' 
@@ -29,7 +29,7 @@
 #' mpt_options()
 #' 
 #' # Set number of MCMC chains to 20:
-#' mpt_options(n.chain = 20)
+#' mpt_options(n.chains = 20)
 #' mpt_options()
 #' 
 #' @export
@@ -42,7 +42,7 @@ mpt_options <- function(...){
   if(length(args)==0L) return(fetched)
   
   # Provide some shorthand terms:
-  if(args[[1]]%in%c("test", "default")){
+  if(args[[1]] %in% c("test", "default")){
     changed <- switch(
       args[[1]]
       , test = set_test_options()

@@ -21,6 +21,7 @@ mpt_treebugs <- function (
   , model
   , id = "id"
   , condition = "condition"
+  , core = NULL
 ){
   all_options <- getOption("MPTmultiverse")
 
@@ -49,7 +50,8 @@ mpt_treebugs <- function (
                                  data = data,
                                  parameters = parameters,
                                  id = id,
-                                 condition = condition)
+                                 condition = condition,
+                                 core = core)
   if (method == "simple_pooling"){
     method <- "simple"
     
@@ -94,7 +96,8 @@ mpt_treebugs <- function (
     }
     # print(c(fit_args, prior_args))
     t0 <- Sys.time()
-    treebugs_fit[[i]] <- do.call(eval(parse(text = paste0("TreeBUGS::", method, "MPT"))), args = c(fit_args, prior_args))
+    treebugs_fit[[i]] <- do.call(eval(parse(text = paste0("TreeBUGS::", method, "MPT"))), 
+                                 args = c(fit_args, prior_args))
     summ <- treebugs_fit[[i]]$mcmc.summ
     
     # continue MCMC sampling (only for betaMPT and traitMPT)
@@ -128,28 +131,28 @@ mpt_treebugs <- function (
     
     # parameter estimates
     summMPT <- TreeBUGS::summarizeMPT(treebugs_fit[[i]]$runjags$mcmc,
-                            mptInfo = treebugs_fit[[i]]$mptInfo,
-                            probs = CI_SIZE,
-                            summ = treebugs_fit[[i]]$mcmc.summ)
+                                      mptInfo = treebugs_fit[[i]]$mptInfo,
+                                      probs = CI_SIZE,
+                                      summ = treebugs_fit[[i]]$mcmc.summ)
     
     sel_group <- result_row$est_group[[1]]$condition == conditions[i]
-    result_row$est_group[[1]][sel_group,-(1:2)] <-
+    result_row$est_group[[1]][sel_group,-(1:3)] <-
       summMPT$groupParameters$mean[paste0("mean_", parameters),1:6]
     
     if (pooling != "complete"){
       # # old: array filled into data frame
-      # result_row$est_indiv[[1]][sel_ind,-(1:3)] <-
+      # result_row$est_indiv[[1]][sel_ind,-(1:4)] <-
       #   summMPT$individParameters[parameters,,1:(2+length(CI_SIZE))]
       sel_ind <- result_row$est_indiv[[1]]$condition == conditions[i]
       dimnames(summMPT$individParameters)$ID <- rownames(data_group)
       tmp <- summMPT$individParameters[parameters,,1:(2+length(CI_SIZE)), drop = FALSE] %>%
         reshape2::melt() %>% 
         tidyr::spread("Statistic", "value")
-      colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:3)])
+      colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:4)])
       tmp[[condition]] <- cond
       result_row$est_indiv[[1]][sel_ind,] <-
         dplyr::left_join(result_row$est_indiv[[1]][sel_ind,] %>%
-                    dplyr::select("id", "condition", "parameter"),
+                    dplyr::select("id", "condition", "parameter", "core"),
                   tmp, by = c("parameter", "id", condition = condition))
     }
     
@@ -205,7 +208,7 @@ mpt_treebugs <- function (
             result_row$test_between[[1]]$condition1 == conditions[i] &
             result_row$test_between[[1]]$condition2 == conditions[j]
           
-          result_row$test_between[[1]][sel_row,-(1:3)] <- 
+          result_row$test_between[[1]][sel_row,-(1:4)] <- 
             c(test_summ[,c("Mean", "SD")], 
               p = ifelse(bayesp > .5, 1 - bayesp, bayesp) * 2,  # two-sided Bayesian p values
               test_summ[,2 + seq_along(CI_SIZE)])

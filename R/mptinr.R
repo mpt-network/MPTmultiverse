@@ -6,8 +6,9 @@ mpt_mptinr <- function(
   , data     # data.frame
   , model    # name of EQN file
   , method   # analysis approaches to be conducted
-  , id
-  , condition
+  , id = "id"
+  , condition = "condition"
+  , core = NULL
 ){
 
   prepared <- prep_data_fitting(
@@ -27,6 +28,7 @@ mpt_mptinr <- function(
       , method = intersect(method, "asymptotic_complete")
       , id = id
       , condition = condition
+      , core = core
     )
   }
   
@@ -38,6 +40,7 @@ mpt_mptinr <- function(
       , method = intersect(method, c("asymptotic_no", "pb_no", "npb_no"))
       , id = id
       , condition = condition
+      , core = core
     )
   }
   
@@ -60,8 +63,9 @@ mpt_mptinr_no <- function(
   , prepared
   , model
   , method
-  , id
-  , condition
+  , id = "id"
+  , condition = "condition"
+  , core = NULL
 ) {
 
   OPTIONS <- getOption("MPTmultiverse")
@@ -108,7 +112,8 @@ mpt_mptinr_no <- function(
                                                data = prepared$data,
                                                parameters = prepared$parameters,
                                                id = id,
-                                               condition = condition)
+                                               condition = condition,
+                                               core = core)
     
     
     
@@ -146,7 +151,7 @@ mpt_mptinr_no <- function(
     #### make est_group ####
     
     est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
-      dplyr::group_by(.data$condition, .data$parameter) %>%
+      dplyr::group_by(.data$condition, .data$parameter, .data$core) %>%
       dplyr::summarise(estN = mean(.data$est),
                        se = stats::sd(.data$est) / 
                          sqrt(sum(!is.na(.data$est)))) %>%
@@ -265,7 +270,8 @@ mpt_mptinr_no <- function(
                                      , bootstrap = "pb"
                                      , fit_mptinr = fit_mptinr
                                      , additional_time = additional_time
-                                     , convergence = convergence)
+                                     , convergence = convergence
+                                     , core = core)
   }
   if ("npb" %in% bootstrap) {
     res[["npb_no"]] <- get_pb_results(dataset = dataset
@@ -276,7 +282,8 @@ mpt_mptinr_no <- function(
                                      , bootstrap = "npb"
                                      , fit_mptinr = fit_mptinr
                                      , additional_time = additional_time
-                                     , convergence = convergence)
+                                     , convergence = convergence
+                                     , core = core)
   }
   # return
   dplyr::bind_rows(res)
@@ -290,7 +297,8 @@ get_pb_results <- function(dataset
   , bootstrap
   , fit_mptinr
   , additional_time
-  , convergence) {
+  , convergence
+  , core = core) {
   
   OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
@@ -311,6 +319,7 @@ get_pb_results <- function(dataset
       , parameters = prepared$parameters
       , id = id
       , condition = condition
+      , core = core
     )
     t1 <- Sys.time()
     fit_pb <- parallel::clusterApplyLB(
@@ -336,6 +345,7 @@ get_pb_results <- function(dataset
       , parameters = prepared$parameters
       , id = id
       , condition = condition
+      , core = core
     )
     t1 <- Sys.time()
     fit_pb <- parallel::clusterApplyLB(
@@ -408,7 +418,7 @@ get_pb_results <- function(dataset
   }
   
   est_group <- tmp %>%
-    dplyr::group_by(.data$condition, .data$parameter) %>%
+    dplyr::group_by(.data$condition, .data$parameter, .data$core) %>%
     dplyr::summarise(estN = mean(.data$est),
                      se = stats::sd(.data$est) / 
                        sqrt(sum(!is.na(.data$est)))) %>%
@@ -602,7 +612,8 @@ mpt_mptinr_complete <- function(dataset,
                                 model,
                                 method,
                                 id, 
-                                condition) {
+                                condition,
+                                core = NULL) {
   OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
   CI_SIZE <- OPTIONS$ci_size
@@ -619,6 +630,7 @@ mpt_mptinr_complete <- function(dataset,
     , parameters = prepared$parameters
     , id = id
     , condition = condition
+    , core = core
   )
   
   res$est_indiv <- list(tibble::tibble())
