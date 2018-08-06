@@ -40,8 +40,8 @@ fit_mpt <- function(
   , dataset
   , data
   , model
-  , id = "id"
-  , condition = "condition"
+  , id = NULL
+  , condition = NULL
   , core = NULL
 ) {
   

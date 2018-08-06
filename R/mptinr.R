@@ -6,8 +6,8 @@ mpt_mptinr <- function(
   , data     # data.frame
   , model    # name of EQN file
   , method   # analysis approaches to be conducted
-  , id = "id"
-  , condition = "condition"
+  , id
+  , condition
   , core = NULL
 ){
 
@@ -63,8 +63,8 @@ mpt_mptinr_no <- function(
   , prepared
   , model
   , method
-  , id = "id"
-  , condition = "condition"
+  , id
+  , condition
   , core = NULL
 ) {
 

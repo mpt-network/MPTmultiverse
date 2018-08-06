@@ -4,8 +4,8 @@
 \alias{fit_mpt}
 \title{Main function}
 \usage{
-fit_mpt(method, dataset, data, model, id = "id",
-  condition = "condition", core = NULL)
+fit_mpt(method, dataset, data, model, id = NULL, condition = NULL,
+  core = NULL)
 }
 \arguments{
 \item{method}{Character. A vector specifying which analysis approaches should be performed (see Description below).}
