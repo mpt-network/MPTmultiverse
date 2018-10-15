@@ -54,6 +54,7 @@ mpt_mptinr <- function(
 ## no pooling ##
 ################
 
+#' @importFrom tibble tibble
 #' @importFrom rlang .data sym
 #' @importFrom magrittr %>%
 #' @keywords internal
@@ -91,12 +92,13 @@ mpt_mptinr_no <- function(
                         ci = (1 - stats::pnorm(1))*2*100)
   t1 <- Sys.time()
   additional_time <- t1 - t0
-  
-  convergence <- data.frame(
+
+  convergence <- tibble::tibble(
     id = prepared$data[, id]
     , condition = prepared$data[, condition]
-    , fit_mptinr$model.info$individual[,1:2]
-    , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, 0)
+    , rank.fisher = fit_mptinr$model.info$individual$rank.fisher
+    , n.parameters = fit_mptinr$model.info$individual$n.parameters
+    , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, FUN.VALUE = 0)
   )
   
   res <- vector("list", length(method))

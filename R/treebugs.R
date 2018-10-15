@@ -13,7 +13,7 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
-
+ 
 mpt_treebugs <- function (
   method
   , dataset

@@ -139,9 +139,9 @@ tidy_options <- function(x) {
     tibble::as_tibble(x[["mptinr"]])
     , tibble::as_tibble(x[["treebugs"]])
   )
-  y$silent_jags <- x$silent_jags
+  # y$silent_jags <- x$silent_jags
   y$ci_size[[1]] <- x$ci_size
   y$max_ci_indiv <- x$max_ci_indiv
-  y$save_model <- x$save_models
+  # y$save_models <- x$save_models
   tibble::as_tibble(y)
 }
