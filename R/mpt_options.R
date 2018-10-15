@@ -78,9 +78,8 @@ set_test_options <- function() { # nocov start
   
   list(
     mptinr = list(
-      bootstrap_samples = 4e1
-      , n.optim = 2
-      , n.CPU = parallel::detectCores()
+      bootstrap_samples = 2e1
+      , n.optim = 1
     )
     , treebugs = list(
       n.chains = 4
@@ -92,12 +91,12 @@ set_test_options <- function() { # nocov start
       , Neff_min = 2
       , extend_max = 1
       , n.PPP = 4e1
-      , n.CPU = parallel::detectCores()
     )
     , silent_jags = FALSE
     # , catch_warnings = TRUE
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
+    , n.CPU = parallel::detectCores()
     , save_models = FALSE
   )
 }
@@ -111,7 +110,6 @@ set_default_options <- function() {
     mptinr = list(
       bootstrap_samples = 2e3
       , n.optim = 2e1
-      , n.CPU = parallel::detectCores()
     )
     , treebugs = list(
       n.chains = 4
@@ -123,12 +121,27 @@ set_default_options <- function() {
       , Neff_min = 1e3
       , extend_max = 2e1
       , n.PPP = 5e3
-      , n.CPU = parallel::detectCores()
     )
     , silent_jags = TRUE
     # , catch_warnings = TRUE
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
+    , n.CPU = parallel::detectCores()
     , save_models = TRUE
   )
+}
+
+#' @importFrom tibble as_tibble
+#' @keywords internal
+
+tidy_options <- function(x) {
+  y <- cbind(
+    tibble::as_tibble(x[["mptinr"]])
+    , tibble::as_tibble(x[["treebugs"]])
+  )
+  y$silent_jags <- x$silent_jags
+  y$ci_size[[1]] <- x$ci_size
+  y$max_ci_indiv <- x$max_ci_indiv
+  y$save_model <- x$save_models
+  tibble::as_tibble(y)
 }

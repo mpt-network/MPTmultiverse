@@ -18,7 +18,7 @@
 #' Maximum-likelihood estimation with MPTinR:
 #' \itemize{
 #'   \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete pooling}
-#'   \item{\code{"asymptotic_no"}: }{ Asymptotitc ML theory, no pooling}
+#'   \item{\code{"asymptotic_no"}: }{ Asymptotic ML theory, no pooling}
 #'   \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
 #'   \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
 #' }
@@ -47,7 +47,8 @@ fit_mpt <- function(
   
   method = match.arg(method, c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no",
                                "simple", "simple_pooling", 
-                               "trait", "trait_uncorrelated", "beta", "betacpp"))
+                               "trait", "trait_uncorrelated", "beta", "betacpp")
+                     , several.ok = TRUE)
   
   
   # set options ----

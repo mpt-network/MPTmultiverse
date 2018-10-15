@@ -92,7 +92,7 @@ mpt_treebugs <- function (
                      n.thin = TREEBUGS_MCMC$n.thin)
     if (method %in% c("simple", "betacpp")){
       fit_args["n.adapt"] <- NULL
-      fit_args <- c(fit_args, cores = unname(TREEBUGS_MCMC$n.CPU))
+      fit_args <- c(fit_args, cores = unname(all_options$n.CPU))
     }
     # print(c(fit_args, prior_args))
     t0 <- Sys.time()
@@ -160,7 +160,7 @@ mpt_treebugs <- function (
     }
     
     gof_group[[i]] <- TreeBUGS::PPP(treebugs_fit[[i]], M = TREEBUGS_MCMC$n.PPP, type = "G2",
-                          T2 = pooling != "complete", nCPU = TREEBUGS_MCMC$n.CPU)
+                          T2 = pooling != "complete", nCPU = all_options$n.CPU)
 
     sel_gof <- result_row$gof_group[[1]]$condition == conditions[i]
     result_row$gof_group[[1]][sel_gof, ] <-

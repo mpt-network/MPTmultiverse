@@ -250,7 +250,7 @@ mpt_mptinr_no <- function(
     ### copy information that is same ----
     
     res[["asymptotic_no"]]$convergence <- list(convergence)
-    res[["asymptotic_no"]]$test_between <- res[["pb_no"]]$test_between
+    # res[["asymptotic_no"]]$test_between <- res[["pb_no"]]$test_between # bugfix--MB--2018-10-14
     
     # write estimation time to results_row ----
     res[["asymptotic_no"]]$estimation[[1]] <- tibble::tibble(
@@ -305,7 +305,7 @@ get_pb_results <- function(dataset
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
-  cl <- parallel::makeCluster(rep("localhost", MPTINR_OPTIONS$n.CPU))
+  cl <- parallel::makeCluster(rep("localhost", OPTIONS$n.CPU))
   parallel::clusterEvalQ(cl, library("MPTinR"))
   parallel::clusterSetRNGStream(cl, iseed = sample.int(.Machine$integer.max, 1))
   

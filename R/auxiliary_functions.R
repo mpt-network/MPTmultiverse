@@ -112,8 +112,9 @@ make_results_row <- function(
   ## create gof_group empty df
   gof_group <- tibble::as_tibble(data.frame(condition = levels(data$condition),
                                             gof))
-  ## create gof_groupindiv empty df
+  ## create gof_indiv empty df
   gof_indiv <- tibble::as_tibble(data.frame(data[,c("id", "condition")], gof))
+  used_options <- tidy_options(mpt_options())
   
   ## data structure for results
   tibble::tibble(
@@ -130,7 +131,8 @@ make_results_row <- function(
     gof_group = list(gof_group),
     gof_indiv = list(gof_indiv),
     convergence = list(tibble::tibble()),
-    estimation = list(tibble::tibble())
+    estimation = list(tibble::tibble()),
+    options = list(used_options)
   )
 }
 
