@@ -95,7 +95,7 @@ mpt_mptinr_no <- function(
 
   convergence <- tibble::tibble(
     id = prepared$data[, id]
-    , condition = prepared$data[, condition]
+    , condition = as.character(prepared$data[[condition]])
     , rank.fisher = fit_mptinr$model.info$individual$rank.fisher
     , n.parameters = fit_mptinr$model.info$individual$n.parameters
     , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, FUN.VALUE = 0)

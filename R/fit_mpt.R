@@ -3,6 +3,7 @@
 #' Does a lot of nice stuff
 #'
 #' @param method Character. A vector specifying which analysis approaches should be performed (see Description below).
+#'   Defaults to all available methods.
 #' @param dataset Character. The name of the dataset to be analyzed. 
 #' @param data A \code{data.frame} containing the data.
 #' @param model A model definition, typically the path to an \code{.eqn} file.
@@ -45,11 +46,30 @@ fit_mpt <- function(
   , core = NULL
 ) {
   
-  method = match.arg(method, c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no",
-                               "simple", "simple_pooling", 
-                               "trait", "trait_uncorrelated", "beta", "betacpp")
-                     , several.ok = TRUE)
+  available_methods <- c(
+    # MPTinR ----
+    "asymptotic_complete"
+    , "asymptotic_no"
+    , "pb_no"
+    , "npb_no"
+    # TreeBUGS ----
+    , "simple"
+    , "simple_pooling"
+    , "trait"
+    , "trait_uncorrelated"
+    , "beta"
+    , "betacpp"
+  )
   
+  if(missing(method)) {
+    method <- available_methods
+  }
+  
+  method <- match.arg(
+    arg = method
+    , choices = available_methods
+    , several.ok = TRUE
+  )
   
   # set options ----
   silent_jags <- getOption("MPTmultiverse")$silent_jags

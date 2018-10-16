@@ -78,7 +78,7 @@ set_test_options <- function() { # nocov start
   
   list(
     mptinr = list(
-      bootstrap_samples = 2e1
+      bootstrap_samples = 1e1
       , n.optim = 1
     )
     , treebugs = list(

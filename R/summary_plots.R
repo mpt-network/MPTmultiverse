@@ -103,7 +103,7 @@
 
 plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE, ...){
   
-  shapes <- c(16, 18, 15, 1, 0, 8, 11, 12, 4)
+  shapes <- c(16, 18, 15, 1, 0, 8, 11, 12, 4, 6)
   
   prefix <- paste0(gsub("\\.eqn", "", results$model[1]), "_", 
                    gsub("\\.", "_", paste0(results$dataset[1],"_")))
