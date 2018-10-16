@@ -260,4 +260,8 @@ mpt_treebugs <- function (
 
 
 
-mpt_treebugs_safe <- purrr::possibly(mpt_treebugs, otherwise = list())
+mpt_treebugs_safe <- purrr::possibly(
+  .f = mpt_treebugs
+  , otherwise = list()
+  , quiet = FALSE
+)

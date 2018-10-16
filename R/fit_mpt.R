@@ -148,7 +148,7 @@ fit_mpt <- function(
   res[["treebugs"]] <- dplyr::bind_rows(
     purrr::map(
       intersect(method, c("simple", "simple_pooling", "trait", "trait_uncorrelated", "beta", "betacpp"))
-      , mpt_treebugs
+      , mpt_treebugs_safe
       , dataset = dataset
       , data = data
       , model = model
