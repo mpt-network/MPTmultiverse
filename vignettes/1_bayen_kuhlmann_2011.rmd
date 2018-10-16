@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   , comment = "#>"
   , warning = FALSE
   , message = FALSE
+  , fig.width = 8
 )
 ```
 
@@ -55,11 +56,6 @@ devtools::install_github("mariusbarth/MPTmultiverse")
 # load packages:
 library("MPTmultiverse")
 
-
-# Make sure that working directory is correct via either:
-# - setwd() / getwd()
-# - Rstudio->Sessions->Set Working Directory->'To Source File Location'
-
 # If you're running the analysis from an .rmd file, you only need to ensure that
 # the .rmd, .eqn, and .csv files are all in the same directory.
 
@@ -71,9 +67,10 @@ EQN_FILE <- "2HTSM_Submodel4.eqn"
 DATA_FILE <- "Kuhlmann_dl7.csv"  
 
 
-### if .csv format uses semicolons ";" (German format):
+# if .csv format uses semicolons ";" (German format):
 data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
-### if .csv format uses commata "," (international format):
+
+# if .csv format uses commata "," (international format):
 # data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
 
 head(data)
@@ -124,12 +121,14 @@ Type `?fit_mpt` in the R console if you want to find out more about the paramete
 all_supported_methods <- c(
   "asymptotic_complete"
   , "asymptotic_no"
-  , "pb_no"
-  , "simple"
-  , "simple_pooling"
-  , "trait"
-  , "trait_uncorrelated"
-  , "beta"
+  # , "pb_no"
+  # , "npb_no"
+  # , "simple"
+  # , "simple_pooling"
+  # , "trait"
+  # , "trait_uncorrelated"
+  # , "beta"
+  # , "betacpp"
 )
 
 results <- fit_mpt(
@@ -149,14 +148,12 @@ results <- fit_mpt(
 # print convergence results
 checks <- (check_results(results))
 
-used_options <- getOption("MPTmultiverse")
 # store results
 save(
   results
   , data
   , EQN_FILE
   , DATA_FILE
-  , used_options
   , checks
   , file = "results.RData"
 )
