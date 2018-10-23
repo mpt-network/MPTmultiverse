@@ -88,8 +88,8 @@ fit_mpt <- function(
   }
   
   # Ensure that all variables are character
-  data$ExpCond <- as.character(data$ExpCond)
-  data$Subject <- as.character(data$Subject)
+  data$ExpCond <- as.character(data[[condition]])
+  data$Subject <- as.character(data[[id]])
   
   
   # check MPT file

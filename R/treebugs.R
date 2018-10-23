@@ -48,7 +48,7 @@ mpt_treebugs <- function (
                                  package = "TreeBUGS",
                                  method = sub("_pooling","", method, fixed = TRUE),
                                  data = data,
-                                 parameters = parameters,
+                                 # parameters = parameters,
                                  id = id,
                                  condition = condition,
                                  core = core)

@@ -16,7 +16,20 @@
 #   gof_indiv = list(tibble())
 # )
 
+#' Create 
+#' 
+#' Internal function, creates container for results
+#' 
+#' @param model       Character.
+#' @param dataset     Character.
+#' @param pooling     Character.
+#' @param package     Character.
+#' @param method      Character.
+#' @param data        A \code{data.frame}.
+#' @param id          Character.
+
 #' @importFrom magrittr %>%
+#' @keywords internal
 
 make_results_row <- function(
   model, 
@@ -25,7 +38,7 @@ make_results_row <- function(
   package,
   method,
   data,
-  parameters,
+  # parameters,
   id,
   condition,
   core = NULL  # character vector specifying which are core parameters

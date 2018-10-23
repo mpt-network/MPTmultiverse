@@ -112,7 +112,7 @@ mpt_mptinr_no <- function(
                                                package = "MPTinR",
                                                method = "asymptotic",
                                                data = prepared$data,
-                                               parameters = prepared$parameters,
+                                               # parameters = prepared$parameters,
                                                id = id,
                                                condition = condition,
                                                core = core)
@@ -319,7 +319,7 @@ get_pb_results <- function(dataset
       , package = "MPTinR"
       , method = "PB/MLE"
       , data = prepared$data
-      , parameters = prepared$parameters
+      # , parameters = prepared$parameters
       , id = id
       , condition = condition
       , core = core
@@ -345,7 +345,7 @@ get_pb_results <- function(dataset
       , package = "MPTinR"
       , method = "NPB/MLE"
       , data = prepared$data
-      , parameters = prepared$parameters
+      # , parameters = prepared$parameters
       , id = id
       , condition = condition
       , core = core
@@ -631,7 +631,7 @@ mpt_mptinr_complete <- function(dataset,
     , package = "MPTinR"
     , method = "asymptotic"
     , data = prepared$data
-    , parameters = prepared$parameters
+    # , parameters = prepared$parameters
     , id = id
     , condition = condition
     , core = core
