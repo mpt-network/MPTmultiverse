@@ -94,7 +94,7 @@ mpt_mptinr_no <- function(
   additional_time <- t1 - t0
 
   convergence <- tibble::tibble(
-    id = prepared$data[, id]
+    id = prepared$data[[id]]
     , condition = as.character(prepared$data[[condition]])
     , rank.fisher = fit_mptinr$model.info$individual$rank.fisher
     , n.parameters = fit_mptinr$model.info$individual$n.parameters
@@ -177,7 +177,7 @@ mpt_mptinr_no <- function(
     res[["asymptotic_no"]]$gof_group[[1]]$focus <- "mean"
     
     tmp <- fit_mptinr$goodness.of.fit$individual
-    tmp$condition <- as.factor(prepared$data$condition)
+    tmp$condition <- as.character(prepared$data$condition)
     gof_group2 <- tmp %>%
       dplyr::group_by(.data$condition) %>%
       dplyr::summarise(stat_obs = sum(.data$G.Squared),
@@ -189,11 +189,11 @@ mpt_mptinr_no <- function(
       , df = gof_group2$stat_df
       , lower.tail = FALSE
     )
-    # ensure that factor levels fit:
-    gof_group2$condition <- factor(
-      gof_group2$condition
-      , levels = levels(res[["asymptotic_no"]]$gof_group[[1]]$condition)
-    )
+    # ensure that factor levels fit: not necessary because we switched to character
+    # gof_group2$condition <- factor(
+    #   gof_group2$condition
+    #   , levels = levels(res[["asymptotic_no"]]$gof_group[[1]]$condition)
+    # )
     
     res[["asymptotic_no"]]$gof_group[[1]] <- 
       dplyr::right_join(res[["asymptotic_no"]]$gof_group[[1]][, c("condition", "type", "focus")],
@@ -229,15 +229,15 @@ mpt_mptinr_no <- function(
       tmp_c1 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition1[i])
       tmp_c2 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition2[i])
       
-      tmp_df <- droplevels(res[["asymptotic_no"]]$est_indiv[[1]][ 
+      tmp_df <- res[["asymptotic_no"]]$est_indiv[[1]][ 
         res[["asymptotic_no"]]$est_indiv[[1]]$parameter == tmp_par & 
           res[["asymptotic_no"]]$est_indiv[[1]]$condition %in% 
-          c(as.character(tmp_c1), as.character(tmp_c2)) , ])
+          c(as.character(tmp_c1), as.character(tmp_c2)) , ]
       
       tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
                              tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
       
-      tmp_lm <- stats::lm(est ~ condition, tmp_df)
+      tmp_lm <- stats::lm(formula = est ~ condition, data = tmp_df)
       
       tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
       
@@ -443,7 +443,7 @@ get_pb_results <- function(dataset
   res$gof_group[[1]]$focus <- "mean"
   
   tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- as.factor(prepared$data$condition)
+  tmp$condition <- as.character(prepared$data$condition)
   gof_group <- tmp %>%
     dplyr::group_by(.data$condition) %>%
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
@@ -455,7 +455,7 @@ get_pb_results <- function(dataset
   # make gof_group for parametric-bootstrap approach
   
   tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- as.factor(prepared$data$condition)
+  tmp$condition <- as.character(prepared$data$condition)
   gof_group <- tmp %>%
     dplyr::group_by(.data$condition) %>%
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
@@ -517,14 +517,15 @@ get_pb_results <- function(dataset
   # make test_between
   
   for (i in seq_len(nrow(res$test_between[[1]]))) {
+    # all these should be character
     tmp_par <- res$test_between[[1]]$parameter[i]
-    tmp_c1 <- as.character(res$test_between[[1]]$condition1[i])
-    tmp_c2 <- as.character(res$test_between[[1]]$condition2[i])
+    tmp_c1 <- res$test_between[[1]]$condition1[i]
+    tmp_c2 <- res$test_between[[1]]$condition2[i]
     
-    tmp_df <- droplevels(res$est_indiv[[1]][ 
+    tmp_df <- res$est_indiv[[1]][ 
       res$est_indiv[[1]]$parameter == tmp_par & 
         res$est_indiv[[1]]$condition %in% 
-        c(as.character(tmp_c1), as.character(tmp_c2)) , ])
+        c(tmp_c1, tmp_c2), ]
     
     tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
                     tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
@@ -663,9 +664,12 @@ mpt_mptinr_complete <- function(dataset,
   
   convergence <- vector("list", 1 + length(prepared$conditions))
   names(convergence) <- c("aggregated", prepared$conditions)
-  convergence$aggregated <- tibble::as_tibble(data.frame(
-             fit_mptinr_agg$model.info[,1:2],
-             convergence = fit_mptinr_agg$best.fits[[1]]$convergence))
+
+  convergence$aggregated <- tibble::tibble(
+    rank.fisher = fit_mptinr_agg$model.info$rank.fisher
+    , n.parameters = fit_mptinr_agg$model.info$n.parameters
+    , convergence = fit_mptinr_agg$best.fits[[1]]$convergence
+  )
   
   t_cond <- list()
   
@@ -701,9 +705,11 @@ mpt_mptinr_complete <- function(dataset,
             prepared$conditions[i],
           ]$parameter]
     
-    convergence[[prepared$conditions[i]]] <- tibble::as_tibble(data.frame(
-             fit_mptinr_tmp$model.info[,1:2],
-             convergence = fit_mptinr_tmp$best.fits[[1]]$convergence))
+    convergence[[prepared$conditions[i]]] <- tibble::tibble(
+      rank.fisher = fit_mptinr_tmp$model.info$rank.fisher
+      , n.parameters = fit_mptinr_tmp$model.info$n.parameters
+      , convergence = fit_mptinr_tmp$best.fits[[1]]$convergence
+    )
   }
   
   for (i in seq_along(CI_SIZE)) {
@@ -722,7 +728,7 @@ mpt_mptinr_complete <- function(dataset,
     p <- test_between$parameter[i]
     c1 <- test_between$condition1[i]
     c2 <- test_between$condition2[i]
-  
+
     test_between[i, "est_diff"] <- 
       est_group[est_group$condition == c1 & est_group$parameter == p, ]$est -
       est_group[est_group$condition == c2 & est_group$parameter == p, ]$est
@@ -746,8 +752,7 @@ mpt_mptinr_complete <- function(dataset,
   
   tmp <- names(convergence)
   convergence <- do.call("rbind", convergence)
-  convergence <- dplyr::bind_cols(condition = factor(tmp), 
-                           convergence)
+  convergence <- dplyr::bind_cols(condition = tmp, convergence)
   
   res$convergence <- list(convergence)
   warn_conv <- convergence$convergence != 0

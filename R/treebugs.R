@@ -29,14 +29,14 @@ mpt_treebugs <- function (
   CI_SIZE <- all_options$ci_size
   
   # dlist <- prepare_data(model, data, id = "id", condition = "condition")
-  conditions <- levels(factor(data[[condition]]))
-  parameters <- MPTinR::check.mpt(model)$parameters
+  conditions <- unique(data[[condition]])
+  parameters <- as.character(MPTinR::check.mpt(model)$parameters)
   col_freq <- get_eqn_categories(model)
 
-  data$id <- data[, id]
-  data$condition <- data[, condition]
+  data$id <- data[[id]]
+  data$condition <- data[[condition]]
   
-  freq_list <- split(data[, col_freq], f = data[, condition])
+  freq_list <- split(data[, col_freq, drop = FALSE], f = data[[condition]])
   pooling <- switch(method, 
                     "simple" = "no", 
                     "simple_pooling" = "complete",
@@ -58,7 +58,7 @@ mpt_treebugs <- function (
     # pooling: aggregate across participants
     data <- stats::aggregate(data[, col_freq], list(condition = data$condition), sum)
     data[[condition]] <- data$condition
-    data[[id]] <- data$id <- 1:nrow(data)
+    data[[id]] <- data$id <- as.character(1:nrow(data))
     if(condition!="condition"){
       data$condition <- NULL
     }
@@ -78,7 +78,7 @@ mpt_treebugs <- function (
   
   
   for (i in seq_along(conditions)){
-    cond <- factor(conditions[i], conditions)
+    cond <- conditions[i]
     sel_condition <- data[[condition]] == conditions[i]
     data_group <- data[sel_condition, col_freq]   #freq_list[[i]]
     rownames(data_group) <- data[[id]][sel_condition]
@@ -151,7 +151,11 @@ mpt_treebugs <- function (
       tmp <- summMPT$individParameters[parameters,,1:(2+length(CI_SIZE)), drop = FALSE] %>%
         reshape2::melt() %>% 
         tidyr::spread("Statistic", "value")
+
       colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:4)])
+      tmp$parameter <- as.character(tmp$parameter)
+      tmp$id <- as.character(tmp$id)
+
       tmp[[condition]] <- cond
       result_row$est_indiv[[1]][sel_ind,] <-
         dplyr::left_join(result_row$est_indiv[[1]][sel_ind,] %>%

@@ -35,18 +35,22 @@ make_results_row <- function(
   data$id <- data[[id]]
   data$condition <- data[[condition]]
   
-  conditions <- levels(factor(data$condition))
-  parameters <- MPTinR::check.mpt(model)$parameters
-  
+  conditions <- unique(data$condition)
+  parameters <- as.character(MPTinR::check.mpt(model)$parameters)
+
   # check list of core parameters 
   if (!missing(core) && !is.null(core)){
     stopifnot(is.vector(core) && is.character(core))
     stopifnot(all(core %in% parameters))
   } 
   
-  est_ind <-
-    tibble::as_tibble(expand.grid(parameter = parameters,
-                                  id = data$id))
+  est_ind <- tibble::as_tibble(
+    expand.grid(
+      parameter = parameters
+      , id = data$id
+      , stringsAsFactors = FALSE
+    )
+  )
 
   est_ind <- dplyr::left_join(est_ind, data[, c("id", "condition")], by = "id")
   est_ind$core <- est_ind$parameter %in% core
@@ -60,13 +64,18 @@ make_results_row <- function(
   
   
   # create est_group empty df
-  est_group <- tibble::as_tibble(expand.grid(parameter = parameters,
-                                             condition = levels(data$condition)))
+  est_group <- tibble::as_tibble(
+    expand.grid(
+      parameter = parameters
+      , condition = unique(data$condition)
+      , stringsAsFactors = FALSE
+    )
+  )
   est_group$core <- est_group$parameter %in% core
-  est_group <- est_group[,c("condition", "parameter", "core")]
-  est_group <- tibble::as_tibble(data.frame(est_group,
-                                            est = NA_real_,
-                                            se = NA_real_))
+  est_group <- est_group[, c("condition", "parameter", "core")]
+  est_group$est = NA_real_
+  est_group$se = NA_real_
+  
   for (i in seq_along(getOption("MPTmultiverse")$ci_size)) {
     est_group <- tibble::add_column(est_group, xx = NA_real_)
     colnames(est_group)[ncol(est_group)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
@@ -75,28 +84,38 @@ make_results_row <- function(
   
   # group comparisons
   if (length(conditions) > 1) {
-    pairs <- utils::combn(conditions, 2)
-    tmp_test_between <- vector("list", ncol(pairs))
     
-    for (i in seq_len(ncol(pairs))) {
+    pairs <- utils::combn(
+      x = conditions
+      , m = 2
+      , simplify = FALSE
+    )
+
+    tmp_test_between <- vector("list", length(pairs))
+    
+    for (i in seq_along(pairs)) {
+      
       tmp_test_between[[i]] <- tibble::as_tibble(
-        expand.grid(parameter = parameters, 
-                    condition1 = factor(pairs[1,i], levels = conditions),
-                    condition2 = factor(pairs[2,i], levels = conditions))) %>% 
+        expand.grid(
+          parameter = parameters
+          , condition1 = pairs[[i]][1]
+          , condition2 = pairs[[i]][2]
+          , stringsAsFactors = FALSE
+        )) %>% 
         dplyr::mutate(core = parameter %in% core) %>%  
         dplyr::select(parameter, core, condition1, condition2) %>% 
         dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
+
       tibble_ci <- tibble::as_tibble(
         matrix(NA_real_, nrow(tmp_test_between[[i]]), 
                length(getOption("MPTmultiverse")$ci_size),
                dimnames = list(NULL, paste0("ci_", getOption("MPTmultiverse")$ci_size))))
-      tmp_test_between[[i]] <- dplyr::bind_cols( tmp_test_between[[i]], tibble_ci)
+      tmp_test_between[[i]] <- dplyr::bind_cols(tmp_test_between[[i]], tibble_ci)
     }
     test_between <- dplyr::bind_rows(tmp_test_between) 
   } else {
     test_between <- tibble::tibble()
   }
-  
   ## est_covariate <- ##MISSING
   
   ## create gof empty df
@@ -109,11 +128,25 @@ make_results_row <- function(
     p = NA_real_
   )
   
-  ## create gof_group empty df
-  gof_group <- tibble::as_tibble(data.frame(condition = levels(data$condition),
-                                            gof))
-  ## create gof_indiv empty df
-  gof_indiv <- tibble::as_tibble(data.frame(data[,c("id", "condition")], gof))
+  # Create gof_group and gof_indiv ----
+  # Exploits value recycling of `data.frame`
+  gof_group <- tibble::as_tibble(
+    data.frame(
+      condition = unique(data$condition)
+      , gof
+      , stringsAsFactors = FALSE
+    )
+  )
+
+  gof_indiv <- tibble::as_tibble(
+    data.frame(
+      data[, c("id", "condition")]
+      , gof
+      , stringsAsFactors = FALSE
+    )
+  )
+  
+  # ----
   used_options <- tidy_options(mpt_options())
   
   ## data structure for results
@@ -150,15 +183,17 @@ prep_data_fitting <- function(
   col_freq <- get_eqn_categories(model_file)
   
   out <- list(
-    conditions = levels(data[[condition]]),
-    parameters = MPTinR::check.mpt(model_file)$parameters,
+    conditions = unique(data[[condition]]),
+    parameters = as.character(MPTinR::check.mpt(model_file)$parameters),
     col_freq = col_freq,
     freq_list = split(data[, col_freq], f = data[[condition]]),
     cols_ci = paste0("ci_", getOption("MPTmultiverse")$ci_size),
     data = data
   )
+  out
 }
-
+  
+  
 #' @keywords internal
 
 get_eqn_categories <- function (model.filename)

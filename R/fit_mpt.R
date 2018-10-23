@@ -12,7 +12,7 @@
 #' @param condition Character. Name of the column specifying a between-subjects factor.
 #'   If not specified, no between-subjects comparisons are performed.
 #' @param core character vector defining the core parameters of interest, e.g.,
-#'   \code{core=c("Dn", "Do")}. All other parameters are treated as auxiliary parameters.
+#'   \code{core = c("Dn", "Do")}. All other parameters are treated as auxiliary parameters.
 #' @examples examples/examples.fit_mpt.R
 #' 
 #' @details 
@@ -78,7 +78,7 @@ fit_mpt <- function(
   
   # prepare data ----
   if(is.null(condition)) {
-    data$ExpCond <- factor("no_condition")
+    data$ExpCond <- "no_condition"
     condition <- "ExpCond"
   }
   
@@ -86,6 +86,11 @@ fit_mpt <- function(
     data$Subject <- 1:nrow(data)
     id <- "Subject"
   }
+  
+  # Ensure that all variables are character
+  data$ExpCond <- as.character(data$ExpCond)
+  data$Subject <- as.character(data$Subject)
+  
   
   # check MPT file
   mpt_model <- TreeBUGS::readEQN(model)
@@ -126,9 +131,9 @@ fit_mpt <- function(
   }
 
   
-  # Ensure that id and condition are factors, also drops unused levels
-  # data[[id]] <- factor(data[[id]])
-  data[[condition]] <- factor(data[[condition]])
+  # Ensure that id and condition are character, also drops unused levels
+  data[[id]] <- as.character(data[[id]])
+  data[[condition]] <- as.character(data[[condition]])
 
   
   res <- list()
