@@ -1,14 +1,21 @@
 
+ppp_se <- function(ppp, n_eff) sqrt(ppp * (1-ppp) / n_eff)
+
 # overall goodness of fit across between-subject conditions
-aggregate_ppp <- function(ppp_list, stat = "T1"){
+aggregate_ppp <- function(ppp_list, stat = "T1") {
   obs <- vapply(ppp_list, "[[", paste0(stat, ".obs"),
                 FUN.VALUE = ppp_list[[1]]$T1.obs)
   pred <- vapply(ppp_list, "[[", paste0(stat, ".pred"),
                  FUN.VALUE = ppp_list[[1]]$T1.obs)
+  
   s.obs <- rowSums(obs)
   s.pred <- rowSums(pred)
+  ppps <- s.obs < s.pred
+  n.eff <- mcmcse::ess(ppps)
+  ppp <- mean(ppps)
+  
   c(stat_obs = mean(s.obs), stat_pred = mean(s.pred),
-    stat_df = NA, p = mean(s.obs < s.pred))
+    stat_df = NA, p = ppp, p_se = ppp_se(ppp, n.eff)) # , p_neff = n.eff
 }
 
 #' @importFrom rlang .data
@@ -176,7 +183,8 @@ mpt_treebugs <- function (
         focus = "mean",
         stat_obs = mean(gof_group[[i]]$T1.obs),
         stat_pred = mean(gof_group[[i]]$T1.pred),
-        p = gof_group[[i]]$T1.p
+        p = gof_group[[i]]$T1.p,
+        p_se = ppp_se(p, mcmcse::ess(gof_group[[i]]$T1.pred))
       )
     
     if (pooling != "complete"){
@@ -185,7 +193,8 @@ mpt_treebugs <- function (
                                            type = "T2", focus = "cov",
                                            stat_obs = mean(gof_group[[i]]$T2.obs),
                                            stat_pred = mean(gof_group[[i]]$T2.pred),
-                                           p = gof_group[[i]]$T2.p)
+                                           p = gof_group[[i]]$T2.p,
+                                           p_se = ppp_se(p, mcmcse::ess(gof_group[[i]]$T2.pred)))
       
       sel_fog_ind <- result_row$gof_indiv[[1]]$condition == conditions[i]
       result_row$gof_indiv[[1]][sel_fog_ind,] <-
@@ -196,7 +205,8 @@ mpt_treebugs <- function (
           focus = "mean",
           stat_obs = colMeans(gof_group[[i]]$ind.T1.obs),
           stat_pred = colMeans(gof_group[[i]]$ind.T1.pred),
-          p = gof_group[[i]]$ind.T1.p)
+          p = gof_group[[i]]$ind.T1.p,
+          p_se = ppp_se(p, mcmcse::ess(gof_group[[i]]$ind.T1.pred)))
     }
   }
   

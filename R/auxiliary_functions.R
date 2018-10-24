@@ -138,7 +138,9 @@ make_results_row <- function(
     stat_obs = NA_real_,
     stat_pred = NA_real_,
     stat_df = NA_real_,
-    p = NA_real_
+    p = NA_real_,
+    # p_neff = NA_real_,
+    p_se = NA_real_
   )
   
   # Create gof_group and gof_indiv ----

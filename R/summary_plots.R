@@ -180,13 +180,16 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   gg_gof1 <-
     # filter(focus == "mean") %>%
     ggplot2::ggplot(
-      gof, 
+      gof,
       ggplot2::aes_(y = ~ p, x = ~ approach)
-    ) + 
-    ggplot2::geom_point() + 
-    ggplot2::ylim(0, 1) + 
+    ) +
+    ggplot2::geom_linerange(ggplot2::aes_(ymin = ~ p - (qnorm(0.975) * p_se) * 2.3, ymax = ~ p + (qnorm(0.975) * p_se) * 2.3), linetype = "dotted") +
+    # ggplot2::geom_pointrange(ggplot2::aes_(ymin = ~ p - (qnorm(0.975) * p_se), ymax = ~ p + (qnorm(0.975) * p_se))) +
+    ggplot2::geom_errorbar(ggplot2::aes_(ymin = ~ p - (qnorm(0.975) * p_se), ymax = ~ p + (qnorm(0.975) * p_se)), width = 0.1) +
+    ggplot2::geom_point() +
+    # ggplot2::ylim(0, 1) +
     ggplot2::geom_hline(yintercept = .05, lty = 2)+
-    ggplot2::coord_flip() +
+    ggplot2::coord_flip(ylim = c(0, 1)) +
     ggplot2::facet_wrap( ~ focus) +
     ggplot2::ggtitle("Goodness of fit")
   
@@ -202,6 +205,8 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
     gof_group <- tidyr::unnest(results, .data$gof_group)
     gof_group$approach <- interaction(gof_group$method, gof_group$pooling, gof_group$package)
     
+    dd2 <- ggplot2::position_dodge(width = 0.2)
+    
     gg_gof2 <-
       ggplot2::ggplot(
         gof_group
@@ -210,9 +215,13 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
           , x = ~ approach
           , col = ~ condition)
         ) + 
-      ggplot2::geom_point() + ggplot2::ylim(0, 1) + 
+      ggplot2::geom_linerange(ggplot2::aes_(ymin = ~ p - (qnorm(0.975) * p_se) * 2.3, ymax = ~ p + (qnorm(0.975) * p_se) * 2.3), linetype = "dotted", position = dd2) +
+      # ggplot2::geom_pointrange(ggplot2::aes_(ymin = ~ p - (qnorm(0.975) * p_se), ymax = ~ p + (qnorm(0.975) * p_se)), position = dd) +
+      ggplot2::geom_errorbar(ggplot2::aes_(ymin = ~ p - (qnorm(0.975) * p_se), ymax = ~ p + (qnorm(0.975) * p_se)), width = 0.2, position = dd2) +
+      ggplot2::geom_point(position = dd2) +
+      # ggplot2::ylim(0, 1) + 
       ggplot2::geom_hline(yintercept = .05, lty = 2)+
-      ggplot2::coord_flip() +
+      ggplot2::coord_flip(ylim = c(0, 1)) +
       ggplot2::facet_wrap(~ focus) +
       ggplot2::ggtitle("Goodness of fit")
     if(save) ggplot2::ggsave(paste0(prefix, "gof_group.pdf"), gg_gof2, h = 4, w = 8)
