@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   , comment = "#>"
   , warning = FALSE
   , message = FALSE
+  , fig.width = 8
 )
 ```
 
@@ -55,11 +56,6 @@ devtools::install_github("mariusbarth/MPTmultiverse")
 # load packages:
 library("MPTmultiverse")
 
-
-# Make sure that working directory is correct via either:
-# - setwd() / getwd()
-# - Rstudio->Sessions->Set Working Directory->'To Source File Location'
-
 # If you're running the analysis from an .rmd file, you only need to ensure that
 # the .rmd, .eqn, and .csv files are all in the same directory.
 
@@ -71,9 +67,10 @@ EQN_FILE <- "2HTSM_Submodel4.eqn"
 DATA_FILE <- "Kuhlmann_dl7.csv"  
 
 
-### if .csv format uses semicolons ";" (German format):
+# if .csv format uses semicolons ";" (German format):
 data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
-### if .csv format uses commata "," (international format):
+
+# if .csv format uses commata "," (international format):
 # data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
 
 head(data)
@@ -106,10 +103,10 @@ You can set options to defaults, again, by typing the shorthand `mpt_options("de
 
 ```{r options, results = 'hide'}
 # How to change a single option:
-# mpt_options(n.iter = 1000)
+mpt_options(n.iter = 1e3)
 
 # For testing purposes, you can use this shorthand to set fast, but unreliable options:
-# mpt_options("test")
+mpt_options("test")
 
 # List all options that were set for the different analysis approaches:
 mpt_options()
@@ -120,12 +117,25 @@ mpt_options()
 In the next chunk, the main computations are done.
 Type `?fit_mpt` in the R console if you want to find out more about the parameters of the function.
 
-```{r analysis, results = 'hide', eval = FALSE}
+```{r analysis, results = 'hide'}
+all_supported_methods <- c(
+  "asymptotic_complete"
+  , "asymptotic_no"
+  , "pb_no"
+  , "npb_no"
+  , "simple"
+  , "simple_pooling"
+  , "trait"
+  , "trait_uncorrelated"
+  , "beta"
+  , "betacpp"
+)
+
 results <- fit_mpt(
-  method = c("simple", "simple_pooling", "trait", "beta", "trait_uncorrelated")
+  method = all_supported_methods
   , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
+  , model = "2HTSM_Submodel4.eqn"
   , id = COL_ID
   , condition = COL_CONDITION
 )
@@ -134,18 +144,16 @@ results <- fit_mpt(
 
 ### Post-processing of Results
 
-```{r results, eval = FALSE}
+```{r results}
 # print convergence results
 checks <- (check_results(results))
 
-used_options <- getOption("MPTmultiverse")
 # store results
 save(
   results
   , data
   , EQN_FILE
   , DATA_FILE
-  , used_options
   , checks
   , file = "results.RData"
 )
@@ -157,21 +165,27 @@ save(
 The analysis output `results` is an object of class `multiverseMPT`, that has its own `plot()` method.
 Type `?plot.multiverseMPT` to see the documentation of possible arguments to this method.
 
-```{r eval = FALSE}
+To plot group-level parameter estimates, type:
+
+```{r}
 plot(results, save = FALSE, "est")
 ```
 
+To plot between-subjects comparisons, type:
 
-```{r eval = FALSE}
+```{r}
 plot(results, save = FALSE, "test_between")
 ```
 
+To plot overall goodness-of-fit, type:
 
-```{r eval = FALSE}
+```{r}
 plot(results, save = FALSE, "gof1")
 ```
 
-```{r eval = FALSE}
+To plot group-wise goodness-of-fit, type:
+
+```{r}
 plot(results, save = FALSE, "gof2")
 ```
 

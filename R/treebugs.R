@@ -13,7 +13,7 @@ aggregate_ppp <- function(ppp_list, stat = "T1"){
 
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
-
+ 
 mpt_treebugs <- function (
   method
   , dataset
@@ -21,21 +21,22 @@ mpt_treebugs <- function (
   , model
   , id = "id"
   , condition = "condition"
+  , core = NULL
 ){
   all_options <- getOption("MPTmultiverse")
-
+  
   TREEBUGS_MCMC <- all_options$treebugs
   CI_SIZE <- all_options$ci_size
   
   # dlist <- prepare_data(model, data, id = "id", condition = "condition")
-  conditions <- levels(factor(data[[condition]]))
-  parameters <- MPTinR::check.mpt(model)$parameters
+  conditions <- unique(data[[condition]])
+  parameters <- as.character(MPTinR::check.mpt(model)$parameters)
   col_freq <- get_eqn_categories(model)
 
-  data$id <- data[, id]
-  data$condition <- data[, condition]
+  data$id <- data[[id]]
+  data$condition <- data[[condition]]
   
-  freq_list <- split(data[, col_freq], f = data[, condition])
+  freq_list <- split(data[, col_freq, drop = FALSE], f = data[[condition]])
   pooling <- switch(method, 
                     "simple" = "no", 
                     "simple_pooling" = "complete",
@@ -47,16 +48,17 @@ mpt_treebugs <- function (
                                  package = "TreeBUGS",
                                  method = sub("_pooling","", method, fixed = TRUE),
                                  data = data,
-                                 parameters = parameters,
+                                 # parameters = parameters,
                                  id = id,
-                                 condition = condition)
+                                 condition = condition,
+                                 core = core)
   if (method == "simple_pooling"){
     method <- "simple"
     
     # pooling: aggregate across participants
     data <- stats::aggregate(data[, col_freq], list(condition = data$condition), sum)
     data[[condition]] <- data$condition
-    data[[id]] <- data$id <- 1:nrow(data)
+    data[[id]] <- data$id <- as.character(1:nrow(data))
     if(condition!="condition"){
       data$condition <- NULL
     }
@@ -76,25 +78,29 @@ mpt_treebugs <- function (
   
   
   for (i in seq_along(conditions)){
-    cond <- factor(conditions[i], conditions)
+    cond <- conditions[i]
     sel_condition <- data[[condition]] == conditions[i]
     data_group <- data[sel_condition, col_freq]   #freq_list[[i]]
     rownames(data_group) <- data[[id]][sel_condition]
     
     fit_args <- list(eqnfile=model,
                      data = data_group,
-                     n.chain = TREEBUGS_MCMC$n.chain,
+                     n.chains = TREEBUGS_MCMC$n.chains,
                      n.iter = TREEBUGS_MCMC$n.iter,
                      n.adapt = TREEBUGS_MCMC$n.adapt,
                      n.burnin = TREEBUGS_MCMC$n.burnin,
                      n.thin = TREEBUGS_MCMC$n.thin)
-    if (method == "simple"){
+    if (method %in% c("simple", "betacpp")){
       fit_args["n.adapt"] <- NULL
-      fit_args <- c(fit_args, cores = unname(TREEBUGS_MCMC$n.CPU))
+      fit_args <- c(fit_args, cores = unname(all_options$n.CPU))
     }
     # print(c(fit_args, prior_args))
     t0 <- Sys.time()
-    treebugs_fit[[i]] <- do.call(eval(parse(text = paste0("TreeBUGS::", method, "MPT"))), args = c(fit_args, prior_args))
+    treebugs_function <- ifelse(method == "betacpp", 
+                                "TreeBUGS::betaMPTcpp",
+                                paste0("TreeBUGS::", method, "MPT"))
+    treebugs_fit[[i]] <- do.call(eval(parse(text = treebugs_function)), 
+                                 args = c(fit_args, prior_args))
     summ <- treebugs_fit[[i]]$mcmc.summ
     
     # continue MCMC sampling (only for betaMPT and traitMPT)
@@ -128,32 +134,37 @@ mpt_treebugs <- function (
     
     # parameter estimates
     summMPT <- TreeBUGS::summarizeMPT(treebugs_fit[[i]]$runjags$mcmc,
-                            mptInfo = treebugs_fit[[i]]$mptInfo,
-                            probs = CI_SIZE)
+                                      mptInfo = treebugs_fit[[i]]$mptInfo,
+                                      probs = CI_SIZE,
+                                      summ = treebugs_fit[[i]]$mcmc.summ)
     
     sel_group <- result_row$est_group[[1]]$condition == conditions[i]
-    result_row$est_group[[1]][sel_group,-(1:2)] <-
+    result_row$est_group[[1]][sel_group,-(1:3)] <-
       summMPT$groupParameters$mean[paste0("mean_", parameters),1:6]
     
     if (pooling != "complete"){
       # # old: array filled into data frame
-      # result_row$est_indiv[[1]][sel_ind,-(1:3)] <-
+      # result_row$est_indiv[[1]][sel_ind,-(1:4)] <-
       #   summMPT$individParameters[parameters,,1:(2+length(CI_SIZE))]
       sel_ind <- result_row$est_indiv[[1]]$condition == conditions[i]
       dimnames(summMPT$individParameters)$ID <- rownames(data_group)
       tmp <- summMPT$individParameters[parameters,,1:(2+length(CI_SIZE)), drop = FALSE] %>%
         reshape2::melt() %>% 
         tidyr::spread("Statistic", "value")
-      colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:3)])
+
+      colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:4)])
+      tmp$parameter <- as.character(tmp$parameter)
+      tmp$id <- as.character(tmp$id)
+
       tmp[[condition]] <- cond
       result_row$est_indiv[[1]][sel_ind,] <-
         dplyr::left_join(result_row$est_indiv[[1]][sel_ind,] %>%
-                    dplyr::select("id", "condition", "parameter"),
+                    dplyr::select("id", "condition", "parameter", "core"),
                   tmp, by = c("parameter", "id", condition = condition))
     }
     
     gof_group[[i]] <- TreeBUGS::PPP(treebugs_fit[[i]], M = TREEBUGS_MCMC$n.PPP, type = "G2",
-                          T2 = pooling != "complete", nCPU = TREEBUGS_MCMC$n.CPU)
+                          T2 = pooling != "complete", nCPU = all_options$n.CPU)
 
     sel_gof <- result_row$gof_group[[1]]$condition == conditions[i]
     result_row$gof_group[[1]][sel_gof, ] <-
@@ -161,7 +172,7 @@ mpt_treebugs <- function (
       dplyr::filter(.data$condition == conditions[i]) %>%
       dplyr::mutate(
         condition = conditions[i],
-        type = "T1_G2",
+        type = "T1",
         focus = "mean",
         stat_obs = mean(gof_group[[i]]$T1.obs),
         stat_pred = mean(gof_group[[i]]$T1.pred),
@@ -204,7 +215,7 @@ mpt_treebugs <- function (
             result_row$test_between[[1]]$condition1 == conditions[i] &
             result_row$test_between[[1]]$condition2 == conditions[j]
           
-          result_row$test_between[[1]][sel_row,-(1:3)] <- 
+          result_row$test_between[[1]][sel_row,-(1:4)] <- 
             c(test_summ[,c("Mean", "SD")], 
               p = ifelse(bayesp > .5, 1 - bayesp, bayesp) * 2,  # two-sided Bayesian p values
               test_summ[,2 + seq_along(CI_SIZE)])
@@ -253,4 +264,8 @@ mpt_treebugs <- function (
 
 
 
-mpt_treebugs_safe <- purrr::possibly(mpt_treebugs, otherwise = list())
+mpt_treebugs_safe <- purrr::possibly(
+  .f = mpt_treebugs
+  , otherwise = list()
+  , quiet = FALSE
+)

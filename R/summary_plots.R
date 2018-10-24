@@ -103,7 +103,7 @@
 
 plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE, ...){
   
-  shapes <- c(16, 18, 15, 1, 0, 8, 11, 12)
+  shapes <- c(16, 18, 15, 1, 0, 8, 11, 12, 4, 6)
   
   prefix <- paste0(gsub("\\.eqn", "", results$model[1]), "_", 
                    gsub("\\.", "_", paste0(results$dataset[1],"_")))
@@ -115,7 +115,7 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   }
   
   
-  dd <- ggplot2::position_dodge(w = .75)
+  dd <- ggplot2::position_dodge(width = .75)
   
   est_group <- tidyr::unnest(data = results, .data$est_group)
   est_group$approach <- interaction(est_group$method, est_group$pooling, est_group$package)

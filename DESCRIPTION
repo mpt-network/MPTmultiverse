@@ -31,10 +31,11 @@ Imports:
     readr
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat
 LazyData: yes
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 License:
   GPL-2
 Year:

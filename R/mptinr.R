@@ -8,6 +8,7 @@ mpt_mptinr <- function(
   , method   # analysis approaches to be conducted
   , id
   , condition
+  , core = NULL
 ){
 
   prepared <- prep_data_fitting(
@@ -27,17 +28,19 @@ mpt_mptinr <- function(
       , method = intersect(method, "asymptotic_complete")
       , id = id
       , condition = condition
+      , core = core
     )
   }
   
-  if(any(method %in% c("asymptotic_no", "pb_no"))) {
+  if(any(method %in% c("asymptotic_no", "pb_no", "npb_no"))) {
     res[["no_pooling"]] <- mpt_mptinr_no(
       dataset = dataset
       , prepared = prepared
       , model = model
-      , method = intersect(method, c("asymptotic_no", "pb_no"))
+      , method = intersect(method, c("asymptotic_no", "pb_no", "npb_no"))
       , id = id
       , condition = condition
+      , core = core
     )
   }
   
@@ -51,6 +54,7 @@ mpt_mptinr <- function(
 ## no pooling ##
 ################
 
+#' @importFrom tibble tibble
 #' @importFrom rlang .data sym
 #' @importFrom magrittr %>%
 #' @keywords internal
@@ -62,6 +66,7 @@ mpt_mptinr_no <- function(
   , method
   , id
   , condition
+  , core = NULL
 ) {
 
   OPTIONS <- getOption("MPTmultiverse")
@@ -69,30 +74,14 @@ mpt_mptinr_no <- function(
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
+  bootstrap <- c()
   
-  cl <- parallel::makeCluster(rep("localhost", MPTINR_OPTIONS$n.CPU))
-  parallel::clusterEvalQ(cl, library("MPTinR"))
-  
-  no_pooling <- make_results_row(model = model,
-                                 dataset = dataset,
-                                 pooling = "no",
-                                 package = "MPTinR",
-                                 method = "PB/MLE",
-                                 data = prepared$data,
-                                 parameters = prepared$parameters,
-                                 id = id,
-                                 condition = condition
-                                 )
-  
-  no_pooling2 <- make_results_row(model = model,
-                                 dataset = dataset,
-                                 pooling = "no",
-                                 package = "MPTinR",
-                                 method = "asymptotic",
-                                 data = prepared$data,
-                                 parameters = prepared$parameters,
-                                 id = id,
-                                 condition = condition)
+  if ("pb_no" %in% method) {
+    bootstrap <- c(bootstrap, "pb")
+  }
+  if ("npb_no" %in% method) {
+    bootstrap <- c(bootstrap, "npb")
+  }
   
   t0 <- Sys.time()
   fit_mptinr <- MPTinR::fit.mpt(prepared$data[,prepared$col_freq],
@@ -102,85 +91,315 @@ mpt_mptinr_no <- function(
                         show.messages = FALSE, output = "full", 
                         ci = (1 - stats::pnorm(1))*2*100)
   t1 <- Sys.time()
-  
-  convergence <- data.frame(
-    id = prepared$data[, id]
-    , condition = prepared$data[, condition]
-    , fit_mptinr$model.info$individual[,1:2]
-    , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, 0)
-  )
-  
-  no_pooling$gof_indiv[[1]]$type <- "pb-G2"
-  no_pooling$gof_indiv[[1]]$focus <- "mean"
-  no_pooling$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
-  no_pooling$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
-  
-  no_pooling2$gof_indiv[[1]]$type <- "G2"
-  no_pooling2$gof_indiv[[1]]$focus <- "mean"
-  no_pooling2$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
-  no_pooling2$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
-  no_pooling2$gof_indiv[[1]]$p <- fit_mptinr$goodness.of.fit$individual$p.value
+  additional_time <- t1 - t0
 
-  t2 <- Sys.time()
-  fit_pb <- parallel::clusterApplyLB(
-    cl
-    , seq_len(nrow(prepared$data))
-    , get_pb_output
-    , fit_mptinr = fit_mptinr
-    , data = prepared$data
-    , model_file = model
-    , col_freq = prepared$col_freq
-    , MPTINR_OPTIONS = MPTINR_OPTIONS
+  convergence <- tibble::tibble(
+    id = prepared$data[[id]]
+    , condition = as.character(prepared$data[[condition]])
+    , rank.fisher = fit_mptinr$model.info$individual$rank.fisher
+    , n.parameters = fit_mptinr$model.info$individual$n.parameters
+    , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, FUN.VALUE = 0)
   )
-  t3 <- Sys.time()
+  
+  res <- vector("list", length(method))
+  names(res) <- method
+  
+  if ("asymptotic_no" %in% method) {
+    
+    res[["asymptotic_no"]] <- make_results_row(model = model,
+                                               dataset = dataset,
+                                               pooling = "no",
+                                               package = "MPTinR",
+                                               method = "asymptotic",
+                                               data = prepared$data,
+                                               # parameters = prepared$parameters,
+                                               id = id,
+                                               condition = condition,
+                                               core = core)
+    
+    
+    
+    res[["asymptotic_no"]]$gof_indiv[[1]]$type <- "G2"
+    res[["asymptotic_no"]]$gof_indiv[[1]]$focus <- "mean"
+    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
+    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
+    res[["asymptotic_no"]]$gof_indiv[[1]]$p <- fit_mptinr$goodness.of.fit$individual$p.value
+    
+    
+    ## make est_indiv and gof_indiv
+    for (i in seq_len(nrow(prepared$data))) {
+      
+      for (p in prepared$parameters) {
+        
+        res[["asymptotic_no"]]$est_indiv[[1]][
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "est" ] <-
+          fit_mptinr$parameters$individual[p,"estimates",i]
+        
+        res[["asymptotic_no"]]$est_indiv[[1]][
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "se" ] <-
+          fit_mptinr$parameters$individual[p, "upper.conf",i] - 
+          fit_mptinr$parameters$individual[p,"estimates",i]
+      }
+    }
+    
+    for (i in seq_along(CI_SIZE)) {
+      res[["asymptotic_no"]]$est_indiv[[1]][, prepared$cols_ci[i]] <-
+        res[["asymptotic_no"]]$est_indiv[[1]][,"est"] +
+        stats::qnorm(CI_SIZE[i])*res[["asymptotic_no"]]$est_indiv[[1]][,"se"]
+    }
+    
+    #### make est_group ####
+    
+    est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
+      dplyr::group_by(.data$condition, .data$parameter, .data$core) %>%
+      dplyr::summarise(estN = mean(.data$est),
+                       se = stats::sd(.data$est) / 
+                         sqrt(sum(!is.na(.data$est)))) %>%
+      dplyr::ungroup() %>%
+      dplyr::rename(est = estN)
+    for (i in seq_along(CI_SIZE)) {
+      est_group2[, prepared$cols_ci[i]] <- est_group2[,"est"] + 
+        stats::qnorm(CI_SIZE[i])*est_group2[,"se"]
+    }
+    
+    res[["asymptotic_no"]]$est_group[[1]] <- dplyr::right_join(
+      est_group2, res[["asymptotic_no"]]$est_group[[1]][,c("condition", 
+                                                           "parameter")],
+      by = c("condition", "parameter"))
+    
+    
+    # ----------------------------------------------------------------------------
+    # make gof_group for asymptotic approach
+    
+    res[["asymptotic_no"]]$gof_group[[1]]$type <- "G2"
+    res[["asymptotic_no"]]$gof_group[[1]]$focus <- "mean"
+    
+    tmp <- fit_mptinr$goodness.of.fit$individual
+    tmp$condition <- as.character(prepared$data$condition)
+    gof_group2 <- tmp %>%
+      dplyr::group_by(.data$condition) %>%
+      dplyr::summarise(stat_obs = sum(.data$G.Squared),
+                       stat_pred = NA_real_,
+                       stat_df = sum(.data$df))
+    
+    gof_group2$p <- stats::pchisq(
+      q = gof_group2$stat_obs
+      , df = gof_group2$stat_df
+      , lower.tail = FALSE
+    )
+    # ensure that factor levels fit: not necessary because we switched to character
+    # gof_group2$condition <- factor(
+    #   gof_group2$condition
+    #   , levels = levels(res[["asymptotic_no"]]$gof_group[[1]]$condition)
+    # )
+    
+    res[["asymptotic_no"]]$gof_group[[1]] <- 
+      dplyr::right_join(res[["asymptotic_no"]]$gof_group[[1]][, c("condition", "type", "focus")],
+                        gof_group2,
+                        by = c("condition"))
+    
+    
+    # ----------------------------------------------------------------------------
+    # make gof
+    
+    gof <- tibble::tibble(
+      type = "G2"
+      , focus = "mean"
+      , stat_obs = fit_mptinr$goodness.of.fit$sum$G.Squared
+      , stat_pred = NA_real_
+      , stat_df = fit_mptinr$goodness.of.fit$sum$df
+      , p = NA_real_
+    )
+    
+    # Calculate *p* value from Chi-squared distribution
+    res[["asymptotic_no"]]$gof[[1]] <- gof
+    res[["asymptotic_no"]]$gof[[1]]$p <- stats::pchisq(
+      q = res[["asymptotic_no"]]$gof[[1]]$stat_obs
+      , df = res[["asymptotic_no"]]$gof[[1]]$stat_df
+      , lower.tail = FALSE
+    )
+    
+    # ----------------------------------------------------------------------------  
+    # make test_between
+    
+    for (i in seq_len(nrow(res[["asymptotic_no"]]$test_between[[1]]))) {
+      tmp_par <- res[["asymptotic_no"]]$test_between[[1]]$parameter[i]
+      tmp_c1 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition1[i])
+      tmp_c2 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition2[i])
+      
+      tmp_df <- res[["asymptotic_no"]]$est_indiv[[1]][ 
+        res[["asymptotic_no"]]$est_indiv[[1]]$parameter == tmp_par & 
+          res[["asymptotic_no"]]$est_indiv[[1]]$condition %in% 
+          c(as.character(tmp_c1), as.character(tmp_c2)) , ]
+      
+      tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
+                             tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
+      
+      tmp_lm <- stats::lm(formula = est ~ condition, data = tmp_df)
+      
+      tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
+      
+      res[["asymptotic_no"]]$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
+        c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
+      
+      res[["asymptotic_no"]]$test_between[[1]][i, prepared$cols_ci] <- 
+        res[["asymptotic_no"]]$test_between[[1]][i, ]$est_diff + 
+        stats::qnorm(CI_SIZE) * res[["asymptotic_no"]]$test_between[[1]][i, ]$se
+    }
+    
+    ### copy information that is same ----
+    
+    res[["asymptotic_no"]]$convergence <- list(convergence)
+    # res[["asymptotic_no"]]$test_between <- res[["pb_no"]]$test_between # bugfix--MB--2018-10-14
+    
+    # write estimation time to results_row ----
+    res[["asymptotic_no"]]$estimation[[1]] <- tibble::tibble(
+      condition = "complete_data"
+      , time_difference = additional_time
+    )
+    
+  }
+  
+  
+  if ("pb" %in% bootstrap) {
+    res[["pb_no"]] <- get_pb_results(dataset = dataset
+                                     , prepared = prepared
+                                     , model = model
+                                     , id = id
+                                     , condition = condition
+                                     , bootstrap = "pb"
+                                     , fit_mptinr = fit_mptinr
+                                     , additional_time = additional_time
+                                     , convergence = convergence
+                                     , core = core)
+  }
+  if ("npb" %in% bootstrap) {
+    res[["npb_no"]] <- get_pb_results(dataset = dataset
+                                     , prepared = prepared
+                                     , model = model
+                                     , id = id
+                                     , condition = condition
+                                     , bootstrap = "npb"
+                                     , fit_mptinr = fit_mptinr
+                                     , additional_time = additional_time
+                                     , convergence = convergence
+                                     , core = core)
+  }
+  # return
+  dplyr::bind_rows(res)
+}
+
+get_pb_results <- function(dataset
+  , prepared
+  , model
+  , id
+  , condition
+  , bootstrap
+  , fit_mptinr
+  , additional_time
+  , convergence
+  , core = core) {
+  
+  OPTIONS <- getOption("MPTmultiverse")
+  MPTINR_OPTIONS <- OPTIONS$mptinr
+  CI_SIZE <- OPTIONS$ci_size
+  MAX_CI_INDIV <- OPTIONS$max_ci_indiv
+  
+  cl <- parallel::makeCluster(rep("localhost", OPTIONS$n.CPU))
+  parallel::clusterEvalQ(cl, library("MPTinR"))
+  parallel::clusterSetRNGStream(cl, iseed = sample.int(.Machine$integer.max, 1))
+  
+  if (bootstrap == "pb") {
+    res <- make_results_row(
+      model = model
+      , dataset = dataset
+      , pooling = "no"
+      , package = "MPTinR"
+      , method = "PB/MLE"
+      , data = prepared$data
+      # , parameters = prepared$parameters
+      , id = id
+      , condition = condition
+      , core = core
+    )
+    t1 <- Sys.time()
+    fit_pb <- parallel::clusterApplyLB(
+      cl
+      , seq_len(nrow(prepared$data))
+      , get_pb_output
+      , fit_mptinr = fit_mptinr
+      , data = prepared$data
+      , model_file = model
+      , col_freq = prepared$col_freq
+      , MPTINR_OPTIONS = MPTINR_OPTIONS
+    )
+    t2 <- Sys.time()
+  }
+  if (bootstrap == "npb") {
+    res <- make_results_row(
+      model = model
+      , dataset = dataset
+      , pooling = "no"
+      , package = "MPTinR"
+      , method = "NPB/MLE"
+      , data = prepared$data
+      # , parameters = prepared$parameters
+      , id = id
+      , condition = condition
+      , core = core
+    )
+    t1 <- Sys.time()
+    fit_pb <- parallel::clusterApplyLB(
+      cl
+      , seq_len(nrow(prepared$data))
+      , get_npb_output
+      , fit_mptinr = fit_mptinr
+      , data = prepared$data
+      , model_file = model
+      , col_freq = prepared$col_freq
+      , MPTINR_OPTIONS = MPTINR_OPTIONS
+    )
+    t2 <- Sys.time()
+  }
+  
+  res$gof_indiv[[1]]$type <- "G2"
+  res$gof_indiv[[1]]$focus <- "mean"
+  res$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
+  res$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
   
   ## make est_indiv and gof_indiv
   for (i in seq_len(nrow(prepared$data))) {
     
     for (p in prepared$parameters) {
-      no_pooling$est_indiv[[1]][
-        no_pooling$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          no_pooling$est_indiv[[1]]$parameter == p, "est" ] <-
+      res$est_indiv[[1]][
+        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res$est_indiv[[1]]$parameter == p, "est" ] <-
         fit_mptinr$parameters$individual[p,"estimates",i]
       
-      no_pooling2$est_indiv[[1]][
-        no_pooling2$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          no_pooling2$est_indiv[[1]]$parameter == p, "est" ] <-
-        fit_mptinr$parameters$individual[p,"estimates",i]
-      no_pooling2$est_indiv[[1]][
-        no_pooling2$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          no_pooling2$est_indiv[[1]]$parameter == p, "se" ] <-
-        fit_mptinr$parameters$individual[p, "upper.conf",i] - 
-        fit_mptinr$parameters$individual[p,"estimates",i]
-      
-      no_pooling$est_indiv[[1]][
-        no_pooling$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          no_pooling$est_indiv[[1]]$parameter == p, prepared$cols_ci ] <-
+      res$est_indiv[[1]][
+        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res$est_indiv[[1]]$parameter == p, prepared$cols_ci ] <-
         stats::quantile(fit_pb[[i]]$parameters$individual[p,"estimates",], probs = CI_SIZE)
-      no_pooling$est_indiv[[1]][
-        no_pooling$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          no_pooling$est_indiv[[1]]$parameter == p, "se" ] <-
+      
+      res$est_indiv[[1]][
+        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res$est_indiv[[1]]$parameter == p, "se" ] <-
         stats::sd(fit_pb[[i]]$parameters$individual[p,"estimates",]) 
     }
-    
     # gof_indiv
-    no_pooling$gof_indiv[[1]][
-      no_pooling$gof_indiv[[1]]$id == prepared$data[i,"id"], "p" ] <-
+    res$gof_indiv[[1]][
+      res$gof_indiv[[1]]$id == prepared$data[i,"id"], "p" ] <-
       (sum(fit_pb[[i]]$goodness.of.fit$individual$G.Squared >
              fit_mptinr$goodness.of.fit$individual[i,"G.Squared"]) + 1) /
       (MPTINR_OPTIONS$bootstrap_samples + 1)
     
   }
   
-  for (i in seq_along(CI_SIZE)) {
-    no_pooling2$est_indiv[[1]][, prepared$cols_ci[i]] <-
-      no_pooling2$est_indiv[[1]][,"est"] +
-      stats::qnorm(CI_SIZE[i])*no_pooling2$est_indiv[[1]][,"se"]
-  }
+    #### make est_group ####
   
-  #### make est_group ####
-  
-  tmp <- no_pooling$est_indiv[[1]]
+  tmp <- res$est_indiv[[1]]
   tmp$range_ci <- tmp[, prepared$cols_ci[length(prepared$cols_ci)]][[1]] - 
     tmp[, prepared$cols_ci[1]][[1]]
   
@@ -190,61 +409,53 @@ mpt_mptinr_no <- function(
     dplyr::summarise(parameter = paste0(.data$parameter, collapse = ", ")) %>% 
     dplyr::ungroup()
   
-  no_pooling$convergence <- 
+  res$convergence <- 
     list(tibble::as_tibble(dplyr::left_join(convergence, non_identified_pars, by = "id")))
   
   if (nrow(non_identified_pars) > 0) {
-    warning("MPTinR-no: IDs and parameters with PB-CIs > ",
+    warning("MPTinR-no: IDs and parameters with ", bootstrap, "-CIs > ",
             MAX_CI_INDIV, " (i.e., non-identified):\n", 
             apply(non_identified_pars, 
                   1, function(x) paste0(x[["id"]], ": ", x[["parameter"]], "\n") ),
             call. = FALSE)    
   }
-
+  
   est_group <- tmp %>%
-    dplyr::filter(.data$range_ci < MAX_CI_INDIV) %>%
-    dplyr::group_by(.data$condition, .data$parameter) %>%
-    dplyr::summarise(
-      estN = mean(.data$est)
-      , se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est)))
-      , quant = list(as.data.frame(t(stats::quantile(.data$est, prob = CI_SIZE))))
-    ) %>%
-    tidyr::unnest(.data$quant) %>%
-    dplyr::ungroup() %>%
-    dplyr::rename(est = .data$estN)
-  colnames(est_group)[
-    (length(colnames(est_group))-length(CI_SIZE)+1):length(colnames(est_group))
-    ] <- prepared$cols_ci
-  
-  no_pooling$est_group[[1]] <-
-    dplyr::right_join(est_group,
-               no_pooling$est_group[[1]][, c("condition", "parameter")],
-               by = c("condition", "parameter"))
-  
-  
-    est_group2 <- no_pooling2$est_indiv[[1]] %>%
-    dplyr::group_by(.data$condition, .data$parameter) %>%
+    dplyr::group_by(.data$condition, .data$parameter, .data$core) %>%
     dplyr::summarise(estN = mean(.data$est),
-              se = stats::sd(.data$est) / sqrt(sum(!is.na(.data$est))),
-              quant = list(as.data.frame(t(stats::quantile(.data$est, prob = CI_SIZE))))) %>%
-    tidyr::unnest(.data$quant) %>%
+                     se = stats::sd(.data$est) / 
+                       sqrt(sum(!is.na(.data$est)))) %>%
     dplyr::ungroup() %>%
-    dplyr::rename(est = .data$estN)
-  colnames(est_group2)[
-    (length(colnames(est_group2))-length(CI_SIZE)+1):length(colnames(est_group2))
-    ] <- prepared$cols_ci
+    dplyr::rename(est = estN)
+  for (i in seq_along(CI_SIZE)) {
+    est_group[, prepared$cols_ci[i]] <- est_group[,"est"] + 
+      stats::qnorm(CI_SIZE[i])*est_group[,"se"]
+  }
   
-  no_pooling2$est_group[[1]] <-
-    dplyr::right_join(est_group2,
-               no_pooling2$est_group[[1]][,c("condition", "parameter")],
-               by = c("condition", "parameter"))
+  res$est_group[[1]] <-
+    dplyr::right_join(est_group,
+                      res$est_group[[1]][, c("condition", "parameter")],
+                      by = c("condition", "parameter"))
   
-  #### make gof_group ####
-  no_pooling$gof_group[[1]]$type <- "pb-G2"
-  no_pooling$gof_group[[1]]$focus <- "mean"
+  # make gof_group for parametric-bootstrap approach
+  
+  res$gof_group[[1]]$type <- paste0(bootstrap, "-G2")
+  res$gof_group[[1]]$focus <- "mean"
   
   tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- as.factor(prepared$data$condition)
+  tmp$condition <- as.character(prepared$data$condition)
+  gof_group <- tmp %>%
+    dplyr::group_by(.data$condition) %>%
+    dplyr::summarise(stat_obs = sum(.data$G.Squared),
+              stat_df = sum(.data$df))
+  gof_group$p <- NA_real_
+  
+  
+  # ----------------------------------------------------------------------------
+  # make gof_group for parametric-bootstrap approach
+  
+  tmp <- fit_mptinr$goodness.of.fit$individual
+  tmp$condition <- as.character(prepared$data$condition)
   gof_group <- tmp %>%
     dplyr::group_by(.data$condition) %>%
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
@@ -261,72 +472,60 @@ mpt_mptinr_no <- function(
     g2_cond[[i]] <- apply(g2_all[ , 
                                  prepared$data$condition == 
                                    prepared$conditions[i]], 1, sum)
-    no_pooling$gof_group[[1]][ 
-      no_pooling$gof_group[[1]]$condition == 
+    res$gof_group[[1]][ 
+      res$gof_group[[1]]$condition == 
         prepared$conditions[i], "stat_obs" ] <- 
       gof_group[ gof_group$condition == prepared$conditions[i], "stat_obs"]
-    no_pooling$gof_group[[1]][ no_pooling$gof_group[[1]]$condition == 
+    res$gof_group[[1]][ res$gof_group[[1]]$condition == 
                                  prepared$conditions[i], "stat_df" ] <- 
       gof_group[ gof_group$condition == prepared$conditions[i], "stat_df"]
-    no_pooling$gof_group[[1]][ no_pooling$gof_group[[1]]$condition == 
+    res$gof_group[[1]][ res$gof_group[[1]]$condition == 
                                  prepared$conditions[i], "p" ] <-
       (sum(gof_group[ gof_group$condition == 
                         prepared$conditions[i], "stat_obs"][[1]] <
              g2_cond[[i]]) + 1) / (MPTINR_OPTIONS$bootstrap_samples + 1)
   }
   
-  #### make gof_group2 ####
-  no_pooling2$gof_group[[1]]$type <- "G2"
-  no_pooling2$gof_group[[1]]$focus <- "mean"
+  gof <- tibble::tibble(
+    type = "G2"
+    , focus = "mean"
+    , stat_obs = fit_mptinr$goodness.of.fit$sum$G.Squared
+    , stat_pred = NA_real_
+    , stat_df = fit_mptinr$goodness.of.fit$sum$df
+    , p = NA_real_
+  )
   
-  gof_group2 <- tmp %>%
-    dplyr::group_by(.data$condition) %>%
-    dplyr::summarise(stat_obs = sum(.data$G.Squared),
-              stat_pred = NA_real_,
-              stat_df = sum(.data$df))
-  gof_group2$p <- stats::pchisq(q = gof_group2$stat_obs, 
-                         df = gof_group2$stat_df, 
-                         lower.tail = FALSE)
-  gof_group2$condition <- factor(gof_group2$condition)
-  no_pooling2$gof_group[[1]] <- 
-    dplyr::right_join(no_pooling2$gof_group[[1]][, c("condition", "type", "focus")],
-             gof_group2,
-               by = c("condition"))
+  # Calculate *p* value from distribution of bootstrapped G2 values
+  res$gof[[1]] <- gof
   
-  no_pooling2$gof[[1]]$type <- "G2"
-  no_pooling2$gof[[1]]$focus <- "mean"
-  no_pooling2$gof[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$sum$G.Squared
-  no_pooling2$gof[[1]]$stat_df <- fit_mptinr$goodness.of.fit$sum$df
-  no_pooling2$gof[[1]]$p <- stats::pchisq(q = no_pooling2$gof[[1]]$stat_obs, 
-                                   df = no_pooling2$gof[[1]]$stat_df, 
-                                   lower.tail = FALSE)
+  g2_all <- vapply(
+    X = fit_pb
+    , FUN = function(x) x$goodness.of.fit$individual$G.Squared
+    , FUN.VALUE = rep(0, MPTINR_OPTIONS$bootstrap_samples)
+  )
+  g2_cond <- apply(
+    X = g2_all
+    , MARGIN = 1
+    , FUN = sum
+  )
   
-  #### make gof ####
-  no_pooling$gof[[1]]$type <- "pb-G2"
-  no_pooling$gof[[1]]$focus <- "mean"
-  no_pooling$gof[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$sum$G.Squared
-  no_pooling$gof[[1]]$stat_df <- fit_mptinr$goodness.of.fit$sum$df
-  
-  g2_all <- vapply(fit_pb,
-                   function(x) x$goodness.of.fit$individual$G.Squared,
-                   rep(0, MPTINR_OPTIONS$bootstrap_samples))
-  
-  g2_cond <- apply(g2_all, 1, sum)
-  no_pooling$gof[[1]]$p <-
-    (sum(no_pooling$gof[[1]]$stat_obs < g2_cond) + 1) /
+  res$gof[[1]]$p <-
+    (sum(res$gof[[1]]$stat_obs < g2_cond) + 1) /
     (MPTINR_OPTIONS$bootstrap_samples + 1)
   
-  ### test between ###
+  # ----------------------------------------------------------------------------  
+  # make test_between
   
-  for (i in seq_len(nrow(no_pooling$test_between[[1]]))) {
-    tmp_par <- no_pooling$test_between[[1]]$parameter[i]
-    tmp_c1 <- no_pooling$test_between[[1]]$condition1[i]
-    tmp_c2 <- no_pooling$test_between[[1]]$condition2[i]
+  for (i in seq_len(nrow(res$test_between[[1]]))) {
+    # all these should be character
+    tmp_par <- res$test_between[[1]]$parameter[i]
+    tmp_c1 <- res$test_between[[1]]$condition1[i]
+    tmp_c2 <- res$test_between[[1]]$condition2[i]
     
-    tmp_df <- droplevels(no_pooling$est_indiv[[1]][ 
-      no_pooling$est_indiv[[1]]$parameter == tmp_par & 
-        no_pooling$est_indiv[[1]]$condition %in% 
-        c(as.character(tmp_c1), as.character(tmp_c2)) , ])
+    tmp_df <- res$est_indiv[[1]][ 
+      res$est_indiv[[1]]$parameter == tmp_par & 
+        res$est_indiv[[1]]$condition %in% 
+        c(tmp_c1, tmp_c2), ]
     
     tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
                     tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
@@ -335,39 +534,26 @@ mpt_mptinr_no <- function(
     
     tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
     
-    no_pooling$test_between[[1]][ 
-      no_pooling$test_between[[1]]$parameter == tmp_par , 
-      c("est_diff" , "se", "p") ] <- 
+    res$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
       c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
     
-    no_pooling$test_between[[1]][ 
-      no_pooling$test_between[[1]]$parameter == tmp_par, prepared$cols_ci] <- 
-      no_pooling$test_between[[1]][ 
-        no_pooling$test_between[[1]]$parameter == tmp_par ,]$est_diff + 
-      stats::qnorm(CI_SIZE)* no_pooling$test_between[[1]][ 
-        no_pooling$test_between[[1]]$parameter == tmp_par ,]$se
-    
+    res$test_between[[1]][i, prepared$cols_ci] <- 
+      res$test_between[[1]][i, ]$est_diff + 
+      stats::qnorm(CI_SIZE)* res$test_between[[1]][i, ]$se
   }
   
-  ### copy information that is same ----
-  no_pooling2$convergence <- no_pooling$convergence
-  no_pooling2$test_between <- no_pooling$test_between
-  
-  # write estimation time to results_row ----
-  no_pooling$estimation[[1]] <- tibble::tibble(
+   # write estimation time to results_row ----
+  res$estimation[[1]] <- tibble::tibble(
     condition = "complete_data"
-    , time_difference = (t3 - t2) + (t1 - t0)
-  )
-  no_pooling2$estimation[[1]] <- tibble::tibble(
-    condition = "complete_data"
-    , time_difference = t1 - t0
+    , time_difference = (t2 - t1) + additional_time
   )
   
   parallel::stopCluster(cl)
   
+  return(res)
   
-  return(dplyr::bind_rows(no_pooling, no_pooling2))
 }
+
 
 
 #' Parametric Bootstrap for MPT
@@ -397,10 +583,30 @@ get_pb_output <- function(
             show.messages = FALSE)
 }
 
+get_npb_output <- function(
+  i
+  , fit_mptinr
+  , data
+  , model_file
+  , col_freq
+  , MPTINR_OPTIONS) {
+  
+  gen_data <- MPTinR::sample.data(
+    data = unlist(data[i, col_freq])
+    , samples = MPTINR_OPTIONS$bootstrap_samples
+    , model.filename = model_file
+  )
+  MPTinR::fit.mpt(gen_data,
+            model.filename = model_file,
+            fit.aggregated = FALSE,
+            n.optim = MPTINR_OPTIONS$n.optim,
+            show.messages = FALSE)
+}
 
-######################
-## complete pooling ##
-######################
+
+# ------------------------------------------------------------------------------
+# Complete-pooling (maximum-likelihood) approach
+
 
 #' @importFrom magrittr %>%
 #' @keywords internal
@@ -410,27 +616,29 @@ mpt_mptinr_complete <- function(dataset,
                                 model,
                                 method,
                                 id, 
-                                condition) {
+                                condition,
+                                core = NULL) {
   OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
   
-  complete_pooling <- make_results_row(
+  res <- make_results_row(
     model = model
     , dataset = dataset
     , pooling = "complete"
     , package = "MPTinR"
     , method = "asymptotic"
     , data = prepared$data
-    , parameters = prepared$parameters
+    # , parameters = prepared$parameters
     , id = id
     , condition = condition
+    , core = core
   )
   
-  complete_pooling$est_indiv <- list(tibble::tibble())
-  complete_pooling$gof_indiv <- list(tibble::tibble())
+  res$est_indiv <- list(tibble::tibble())
+  res$gof_indiv <- list(tibble::tibble())
   
   #### fully aggregated:
   
@@ -442,25 +650,26 @@ mpt_mptinr_complete <- function(dataset,
   t_complete_data <- Sys.time() - t0
   ## gof
   
-  complete_pooling$gof[[1]][1,"type"] <- "G2"
-  complete_pooling$gof[[1]][1,"focus"] <- "mean"
-  complete_pooling$gof[[1]][1,"stat_obs"] <-
-    fit_mptinr_agg$goodness.of.fit$G.Squared
-  complete_pooling$gof[[1]][1,"stat_df"] <-
-    fit_mptinr_agg$goodness.of.fit$df
-  complete_pooling$gof[[1]][1,"p"] <-
-    fit_mptinr_agg$goodness.of.fit$p
+  res$gof[[1]][1,"type"] <- "G2"
+  res$gof[[1]][1,"focus"] <- "mean"
+  
+  res$gof[[1]][1, c("stat_obs", "stat_df", "p")] <-
+    fit_mptinr_agg$goodness.of.fit[, c("G.Squared", "df", "p.value")]
+
   
   #### aggregated by condition
   
-  complete_pooling$gof_group[[1]][,"type"] <- "G2"
-  complete_pooling$gof_group[[1]][,"focus"] <- "mean"
+  res$gof_group[[1]][, "type"] <- "G2"
+  res$gof_group[[1]][, "focus"] <- "mean"
   
   convergence <- vector("list", 1 + length(prepared$conditions))
   names(convergence) <- c("aggregated", prepared$conditions)
-  convergence$aggregated <- tibble::as_tibble(data.frame(
-             fit_mptinr_agg$model.info[,1:2],
-             convergence = fit_mptinr_agg$best.fits[[1]]$convergence))
+
+  convergence$aggregated <- tibble::tibble(
+    rank.fisher = fit_mptinr_agg$model.info$rank.fisher
+    , n.parameters = fit_mptinr_agg$model.info$n.parameters
+    , convergence = fit_mptinr_agg$best.fits[[1]]$convergence
+  )
   
   t_cond <- list()
   
@@ -474,74 +683,78 @@ mpt_mptinr_complete <- function(dataset,
                               output = "full")
     t_cond[[prepared$conditions[i]]] <- Sys.time() - t0
     
-    complete_pooling$gof_group[[1]][
-      complete_pooling$gof_group[[1]]$condition == 
-        prepared$conditions[i] ,"stat_obs"] <-
-      fit_mptinr_tmp$goodness.of.fit$G.Squared
-    complete_pooling$gof_group[[1]][
-      complete_pooling$gof_group[[1]]$condition == 
-        prepared$conditions[i], "stat_df"] <-
-      fit_mptinr_tmp$goodness.of.fit$df
-    complete_pooling$gof_group[[1]][
-      complete_pooling$gof_group[[1]]$condition == 
-        prepared$conditions[i], "p"] <-
-      fit_mptinr_tmp$goodness.of.fit$p
+    res$gof_group[[1]][
+      res$gof_group[[1]]$condition == 
+        prepared$conditions[i] , c("stat_obs", "stat_df", "p")] <-
+      fit_mptinr_tmp$goodness.of.fit[, c("G.Squared", "df", "p.value")]
     
-    complete_pooling$est_group[[1]][
-      complete_pooling$est_group[[1]]$condition == 
-        prepared$conditions[i], "est"
-      ] <- fit_mptinr_tmp$parameters[
-        complete_pooling$est_group[[1]][
-          complete_pooling$est_group[[1]]$condition == 
-            prepared$conditions[i],
-          ]$parameter, "estimates" ]
-    
+    res$est_group[[1]][
+      res$est_group[[1]]$condition == prepared$conditions[i], "est"] <- 
+      fit_mptinr_tmp$parameters[
+        res$est_group[[1]][res$est_group[[1]]$condition == prepared$conditions[i], ]$parameter, "estimates"]
+
     par_se <- sqrt(diag(solve(fit_mptinr_tmp$hessian[[1]])))
     names(par_se) <- rownames(fit_mptinr_tmp$parameters)
     
-    complete_pooling$est_group[[1]][
-      complete_pooling$est_group[[1]]$condition == 
+    res$est_group[[1]][
+      res$est_group[[1]]$condition == 
         prepared$conditions[i], "se"
       ] <- par_se[
-        complete_pooling$est_group[[1]][
-          complete_pooling$est_group[[1]]$condition == 
+        res$est_group[[1]][
+          res$est_group[[1]]$condition == 
             prepared$conditions[i],
           ]$parameter]
     
-    convergence[[prepared$conditions[i]]] <- tibble::as_tibble(data.frame(
-             fit_mptinr_tmp$model.info[,1:2],
-             convergence = fit_mptinr_tmp$best.fits[[1]]$convergence))
+    convergence[[prepared$conditions[i]]] <- tibble::tibble(
+      rank.fisher = fit_mptinr_tmp$model.info$rank.fisher
+      , n.parameters = fit_mptinr_tmp$model.info$n.parameters
+      , convergence = fit_mptinr_tmp$best.fits[[1]]$convergence
+    )
   }
   
   for (i in seq_along(CI_SIZE)) {
-    complete_pooling$est_group[[1]][, prepared$cols_ci[i]] <-
-      complete_pooling$est_group[[1]][,"est"] +
-      stats::qnorm(CI_SIZE[i])*complete_pooling$est_group[[1]][,"se"]
+    res$est_group[[1]][, prepared$cols_ci[i]] <-
+      res$est_group[[1]][,"est"] +
+      stats::qnorm(CI_SIZE[i])*res$est_group[[1]][,"se"]
   }
   
-  ### test between ###
-  tmp_pars <- complete_pooling$est_group[[1]]
+  # ----------------------------------------------------------------------------
+  # test_between
+  est_group <- res$est_group[[1]]
+  test_between <- res$test_between[[1]]
   
-  for (i in seq_len(nrow(complete_pooling$test_between[[1]]))) {
+  for (i in seq_len(nrow(test_between))) {
     
-    tmp_par <- complete_pooling$test_between[[1]]$parameter[i]
-    tmp_c1 <- complete_pooling$test_between[[1]]$condition1[i]
-    tmp_c2 <- complete_pooling$test_between[[1]]$condition2[i]
-  
-    complete_pooling$test_between[[1]][i, "est_diff"] <- 
-      tmp_pars[tmp_pars$condition == tmp_c1 & 
-               tmp_pars$parameter == tmp_par, ]$est -
-      tmp_pars[tmp_pars$condition == tmp_c2 & 
-               tmp_pars$parameter == tmp_par, ]$est
+    p <- test_between$parameter[i]
+    c1 <- test_between$condition1[i]
+    c2 <- test_between$condition2[i]
+
+    test_between[i, "est_diff"] <- 
+      est_group[est_group$condition == c1 & est_group$parameter == p, ]$est -
+      est_group[est_group$condition == c2 & est_group$parameter == p, ]$est
     
+    # standard errors
+    test_between[i, "se"] <- sqrt(
+      (est_group[est_group$condition == c1 & est_group$parameter == p, ]$se)^2 +
+      (est_group[est_group$condition == c2 & est_group$parameter == p, ]$se)^2
+    )
   }
+  
+  # CIs from standard errors
+  for(k in CI_SIZE) {
+    test_between[[paste0("ci_", k)]] <- test_between$est_diff + test_between$se * qnorm(p = k)
+  }
+  
+  res$test_between[[1]] <- test_between
+  
+  # ----------------------------------------------------------------------------
+  # convergence
   
   tmp <- names(convergence)
   convergence <- do.call("rbind", convergence)
-  convergence <- dplyr::bind_cols(condition = factor(tmp), 
-                           convergence)
+  convergence <- dplyr::bind_cols(condition = tmp, convergence)
   
-  complete_pooling$convergence <- list(convergence)
+  res$convergence <- list(convergence)
   warn_conv <- convergence$convergence != 0
   if (any(warn_conv)) {
     warning("MPTinR-complete: Convergence code != 0 for: ", 
@@ -549,10 +762,10 @@ mpt_mptinr_complete <- function(dataset,
             call. = FALSE)
   }
   
-  complete_pooling$estimation[[1]] <- tibble::tibble(
+  res$estimation[[1]] <- tibble::tibble(
     condition = c("complete_data", names(t_cond))
     , time_difference = as.numeric(c(t_complete_data, unlist(t_cond)))
   )
   
-  return(complete_pooling)
+  return(res)
 }
