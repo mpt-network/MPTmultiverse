@@ -130,6 +130,18 @@ fit_mpt <- function(
     stop("Variable \"", paste(freq_cols[not_integer], collapse = ", "), "\" contains non-integer values.")
   }
 
+  # Sanity check for TreeBUGS options
+  if(any(method %in% c("simple", "simple_pooling", "trait", "trait_uncorrelated", "beta", "betacpp"))) {
+    opt <- mpt_options()
+    n.samples <- (opt$treebugs$n.iter - opt$treebugs$n.burnin) * opt$n.CPU
+    if((opt$treebugs$n.iter - opt$treebugs$n.burnin)<=0) {
+      stop("Check your mpt_options(): You specified less iterations (n.iter) than burn-in samples (n.burnin).")
+    }
+    if(n.samples <= 0 | n.samples < opt$treebugs$Neff_min) {
+      warning("With your current mpt_options(), it is not possible to obtain the specified number of effective samples.")
+    }
+  }
+  
   
   # Ensure that id and condition are character, also drops unused levels
   data[[id]] <- as.character(data[[id]])
