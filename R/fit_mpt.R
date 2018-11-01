@@ -85,6 +85,10 @@ fit_mpt <- function(
                            silent.runjags = silent_jags)
   
   # prepare data ----
+  if (missing(data)) {
+    data <- as.data.frame(readr::read_csv(dataset))
+  }
+  
   if(is.null(condition)) {
     data$ExpCond <- "no_condition"
     condition <- "ExpCond"
