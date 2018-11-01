@@ -116,7 +116,6 @@ mpt_treebugs <- function (
         
         treebugs_fit[[i]] <- TreeBUGS::extendMPT(treebugs_fit[[i]],
                                        n.iter = TREEBUGS_MCMC$n.iter,
-                                       n.thin = TREEBUGS_MCMC$n.thin,
                                        n.adapt = TREEBUGS_MCMC$n.adapt)
         summ <- treebugs_fit[[i]]$mcmc.summ
         ext_cnt <- ext_cnt + 1
@@ -244,11 +243,12 @@ mpt_treebugs <- function (
   
   # save model objects to the working directory if requested by user ----
   if(all_options$save_models){
+    dataset_name <- gsub("^.*[/\\]","", dataset)
     save(treebugs_fit, file = paste0(
       paste(
         c(
           gsub(model, pattern = ".eqn|.EQN", replacement = "")
-          , gsub(dataset, pattern = ".csv|.CSV", replacement = "")
+          , gsub(dataset_name, pattern = ".csv|.CSV", replacement = "")
           , pooling
           , method
         )
