@@ -61,6 +61,14 @@ fit_mpt <- function(
     , "betacpp"
   )
   
+  # check arguments
+  if (!is.character(dataset) || grepl("[/\\]", dataset)){
+    stop("Please do not use relative paths such as 'model/data.csv' in the argument 'dataset'.")
+  }
+  if (!is.character(model) || grepl("[/\\]", model)){
+    stop("Please do not use relative paths such as 'model/model.eqn' in the argument 'model'.")
+  }
+  
   if(missing(method)) {
     method <- available_methods
   }
