@@ -105,9 +105,9 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   
   shapes <- c(16, 18, 15, 1, 0, 8, 11, 12, 4, 6)
   
+  results <- x
   prefix <- paste0(gsub("\\.eqn", "", results$model[1]), "_", 
                    gsub("\\.", "_", paste0(results$dataset[1],"_")))
-  results <- x
   
   if (write.csv){
     readr::write_csv(tidyr::unnest(results, .data$est_group), paste0(prefix,"estimates.csv"))
