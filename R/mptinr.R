@@ -18,6 +18,19 @@ mpt_mptinr <- function(
     , condition = condition
   )
   
+  # Homogeneity tests
+  homogeneity_tests <- dplyr::bind_rows(
+    lapply(X = prepared$freq_list, FUN = function(x) {
+      tmp <- TreeBUGS::testHetChi(freq = x, tree = prepared$trees)
+      tibble::tibble(
+        chisq = tmp$chisq
+        , df = tmp$df
+        , p = tmp$prob
+      )
+    })
+    , .id = "condition"
+  )
+  
   res <- list()
   
   if(any(method %in% c("asymptotic_complete"))) {
@@ -42,6 +55,10 @@ mpt_mptinr <- function(
       , condition = condition
       , core = core
     )
+  }
+  
+  for(i in 1:length(res)) {
+    res[[i]]$test_homogeneity[[1]] <- homogeneity_tests
   }
   
   # return

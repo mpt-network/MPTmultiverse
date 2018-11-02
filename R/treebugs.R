@@ -52,6 +52,21 @@ mpt_treebugs <- function (
                                  id = id,
                                  condition = condition,
                                  core = core)
+  
+  # Homogeneity tests
+  result_row$test_homogeneity[[1]] <- dplyr::bind_rows(
+    lapply(X = freq_list, FUN = function(x) {
+      tmp <- TreeBUGS::testHetChi(freq = x, tree = get_eqn_trees(model_file = model))
+      tibble::tibble(
+        chisq = tmp$chisq
+        , df = tmp$df
+        , p = tmp$prob
+      )
+    })
+    , .id = "condition"
+  )
+  
+  
   if (method == "simple_pooling"){
     method <- "simple"
     

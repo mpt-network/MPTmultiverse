@@ -159,9 +159,18 @@ make_results_row <- function(
     )
   )
   
-  # ----
+  test_homogeneity <- tibble::tibble(
+    condition = unique(data$condition)
+    , chisq = NA_real_
+    , df = NA_real_
+    , p = NA_real_
+  )
+  
+  
+  # save used options in a tidy format ----
   used_options <- tidy_options(mpt_options())
   
+
   ## data structure for results
   tibble::tibble(
     model = model,
@@ -176,6 +185,7 @@ make_results_row <- function(
     gof = list(gof),
     gof_group = list(gof_group),
     gof_indiv = list(gof_indiv),
+    test_homogeneity = list(test_homogeneity),
     convergence = list(tibble::tibble()),
     estimation = list(tibble::tibble()),
     options = list(used_options)
