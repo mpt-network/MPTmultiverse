@@ -2,13 +2,26 @@ Package: MPTmultiverse
 Title: Multiverse Analysis of Multinomial Processing Tree Models
 Version: 0.1
 Description:
-    MPTmultiverse provides functions for a multiverse analysis of multinomial
-    processing tree (MPT) models.
+    Statistical or cognitive modeling usually requires a number of more or less 
+    arbitrary choices creating one specific path through a 'garden of forking paths'. 
+    The multiverse approach (Steegen, Tuerlinckx, Gelman, & Vanpaemel, 2016, 
+    <doi:10.1177/1745691616658637>) offers a principled alternative in which results 
+    for all possible combinations of reasonable modeling choices are reported. 
+    MPTmultiverse performs a multiverse analysis for multinomial processing tree 
+    (MPT, Riefer & Batchelder, 1988, <doi:10.1037/0033-295X.95.3.318>) models across 
+    frequentist and Bayesian approaches. For the frequentist approaches no pooling 
+    (with and without parametric or nonparametric bootstrap) and complete pooling 
+    are implemented using MPTinR <https://cran.r-project.org/package=MPTinR>. 
+    For the Bayesian approaches no pooling, complete pooling, and three different 
+    variants of partial pooling are implemented using 
+    TreeBUGS <https://cran.r-project.org/package=TreeBUGS>. 
 Authors@R: c(
     person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
-    , person("Henrik", "Singmann", email = "singmann@psychologie.uzh.ch", role = c("aut"))
+    , person("Henrik", "Singmann", role = c("aut"), 
+        email="singmann@gmail.com", comment=c(ORCID="0000-0002-4842-3657"))
     , person(c("Daniel", "W."), "Heck", email = "heck@uni-mannheim.de", role = c("aut"))
-    , person("Frederik", "Aust", email = "frederik.aust@uni-koeln.de", role = c("ctb"))
+    , person("Frederik", "Aust", email = "frederik.aust@uni-koeln.de", role = c("ctb"), 
+        comment = c(ORCID = "0000-0003-4900-788X"))
   )
 URL: https://github.com/methexp/MPTmultiverse
 BugReports: https://github.com/methexp/MPTmultiverse/issues
