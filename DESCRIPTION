@@ -14,7 +14,8 @@ Description:
     are implemented using MPTinR <https://cran.r-project.org/package=MPTinR>. 
     For the Bayesian approaches no pooling, complete pooling, and three different 
     variants of partial pooling are implemented using 
-    TreeBUGS <https://cran.r-project.org/package=TreeBUGS>. 
+    TreeBUGS <https://cran.r-project.org/package=TreeBUGS>. The main function is 
+    fit_mpt() who performs the multiverse analysis in one call.
 Authors@R: c(
     person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
     , person("Henrik", "Singmann", role = c("aut"), 
@@ -23,8 +24,8 @@ Authors@R: c(
     , person("Frederik", "Aust", email = "frederik.aust@uni-koeln.de", role = c("ctb"), 
         comment = c(ORCID = "0000-0003-4900-788X"))
   )
-URL: https://github.com/methexp/MPTmultiverse
-BugReports: https://github.com/methexp/MPTmultiverse/issues
+URL: https://github.com/mpt-network/MPTmultiverse
+BugReports: https://github.com/mpt-network/MPTmultiverse/issues
 Depends:
     R (>= 2.11.1),
 Imports:
