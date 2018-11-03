@@ -115,7 +115,8 @@ mpt_mptinr_no <- function(
     , condition = as.character(prepared$data[[condition]])
     , rank.fisher = fit_mptinr$model.info$individual$rank.fisher
     , n.parameters = fit_mptinr$model.info$individual$n.parameters
-    , convergence = vapply(fit_mptinr$best.fits$individual, FUN = function(x) x$convergence, FUN.VALUE = 0)
+    , convergence = vapply(fit_mptinr$best.fits$individual, 
+                           FUN = function(x) x$convergence, FUN.VALUE = 0)
   )
   
   res <- vector("list", length(method))
@@ -138,9 +139,12 @@ mpt_mptinr_no <- function(
     
     res[["asymptotic_no"]]$gof_indiv[[1]]$type <- "G2"
     res[["asymptotic_no"]]$gof_indiv[[1]]$focus <- "mean"
-    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_obs <- fit_mptinr$goodness.of.fit$individual$G.Squared
-    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_df <- fit_mptinr$goodness.of.fit$individual$df
-    res[["asymptotic_no"]]$gof_indiv[[1]]$p <- fit_mptinr$goodness.of.fit$individual$p.value
+    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_obs <- 
+      fit_mptinr$goodness.of.fit$individual$G.Squared
+    res[["asymptotic_no"]]$gof_indiv[[1]]$stat_df <- 
+      fit_mptinr$goodness.of.fit$individual$df
+    res[["asymptotic_no"]]$gof_indiv[[1]]$p <- 
+      fit_mptinr$goodness.of.fit$individual$p.value
     
     
     ## make est_indiv and gof_indiv
@@ -759,7 +763,8 @@ mpt_mptinr_complete <- function(dataset,
   
   # CIs from standard errors
   for(k in CI_SIZE) {
-    test_between[[paste0("ci_", k)]] <- test_between$est_diff + test_between$se * qnorm(p = k)
+    test_between[[paste0("ci_", k)]] <- test_between$est_diff + 
+      test_between$se * qnorm(p = k)
   }
   
   res$test_between[[1]] <- test_between
