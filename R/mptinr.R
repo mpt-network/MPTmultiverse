@@ -198,7 +198,10 @@ mpt_mptinr_no <- function(
     res[["asymptotic_no"]]$gof_group[[1]]$focus <- "mean"
     
     tmp <- fit_mptinr$goodness.of.fit$individual
-    tmp$condition <- as.character(prepared$data$condition)
+    tmp$condition <- factor(as.character(prepared$data$condition), 
+                            levels = prepared$conditions)
+    ## creation of factor above (which is reverted below) ensures that output
+    ## has same ordering as gof_group for other messages
     gof_group2 <- tmp %>%
       dplyr::group_by(.data$condition) %>%
       dplyr::summarise(stat_obs = sum(.data$G.Squared),
@@ -210,6 +213,7 @@ mpt_mptinr_no <- function(
       , df = gof_group2$stat_df
       , lower.tail = FALSE
     )
+    gof_group2$condition <- as.character(gof_group2$condition)
     # ensure that factor levels fit: not necessary because we switched to character
     # gof_group2$condition <- factor(
     #   gof_group2$condition

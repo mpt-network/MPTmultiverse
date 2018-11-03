@@ -38,7 +38,7 @@ test_that("No-pooling approaches work", {
   
   # dput(round(only_asymptotic$gof_group[[1]]$stat_obs, 2))
   expect_equal(only_asymptotic$gof_group[[1]]$stat_obs, 
-               c(31.75, 27.2), 
+               c(27.2, 31.75), 
                tolerance = 0.01)
   
   expect_equal(only_asymptotic$est_indiv[[1]]$se, 
