@@ -37,10 +37,13 @@ e.g., \code{core = c("Dn", "Do")}. All other parameters are treated as
 auxiliary parameters.}
 }
 \value{
-A \code{tibble} with one row per estimation \code{method} and the following columns:
+A \code{tibble} with one row per estimation \code{method} and the
+  following columns:
 \enumerate{
-  \item \code{model}: Model file name (copied from \code{model} argument), \code{character}
-  \item \code{dataset}: Name of data set (copied from \code{dataset} argument), \code{character}
+  \item \code{model}: Name of model file (copied from \code{model} argument),
+  \code{character}
+  \item \code{dataset}: Name of data set (copied from \code{dataset}
+  argument), \code{character}
   \item \code{pooling}: \code{character} specifying the level of pooling with
   three potential values: \code{c("complete", "no", "partial")}
   \item \code{package}: \code{character} specifying the package used for
@@ -49,7 +52,8 @@ A \code{tibble} with one row per estimation \code{method} and the following colu
   following potential values: \code{c("asymptotic", "PB/MLE", "NPB/MLE",
   "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}
   \item \code{est_group}: Group-level parameter estimates per condition/group.
-  \item \code{est_indiv}: Individual-level parameter estimates (if provided by method).
+  \item \code{est_indiv}: Individual-level parameter estimates (if provided
+  by method).
   \item \code{test_between}: Parameter differences between the levels of the
   between-subjects condition (if specified).
   \item \code{gof}: Overall goodness of fit across all individuals.
@@ -77,8 +81,8 @@ A \code{tibble} with one row per estimation \code{method} and the following colu
 }
 
 With the exception of the first five columns (i.e., after \code{method}) all
-columns are \code{list} columns typically holding one \code{tibble} per cell. The
-simplest way to analyze the results is separately per column using
+columns are \code{list} columns typically holding one \code{tibble} per cell.
+The simplest way to analyze the results is separately per column using
 \code{\link[tidyr]{unnest}}. Examples for this are given below.
 }
 \description{
@@ -100,10 +104,15 @@ need to match the column names in \code{data}. Results are returned in one
 This functions is a fancy wrapper for packages \code{MPTinR} and
   \pkg{TreeBUGS} applying various frequentist and Bayesian estimation methods
   to the same data set using a single MPT model and collecting the results
-  are returned in a single \code{tibble} where each row corresponds to one
+  in a single \code{tibble} where each row corresponds to one
   estimation method. Note that parameter restrictions (e.g., equating
   different parameters or fixing them to a constant) need to be part of the
   model (i.e., the \code{.eqn} file) and cannot be passed as an argument.
+  
+  The settings for the various methods are specified via function
+  \code{\link{mpt_options}}. The default settings use all available cores for
+  calculating the boostrap distribution as well as independent MCMC chains
+  and should be approproaite for most situations.
 
   The data can have a single between-subjects condition (specified via
   \code{condition}). This condition can have more than two levels. If
@@ -118,35 +127,36 @@ This functions is a fancy wrapper for packages \code{MPTinR} and
   simply include separate trees and separate sets of parameters for each
   within-subjects condition. This allows to at least compare the estimates
   for each within-subjects condition across estimation method.
+  
+  \subsection{Implemented Methods}{
+    Maximum-likelihood estimation with \pkg{MPTinR} via
+    \code{\link[MPTinR]{fit.mpt}}:
+    \itemize{
+      \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete
+      pooling}
+      \item{\code{"asymptotic_no"}: }{ Asymptotic ML theory, no pooling}
+      \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
+      \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
+    }
+     
+    Bayesian estimation with \pkg{TreeBUGS}
+    \itemize{
+      \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
+        \link[TreeBUGS]{simpleMPT})}
+      \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling 
+        (C++, \link[TreeBUGS]{simpleMPT})}
+      \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, 
+        \link[TreeBUGS]{traitMPT})}
+      \item{\code{"trait_uncorrelated"}: }{latent-trait model without
+        correlation parameters, partial pooling (JAGS,
+        \link[TreeBUGS]{traitMPT})}
+      \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, 
+        \link[TreeBUGS]{betaMPT})}
+      \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
+        \link[TreeBUGS]{betaMPTcpp})}
+    }
 }
-\section{Implemented Methods}{
-
-Maximum-likelihood estimation with \pkg{MPTinR} via \code{\link[MPTinR]{fit.mpt}}:
-\itemize{
-  \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete
-  pooling}
-  \item{\code{"asymptotic_no"}: }{ Asymptotic ML theory, no pooling}
-  \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
-  \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
 }
- 
-Bayesian estimation with \pkg{TreeBUGS}
-\itemize{
-  \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
-    \link[TreeBUGS]{simpleMPT})}
-  \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling 
-    (C++, \link[TreeBUGS]{simpleMPT})}
-  \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, 
-    \link[TreeBUGS]{traitMPT})}
-  \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation 
-    parameters, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
-  \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, 
-    \link[TreeBUGS]{betaMPT})}
-  \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
-    \link[TreeBUGS]{betaMPTcpp})}
-}
-}
-
 \examples{
 
 # ------------------------------------------------------------------------------
