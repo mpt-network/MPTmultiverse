@@ -13,7 +13,7 @@
 #'   If not specified, no between-subjects comparisons are performed.
 #' @param core character vector defining the core parameters of interest, e.g.,
 #'   \code{core = c("Dn", "Do")}. All other parameters are treated as auxiliary parameters.
-#' @examples examples/examples.fit_mpt.R
+#' @example examples/examples.fit_mpt.R
 #' 
 #' @details 
 #' Maximum-likelihood estimation with MPTinR:

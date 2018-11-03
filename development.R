@@ -4,6 +4,9 @@ library("testthat")
 load_all()
 test()
 
+document()
+
+check()
 
 library(usethis) ## see: https://github.com/r-lib/usethis
 
