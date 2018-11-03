@@ -12,23 +12,74 @@ fit_mpt(method, dataset, data, model, id = NULL, condition = NULL,
 should be performed (see Description below). Defaults to all available
 methods.}
 
-\item{dataset}{Character. The name of the dataset to be analyzed.}
+\item{dataset}{scalar \code{character} vector. Name of the data set that will
+be copied to the results \code{tibble}.}
 
-\item{data}{A \code{data.frame} containing the data.}
+\item{data}{A \code{data.frame} containing the data. Column
+names need to match category names in \code{model} (i.e., different from
+\pkg{MPTinR} behavior, order of categories is not important, matching is
+done via name).}
 
 \item{model}{A model definition, typically the path to an \code{.eqn} model
-file containing the model equations..}
+file containing the model equations. Category names need to match column
+names in \code{data}.}
 
-\item{id}{Character. Name of the column that contains the subject identifier.
-If not specified, it is assumed that each row represents observations from
-one participant.}
+\item{id}{scalar \code{character} vector. Name of the column that contains
+the subject identifier. If not specified, it is assumed that each row
+represents observations from one participant.}
 
-\item{condition}{Character. Name of the column specifying a between-subjects
-factor. If not specified, no between-subjects comparisons are performed.}
+\item{condition}{scalar \code{character} vector. Name of the column
+specifying a between-subjects factor. If not specified, no between-subjects
+comparisons are performed.}
 
-\item{core}{character vector defining the core parameters of interest, e.g.,
-\code{core = c("Dn", "Do")}. All other parameters are treated as auxiliary
-parameters.}
+\item{core}{\code{character} vector defining the core parameters of interest,
+e.g., \code{core = c("Dn", "Do")}. All other parameters are treated as
+auxiliary parameters.}
+}
+\value{
+A \code{tibble} with one row per estimation \code{method} and the following columns:
+\enumerate{
+  \item \code{model}: Model file name (copied from \code{model} argument), \code{character}
+  \item \code{dataset}: Name of data set (copied from \code{dataset} argument), \code{character}
+  \item \code{pooling}: \code{character} specifying the level of pooling with
+  three potential values: \code{c("complete", "no", "partial")}
+  \item \code{package}: \code{character} specifying the package used for
+  estimation with two potential values: \code{c("MPTinR", "TreeBUGS")}
+  \item \code{method}: \code{character} specifying the method used with the
+  following potential values: \code{c("asymptotic", "PB/MLE", "NPB/MLE",
+  "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}
+  \item \code{est_group}: Group-level parameter estimates per condition/group.
+  \item \code{est_indiv}: Individual-level parameter estimates (if provided by method).
+  \item \code{test_between}: Parameter differences between the levels of the
+  between-subjects condition (if specified).
+  \item \code{gof}: Overall goodness of fit across all individuals.
+  \item \code{gof_group}: Group-level goodness of fit.
+  \item \code{gof_indiv}: Individual-level goodness of fit.
+  \item \code{test_homogeneity}: Chi-square based test of participant
+  homogeneity proposed by Smith and Batchelder (2008). This test is the same
+  for each estimation method.
+  \item \code{convergence}: Convergence information provided by the
+  respective estimation method. For the asymptotic frequentist methods this
+  is a \code{tibble} with rank of the Fisher matrix, the number of parameters
+  (which should match the rank of the Fisgher matrix), and the convergence
+  code provided by the optimization algorithm (which is
+  \code{\link{nlminb}}). The boostrap methods contain an additional column,
+  \code{parameter}, that contains the information which (if any) parameters
+  are empirically non-identifiable based on the bootstrapped distribution of
+  parameter estimates (i.e., for which the range of the boostrap distribution
+  is larger than \code{mpt_options()$max_ci_indiv} which defaults to
+  \code{0.99}). For the Bayesian methods this is a \code{tibble} containing
+  information of the posterior dsitribution (i.e., mean, quantiles, SD, SE,
+  \code{n.eff}, and R-hat) for each parameter.
+  \item \code{estimation}: Time it took for each estimation method and group.
+  \item \code{options}: Options used for estimation. Obtained by running
+  `mpt_options()`
+}
+
+With the exception of the first five columns (i.e., after \code{method}) all
+columns are \code{list} columns typically holding one \code{tibble} per cell. The
+simplest way to analyze the results is separately per column using
+\code{\link[tidyr]{unnest}}. Examples for this are given below.
 }
 \description{
 Performs a multiverse analysis for multinomial processing tree (MPT) models
@@ -37,28 +88,65 @@ the frequentist approaches, no pooling (with and without parametric or
 nonparametric bootstrap) and complete pooling  are implemented using
 \pkg{MPTinR}. For the Bayesian approaches, no pooling, complete pooling, and
 three different variants of partial pooling are implemented using
-\pkg{TreeBUGS}. Results are returned in one \code{tibble} with one row per
-estimation methods.
+\pkg{TreeBUGS}. Requires \code{data} on a by-participant level with each row
+corresponding to data from one participant (i.e., different response
+categories correspond to different columns) and the data can contain a single
+between-subjects condition. Model equations need to be passed as a
+\code{.eqn} model file and category labels (first column in \code{.eqn} file)
+need to match the column names in \code{data}. Results are returned in one
+\code{tibble} with one row per estimation method.
 }
 \details{
-Maximum-likelihood estimation with MPTinR:
+This functions is a fancy wrapper for packages \code{MPTinR} and
+  \pkg{TreeBUGS} applying various frequentist and Bayesian estimation methods
+  to the same data set using a single MPT model and collecting the results
+  are returned in a single \code{tibble} where each row corresponds to one
+  estimation method. Note that parameter restrictions (e.g., equating
+  different parameters or fixing them to a constant) need to be part of the
+  model (i.e., the \code{.eqn} file) and cannot be passed as an argument.
+
+  The data can have a single between-subjects condition (specified via
+  \code{condition}). This condition can have more than two levels. If
+  specified, the pairwise differences between each level, the standard error
+  of the differences, and confidence-intervals of the differences are
+  calculated for each parameter. Please note that \code{condition} is
+  silently converted to \code{character} in the output. Thus, a specific
+  ordering of the \code{factor} levels in the output cannot be guaranteed.
+  
+  Parameter differences or other support for within-subject conditions is not
+  provided. The best course of action for within-subjects conditions is to
+  simply include separate trees and separate sets of parameters for each
+  within-subjects condition. This allows to at least compare the estimates
+  for each within-subjects condition across estimation method.
+}
+\section{Implemented Methods}{
+
+Maximum-likelihood estimation with \pkg{MPTinR} via \code{\link[MPTinR]{fit.mpt}}:
 \itemize{
-  \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete pooling}
+  \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete
+  pooling}
   \item{\code{"asymptotic_no"}: }{ Asymptotic ML theory, no pooling}
   \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
   \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
 }
  
-Bayesian estimation with TreeBUGS
+Bayesian estimation with \pkg{TreeBUGS}
 \itemize{
-  \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++, \link[TreeBUGS]{simpleMPT})}
-  \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling (C++, \link[TreeBUGS]{simpleMPT})}
-  \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
-  \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation parameters, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
-  \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, \link[TreeBUGS]{betaMPT})}
-  \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, \link[TreeBUGS]{betaMPTcpp})}
+  \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
+    \link[TreeBUGS]{simpleMPT})}
+  \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling 
+    (C++, \link[TreeBUGS]{simpleMPT})}
+  \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, 
+    \link[TreeBUGS]{traitMPT})}
+  \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation 
+    parameters, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
+  \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, 
+    \link[TreeBUGS]{betaMPT})}
+  \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
+    \link[TreeBUGS]{betaMPTcpp})}
 }
 }
+
 \examples{
 
 # ------------------------------------------------------------------------------
@@ -148,4 +236,9 @@ all_bootstrap <- fit_mpt(
 )
 
 dplyr::glimpse(all_bootstrap)
+}
+\references{
+Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences
+  in categorical data. \emph{Psychonomic Bulletin & Review}, 15(4), 713-731.
+  \url{https://doi.org/10.3758/PBR.15.4.713}
 }
