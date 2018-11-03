@@ -1,18 +1,29 @@
-#' Main function
+#' Multiverse Analysis for MPT Models
 #'
-#' Does a lot of nice stuff
+#' Performs a multiverse analysis for multinomial processing tree (MPT) models
+#' across maximum-likelihood/frequentist and Bayesian estimation approaches. For
+#' the frequentist approaches, no pooling (with and without parametric or
+#' nonparametric bootstrap) and complete pooling  are implemented using
+#' \pkg{MPTinR}. For the Bayesian approaches, no pooling, complete pooling, and
+#' three different variants of partial pooling are implemented using
+#' \pkg{TreeBUGS}. Results are returned in one \code{tibble} with one row per
+#' estimation methods.
 #'
-#' @param method Character. A vector specifying which analysis approaches should be performed (see Description below).
-#'   Defaults to all available methods.
+#' @param method \code{character} vector specifying which analysis approaches
+#'   should be performed (see Description below). Defaults to all available
+#'   methods.
 #' @param dataset Character. The name of the dataset to be analyzed. 
 #' @param data A \code{data.frame} containing the data.
-#' @param model A model definition, typically the path to an \code{.eqn} file.
+#' @param model A model definition, typically the path to an \code{.eqn} model
+#'   file containing the model equations..
 #' @param id Character. Name of the column that contains the subject identifier.
-#'   If not specified, it is assumed that each row represents observations from one participant.
-#' @param condition Character. Name of the column specifying a between-subjects factor.
-#'   If not specified, no between-subjects comparisons are performed.
+#'   If not specified, it is assumed that each row represents observations from
+#'   one participant.
+#' @param condition Character. Name of the column specifying a between-subjects
+#'   factor. If not specified, no between-subjects comparisons are performed.
 #' @param core character vector defining the core parameters of interest, e.g.,
-#'   \code{core = c("Dn", "Do")}. All other parameters are treated as auxiliary parameters.
+#'   \code{core = c("Dn", "Do")}. All other parameters are treated as auxiliary
+#'   parameters.
 #' @example examples/examples.fit_mpt.R
 #' 
 #' @details 

@@ -2,32 +2,43 @@
 % Please edit documentation in R/fit_mpt.R
 \name{fit_mpt}
 \alias{fit_mpt}
-\title{Main function}
+\title{Multiverse Analysis for MPT Models}
 \usage{
 fit_mpt(method, dataset, data, model, id = NULL, condition = NULL,
   core = NULL)
 }
 \arguments{
-\item{method}{Character. A vector specifying which analysis approaches should be performed (see Description below).
-Defaults to all available methods.}
+\item{method}{\code{character} vector specifying which analysis approaches
+should be performed (see Description below). Defaults to all available
+methods.}
 
 \item{dataset}{Character. The name of the dataset to be analyzed.}
 
 \item{data}{A \code{data.frame} containing the data.}
 
-\item{model}{A model definition, typically the path to an \code{.eqn} file.}
+\item{model}{A model definition, typically the path to an \code{.eqn} model
+file containing the model equations..}
 
 \item{id}{Character. Name of the column that contains the subject identifier.
-If not specified, it is assumed that each row represents observations from one participant.}
+If not specified, it is assumed that each row represents observations from
+one participant.}
 
-\item{condition}{Character. Name of the column specifying a between-subjects factor.
-If not specified, no between-subjects comparisons are performed.}
+\item{condition}{Character. Name of the column specifying a between-subjects
+factor. If not specified, no between-subjects comparisons are performed.}
 
 \item{core}{character vector defining the core parameters of interest, e.g.,
-\code{core = c("Dn", "Do")}. All other parameters are treated as auxiliary parameters.}
+\code{core = c("Dn", "Do")}. All other parameters are treated as auxiliary
+parameters.}
 }
 \description{
-Does a lot of nice stuff
+Performs a multiverse analysis for multinomial processing tree (MPT) models
+across maximum-likelihood/frequentist and Bayesian estimation approaches. For
+the frequentist approaches, no pooling (with and without parametric or
+nonparametric bootstrap) and complete pooling  are implemented using
+\pkg{MPTinR}. For the Bayesian approaches, no pooling, complete pooling, and
+three different variants of partial pooling are implemented using
+\pkg{TreeBUGS}. Results are returned in one \code{tibble} with one row per
+estimation methods.
 }
 \details{
 Maximum-likelihood estimation with MPTinR:
@@ -79,20 +90,42 @@ CORE <- c("C1", "C2")
 
 # set test options for a quick and unreliable run:
 mpt_options("test")
-mpt_options() # to
+mpt_options() # to see the settings 
+## Note: settings are also saved in the results tibble
 
-all_supported_methods <- c(
-  "asymptotic_complete"
-  , "asymptotic_no"
-  , "pb_no"
-  , "npb_no"
-  , "simple"
-  , "simple_pooling"
-  , "trait"
-  , "trait_uncorrelated"
-  , "beta"
+\dontrun{
+## without specifying method, all are used per default
+fit_all <- fit_mpt(
+  dataset = DATA_FILE
+  , data = data
+  , model = EQN_FILE
+  , condition = COL_CONDITION
+  , core = CORE
 )
 
+### Analysis of results requires dplyr and tidyr (or just 'tidyverse')
+library("dplyr")
+library("tidyr")
+
+glimpse(fit_all) 
+## first few columns identify model, data, and estimation approach/method
+## remaining columns are list columns containing the results for each method
+## use unnest to work with each of the results columns
+
+fit_all \%>\% 
+  select(method, pooling, est_group) \%>\% 
+  unnest() 
+
+
+fit_all \%>\% 
+  select(method, pooling, gof_group) \%>\% 
+  unnest() \%>\% 
+  as.data.frame()
+
+  
+}
+
+### Also possible to only use individual methods:
 
 only_asymptotic <- fit_mpt(
   method = "asymptotic_no"

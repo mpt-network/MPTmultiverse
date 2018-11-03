@@ -9,10 +9,11 @@ Description:
     for all possible combinations of reasonable modeling choices are reported. 
     MPTmultiverse performs a multiverse analysis for multinomial processing tree 
     (MPT, Riefer & Batchelder, 1988, <doi:10.1037/0033-295X.95.3.318>) models across 
-    frequentist and Bayesian approaches. For the frequentist approaches no pooling 
-    (with and without parametric or nonparametric bootstrap) and complete pooling 
-    are implemented using MPTinR <https://cran.r-project.org/package=MPTinR>. 
-    For the Bayesian approaches no pooling, complete pooling, and three different 
+    maximum-likelihood/frequentist and Bayesian estimation approaches. For the 
+    frequentist approaches, no pooling (with and without parametric or nonparametric 
+    bootstrap) and complete pooling are implemented using 
+    MPTinR <https://cran.r-project.org/package=MPTinR>. 
+    For the Bayesian approaches, no pooling, complete pooling, and three different 
     variants of partial pooling are implemented using 
     TreeBUGS <https://cran.r-project.org/package=TreeBUGS>. The main function is 
     fit_mpt() who performs the multiverse analysis in one call.

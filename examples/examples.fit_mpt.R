@@ -28,20 +28,42 @@ CORE <- c("C1", "C2")
 
 # set test options for a quick and unreliable run:
 mpt_options("test")
-mpt_options() # to
+mpt_options() # to see the settings 
+## Note: settings are also saved in the results tibble
 
-all_supported_methods <- c(
-  "asymptotic_complete"
-  , "asymptotic_no"
-  , "pb_no"
-  , "npb_no"
-  , "simple"
-  , "simple_pooling"
-  , "trait"
-  , "trait_uncorrelated"
-  , "beta"
+\dontrun{
+## without specifying method, all are used per default
+fit_all <- fit_mpt(
+  dataset = DATA_FILE
+  , data = data
+  , model = EQN_FILE
+  , condition = COL_CONDITION
+  , core = CORE
 )
 
+### Analysis of results requires dplyr and tidyr (or just 'tidyverse')
+library("dplyr")
+library("tidyr")
+
+glimpse(fit_all) 
+## first few columns identify model, data, and estimation approach/method
+## remaining columns are list columns containing the results for each method
+## use unnest to work with each of the results columns
+
+fit_all %>% 
+  select(method, pooling, est_group) %>% 
+  unnest() 
+
+
+fit_all %>% 
+  select(method, pooling, gof_group) %>% 
+  unnest() %>% 
+  as.data.frame()
+
+  
+}
+
+### Also possible to only use individual methods:
 
 only_asymptotic <- fit_mpt(
   method = "asymptotic_no"
