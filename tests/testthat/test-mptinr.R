@@ -16,7 +16,7 @@ test_that("No-pooling approaches work", {
     , labels = c("low_WM", "high_WM")
   )
   op <- mpt_options()
-  mpt_options("test")
+  capture_output(mpt_options("test"))
   
   only_asymptotic <- fit_mpt(
     method = "asymptotic_no"

@@ -16,7 +16,7 @@ test_that("make_results_row()"
       , labels = c("low_WM", "high_WM")
     ))
     data$id <- as.character(1:nrow(data))
-    mpt_options("test")
+    capture_output(mpt_options("test"))
     
     object <- MPTmultiverse:::make_results_row(
       model = EQN_FILE
@@ -46,6 +46,7 @@ test_that("make_results_row()"
         , "gof"
         , "gof_group"
         , "gof_indiv"
+        , "test_homogeneity"
         , "convergence"
         , "estimation"
         , "options"
