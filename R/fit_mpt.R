@@ -48,7 +48,7 @@
 #'   The settings for the various methods are specified via function
 #'   \code{\link{mpt_options}}. The default settings use all available cores for
 #'   calculating the boostrap distribution as well as independent MCMC chains
-#'   and should be approproaite for most situations.
+#'   and should be appropriate for most situations.
 #'
 #'   The data can have a single between-subjects condition (specified via
 #'   \code{condition}). This condition can have more than two levels. If
@@ -103,29 +103,41 @@
 #'     
 #'     For the \emph{no pooling asymptotic approach}, the individual-level
 #'     maximum-likelihood estimates are reported in column \code{est_indiv} and
-#'     \code{gof_indiv} and provide the basis for the other results. The
-#'     group-level parameters are simply the means of the individual-level
-#'     parameters, the SE is the SE of the mean for these parameter (i.e.,
-#'     SD/sqrt(N), where N excludes parameters estimated as NA), and the CI is
+#'     \code{gof_indiv} and provide the basis for the other results. Whether or
+#'     not an individual-level parameter estimate is judged as identifiable
+#'     (column \code{identifiable}) is based on separate fits with different
+#'     random starting values. If, in these separate, fits the same objective
+#'     criterion is reached several times (i.e., \code{Log.Likelihood} within
+#'     .01 of best fit), but the parameter estimate differs (i.e., different
+#'     estimates within .01 of each other), then an estimate is flagged as
+#'     non-identifiable. If they are the same (i.e., within .01 of each other)
+#'     they are marked as identifiable. The group-level parameters are simply
+#'     the means of the identifiable individual-level parameters, the SE is the
+#'     SE of the mean for these parameter (i.e., SD/sqrt(N), where N excludes
+#'     non-identifiable parameters and thise estimated as NA), and the CI is
 #'     based on mean and SE. The group-level and overall fit is the sum of the
 #'     individual G-squares, sum of individual-level df, and corresponding
 #'     chi-square df. The difference between the conditions and corresponding
-#'     statistics are based on a t-test comparing the individual-level
-#'     estimates. The CIs of the difference are based on the SEs (which are
-#'     derived from an equivalent linear model).
+#'     statistics are based on a t-test comparing the individual-level estimates
+#'     (again, after excluding non-identifiable estimates). The CIs of the
+#'     difference are based on the SEs (which are derived from a linear model
+#'     equivalent to the t-test).
 #'     
 #'     The individual-level estimates of the \code{bootstrap based no-pooling}
 #'     approaches are identical to the asymptotic ones. However, the SE is the
 #'     SD of the bootstrapped distribution of parameter estimates, the CIs are
 #'     the corresponding quantiles of the bootstrapped distribution, and the
-#'     p-value is obtained from the bootstrapped G-square distribution. The
-#'     group-level estimates are also the mean of the individual-level
-#'     estimates, however, after excluding those parameters that are empirically
-#'     not identified based on the CIs derived from the bootstrap distribution.
-#'     Specifically, we calculate the range from maximum and minimum CI value
-#'     and exclude those individuals for which the range is larger than
-#'     \code{mpt_options()$max_ci_indiv} which defaults to \code{0.99}. (PLEASE
-#'     CHECK)
+#'     p-value is obtained from the bootstrapped G-square distribution.
+#'     Identifiability of individual-level parameter estimates is also based on
+#'     the bootstrap distribution of estimates. Specifically, we calculate the
+#'     range of the CI (i.e., maximum minus minimum CI value) and flag those
+#'     parameters as non-identifiable for which the range is larger than
+#'     \code{mpt_options()$max_ci_indiv}, which defaults to \code{0.99}. Thus,
+#'     in the default settings we say a parameter is non-identifiable if the
+#'     bootstrap based CI extends from 0 to 1. The group-level estimates are the
+#'     mean of the identifiable individual-level estimates. And difference
+#'     between conditions is calculated in the same manner as for the asymptotic
+#'     case using the identifiable individual-level parameter esatimates.
 #'   }
 #' 
 #' @return A \code{tibble} with one row per estimation \code{method} and the
