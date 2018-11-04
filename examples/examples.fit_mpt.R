@@ -9,7 +9,7 @@ DATA_FILE <- system.file("extdata", "smith_et_al_2011.csv", package = "MPTmultiv
 # data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
 ### if .csv format uses commata "," (international format):
 data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
-data <- data[c(1:10, 113:122),]
+data <- data[c(1:10, 113:122),]  ## select only subset of data for example
 head(data)
 
 COL_CONDITION <- "WM_EX"  # name of the variable encoding group membership
@@ -25,6 +25,9 @@ data[[COL_CONDITION]] <- factor(
 
 # define core parameters:
 CORE <- c("C1", "C2")
+
+## save options so they can be reset later:
+op <- mpt_options() 
 
 # set test options for a quick and unreliable run:
 mpt_options("test")
