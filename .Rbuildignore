@@ -1,3 +1,6 @@
+^development\.R$
+vignettes
+examples
 ^\.travis\.yml$
 ^.*\.Rproj$
 ^\.Rproj\.user$
