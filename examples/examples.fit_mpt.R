@@ -27,13 +27,14 @@ data[[COL_CONDITION]] <- factor(
 CORE <- c("C1", "C2")
 
 ## save options so they can be reset later:
-op <- mpt_options() 
+
 
 # set test options for a quick and unreliable run:
-mpt_options("test")
-mpt_options("n.CPU" = 1) # use 1 core to run on CRAN
+
+
 
 \dontrun{
+op <- mpt_options() 
 ## to reset default options (which you would want) use:
 mpt_options("default")
 
@@ -49,29 +50,55 @@ fit_all <- fit_mpt(
   , core = CORE
 )
 
+mpt_options(op) ## reset options  
+}
+
+load(system.file("extdata", "prospective_memory_example.rda", package = "MPTmultiverse"))
+
 ### Analysis of results requires dplyr and tidyr (or just 'tidyverse')
 library("dplyr")
 library("tidyr")
 
-glimpse(fit_all) 
+
 ## first few columns identify model, data, and estimation approach/method
 ## remaining columns are list columns containing the results for each method
 ## use unnest to work with each of the results columns
+glimpse(fit_all) 
 
+# Although we requested all 10 methods, only 9 worked:
+fit_all$method
+# Jags variant of beta MPT is missing.
+
+## Let us inspect the group-level estimates
 fit_all %>% 
   select(method, pooling, est_group) %>% 
   unnest() 
 
+# we can also plot the group-level estimates:
+plot(fit_all, which = "est")
 
+
+## Next we take a look at the GoF
 fit_all %>% 
   select(method, pooling, gof_group) %>% 
   unnest() %>% 
   as.data.frame()
 
-  
-}
+# Again, we can plot it as well
+plot(fit_all, which = "gof2")  ## use "gof1" for overall GoF
+
+## Finally, we take a look at the differences between conditions
+fit_all %>% 
+  select(method, pooling, test_between) %>% 
+  unnest() 
+
+# and then we plot it
+plot(fit_all, which = "test_between")
 
 ### Also possible to only use individual methods:
+op2 <- mpt_options() ## save options for later resetting
+mpt_options("test")
+mpt_options("n.CPU" = 1) # use 1 core to run on CRAN
 
 only_asymptotic <- fit_mpt(
   method = "asymptotic_no"
@@ -84,8 +111,8 @@ only_asymptotic <- fit_mpt(
 
 dplyr::glimpse(only_asymptotic)
 
-all_bootstrap <- fit_mpt(
-  method = c("pb_no", "npb_no")
+bayes_complete <- fit_mpt(
+  method = c("simple_pooling")
   , dataset = DATA_FILE
   , data = data
   , model = EQN_FILE
@@ -93,7 +120,7 @@ all_bootstrap <- fit_mpt(
   , core = CORE
 )
 
-dplyr::glimpse(all_bootstrap)
+dplyr::glimpse(bayes_complete)
 
-## reset default options:
-mpt_options("default")
+## reset options:
+mpt_options(op2) 
