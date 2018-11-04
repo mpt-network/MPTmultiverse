@@ -115,8 +115,9 @@ make_results_row <- function(
           , condition2 = pairs[[i]][2]
           , stringsAsFactors = FALSE
         )) %>% 
-        dplyr::mutate(core = parameter %in% core) %>%  
-        dplyr::select(parameter, core, condition1, condition2) %>% 
+        dplyr::mutate(core = .data$parameter %in% core) %>%  
+        dplyr::select(.data$parameter, .data$core, 
+                      .data$condition1, .data$condition2) %>% 
         dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
       
       tibble_ci <- tibble::as_tibble(
