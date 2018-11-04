@@ -28,10 +28,15 @@ CORE <- c("C1", "C2")
 
 # set test options for a quick and unreliable run:
 mpt_options("test")
-mpt_options() # to see the settings 
-## Note: settings are also saved in the results tibble
+mpt_options("n.CPU" = 1) # use 1 core to run on CRAN
 
 \dontrun{
+## to reset default options (which you would want) use:
+mpt_options("default")
+
+mpt_options() # to see the settings 
+## Note: settings are also saved in the results tibble
+  
 ## without specifying method, all are used per default
 fit_all <- fit_mpt(
   dataset = DATA_FILE

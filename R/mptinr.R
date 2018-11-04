@@ -74,6 +74,7 @@ mpt_mptinr <- function(
 #' @importFrom tibble tibble
 #' @importFrom rlang .data sym
 #' @importFrom magrittr %>%
+#' @importFrom stats qnorm
 #' @keywords internal
 
 mpt_mptinr_no <- function(
