@@ -22,13 +22,25 @@ test_that("Partial Pooling approaches work", {
   
   set.seed(10)  ## for reproducibility
   
-  expect_warning(capture_output(res_bayes <- fit_mpt(
+  capture_output(res_bayes <- fit_mpt(
     method = "trait", 
     , dataset = DATA_FILE
     , data = data
     , model = EQN_FILE
     , condition = COL_CONDITION
-  )), "The adaptation phase of one or more models was not completed in 10000 iterations",
-  fixed = TRUE)
+  ))
+  expect_equal(nrow(res_bayes), 1)
+  expect_equal(res_bayes$pooling, "partial")
+  expect_equal(res_bayes$method, "trait")
+  
+  ## dput(round(res_bayes$est_group[[1]]$est, 2))
+  expect_equal(res_bayes$est_group[[1]]$est, 
+               c(c(0.91, 0.84, 0.63, 0.83, 0.88, 0.94, 0.78, 0.78)), 
+               tolerance = 0.02)
+  
+  # dput(round(res_bayes$gof_group[[1]]$stat_obs, 2))
+  expect_equal(res_bayes$gof_group[[1]]$stat_obs, 
+               c(2, 1.36, 195.16, 158.33), 
+               tolerance = 0.1)
   
 })
