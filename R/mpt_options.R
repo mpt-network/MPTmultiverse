@@ -43,7 +43,7 @@ mpt_options <- function(...){
   if(length(args)==0L) return(fetched)
   
   # Provide some shorthand terms:
-  if(args[[1]] %in% c("test", "default")){
+  if(args[[1]][[1]] %in% c("test", "default")){
     changed <- switch(
       args[[1]]
       , test = set_test_options()

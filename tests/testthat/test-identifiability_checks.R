@@ -6,6 +6,7 @@ test_that("Non-identified parameters are excluded", {
   testthat::skip_on_cran()
   testthat::skip_on_travis()
   
+  op <- mpt_options()
   mpt_options("default")
   mpt_options("bootstrap_samples" = 200)
   mpt_options(n.optim = 5)
@@ -64,4 +65,6 @@ test_that("Non-identified parameters are excluded", {
     only_pb$test_between[[1]]$est_diff, 
     only_asymptotic$test_between[[1]]$est_diff, 
     tolerance = 0.001)))
+  
+  mpt_options(op)  # reset options
 })
