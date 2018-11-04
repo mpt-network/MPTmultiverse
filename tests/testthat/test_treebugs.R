@@ -1,6 +1,7 @@
 context("TreeBUGS basic tests")
 
 test_that("Partial Pooling approaches work", {
+  testthat::skip_on_cran()
 
   EQN_FILE <- system.file("extdata", "prospective_memory.eqn", package = "MPTmultiverse")
   DATA_FILE <- system.file("extdata", "smith_et_al_2011.csv", package = "MPTmultiverse")
@@ -15,20 +16,21 @@ test_that("Partial Pooling approaches work", {
   )
   op <- mpt_options()
   capture_output(mpt_options("default"))
-  mpt_options(n.chains = 2)  ## use 2 chains, hopefully it still runs on CRAN
+  mpt_options(n.chains = 1)  ## use 2 chains, hopefully it still runs on CRAN
   mpt_options(Neff_min = 100)
   mpt_options(n.iter = 50000)
   mpt_options(save_models = FALSE)
   
   set.seed(10)  ## for reproducibility
   
-  capture_output(res_bayes <- fit_mpt(
+  # capture_output(
+  res_bayes <- fit_mpt(
     method = "trait", 
     , dataset = DATA_FILE
     , data = data
     , model = EQN_FILE
     , condition = COL_CONDITION
-  ))
+  )
   expect_equal(nrow(res_bayes), 1)
   expect_equal(res_bayes$pooling, "partial")
   expect_equal(res_bayes$method, "trait")
