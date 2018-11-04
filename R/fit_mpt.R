@@ -314,15 +314,17 @@ fit_mpt <- function(
   res <- list()
   
   # MPTinR part ----
-  res[["mptinr"]] <- mpt_mptinr(
-    dataset = dataset
-    , data = data
-    , model = model
-    , method = intersect(method, c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no"))
-    , id = id
-    , condition = condition
-    , core = core
-  )
+  if (any(method %in% c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no"))) {
+    res[["mptinr"]] <- mpt_mptinr(
+      dataset = dataset
+      , data = data
+      , model = model
+      , method = intersect(method, c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no"))
+      , id = id
+      , condition = condition
+      , core = core
+    )
+  }
   
   # TreeBUGS part ----
   res[["treebugs"]] <- dplyr::bind_rows(
