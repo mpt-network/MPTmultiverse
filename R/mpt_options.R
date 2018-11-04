@@ -108,17 +108,17 @@ set_default_options <- function() {
   
   list(
     mptinr = list(
-      bootstrap_samples = 2e3
-      , n.optim = 2e1
+      bootstrap_samples = 1000
+      , n.optim = 10
     )
     , treebugs = list(
-      n.chains = 4
+      n.chains = 3
       , n.iter = 5e4
       , n.adapt = 1e4
       , n.burnin = 2e4
       , n.thin = 1e1
-      , Rhat_max = 1.01
-      , Neff_min = 1e3
+      , Rhat_max = 1.05
+      , Neff_min = 2000
       , extend_max = 2e1
       , n.PPP = 5e3
     )
