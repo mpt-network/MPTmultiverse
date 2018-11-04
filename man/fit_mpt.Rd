@@ -285,6 +285,9 @@ all_bootstrap <- fit_mpt(
 )
 
 dplyr::glimpse(all_bootstrap)
+
+## reset default options:
+mpt_options("default")
 }
 \references{
 Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences

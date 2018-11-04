@@ -91,3 +91,6 @@ all_bootstrap <- fit_mpt(
 )
 
 dplyr::glimpse(all_bootstrap)
+
+## reset default options:
+mpt_options("default")

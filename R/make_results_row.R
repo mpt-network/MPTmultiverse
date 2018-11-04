@@ -74,7 +74,7 @@ make_results_row <- function(
     est_ind <- tibble::add_column(est_ind, xx = NA_real_)
     colnames(est_ind)[ncol(est_ind)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
   }
-  
+  est_ind <- tibble::add_column(est_ind, identifiable = NA)
   
   # create est_group empty df
   est_group <- tibble::as_tibble(

@@ -1,7 +1,7 @@
 
-context("MPTinR Bootstrap")
+context("MPTinR: Identifiability of individual parameters")
 
-test_that("Bootstrap excludes non-identified parameters", {
+test_that("Non-identified parameters are excluded", {
   
   testthat::skip_on_cran()
   testthat::skip_on_travis()
@@ -35,6 +35,9 @@ test_that("Bootstrap excludes non-identified parameters", {
   ), "MPTinR-no: IDs and parameters with pb-CIs > 0.99 (i.e., non-identified)", 
   fixed = TRUE)
   
+  mpt_options(n.optim = 20)
+  
+  set.seed(11)
   only_asymptotic <- fit_mpt(
     method = "asymptotic_no"
     , dataset = DATA_FILE
