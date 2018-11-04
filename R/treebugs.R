@@ -165,6 +165,7 @@ mpt_treebugs <- function (
       tmp <- summMPT$individParameters[parameters,,1:(2+length(CI_SIZE)), drop = FALSE] %>%
         reshape2::melt() %>% 
         tidyr::spread("Statistic", "value")
+      tmp$identifiable <- NA
 
       colnames(tmp) <- c("parameter", "id", colnames(result_row$est_indiv[[1]])[-(1:4)])
       tmp$parameter <- as.character(tmp$parameter)
