@@ -446,6 +446,7 @@ get_pb_results <- function(dataset
   }
   
   est_group <- tmp %>%
+    dplyr::filter(.data$range_ci < MAX_CI_INDIV) %>%  ## exclude non-identified pars.
     dplyr::group_by(.data$condition, .data$parameter, .data$core) %>%
     dplyr::summarise(estN = mean(.data$est),
                      se = stats::sd(.data$est) / 
@@ -462,6 +463,39 @@ get_pb_results <- function(dataset
                       res$est_group[[1]][, c("condition", "parameter")],
                       by = c("condition", "parameter"))
   
+  # ----------------------------------------------------------------------------  
+  # make test_between
+  
+  for (i in seq_len(nrow(res$test_between[[1]]))) {
+    # all these should be character
+    tmp_par <- res$test_between[[1]]$parameter[i]
+    tmp_c1 <- res$test_between[[1]]$condition1[i]
+    tmp_c2 <- res$test_between[[1]]$condition2[i]
+    
+    tmp_df <- tmp %>%
+      dplyr::filter(
+        .data$range_ci < MAX_CI_INDIV,
+        .data$parameter == tmp_par,
+        .data$condition %in% 
+        c(tmp_c1, tmp_c2)
+        )
+    
+    tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
+                    tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
+    
+    tmp_lm <- stats::lm(est ~ condition, tmp_df)
+    
+    tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
+    
+    res$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
+      c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
+    
+    res$test_between[[1]][i, prepared$cols_ci] <- 
+      res$test_between[[1]][i, ]$est_diff + 
+      stats::qnorm(CI_SIZE)* res$test_between[[1]][i, ]$se
+  }
+  
+  # ----------------------------------------------------------------------------  
   # make gof_group for parametric-bootstrap approach
   
   res$gof_group[[1]]$type <- paste0(bootstrap, "-G2")
@@ -470,19 +504,7 @@ get_pb_results <- function(dataset
   tmp <- fit_mptinr$goodness.of.fit$individual
   tmp$condition <- as.character(prepared$data$condition)
   gof_group <- tmp %>%
-    dplyr::group_by(.data$condition) %>%
-    dplyr::summarise(stat_obs = sum(.data$G.Squared),
-              stat_df = sum(.data$df))
-  gof_group$p <- NA_real_
-  
-  
-  # ----------------------------------------------------------------------------
-  # make gof_group for parametric-bootstrap approach
-  
-  tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- as.character(prepared$data$condition)
-  gof_group <- tmp %>%
-    dplyr::group_by(.data$condition) %>%
+    dplyr::group_by(.data$condition) %>%  
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
               stat_df = sum(.data$df))
   gof_group$p <- NA_real_
@@ -538,35 +560,7 @@ get_pb_results <- function(dataset
     (sum(res$gof[[1]]$stat_obs < g2_cond) + 1) /
     (MPTINR_OPTIONS$bootstrap_samples + 1)
   
-  # ----------------------------------------------------------------------------  
-  # make test_between
-  
-  for (i in seq_len(nrow(res$test_between[[1]]))) {
-    # all these should be character
-    tmp_par <- res$test_between[[1]]$parameter[i]
-    tmp_c1 <- res$test_between[[1]]$condition1[i]
-    tmp_c2 <- res$test_between[[1]]$condition2[i]
-    
-    tmp_df <- res$est_indiv[[1]][ 
-      res$est_indiv[[1]]$parameter == tmp_par & 
-        res$est_indiv[[1]]$condition %in% 
-        c(tmp_c1, tmp_c2), ]
-    
-    tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
-                    tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
-    
-    tmp_lm <- stats::lm(est ~ condition, tmp_df)
-    
-    tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
-    
-    res$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
-      c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
-    
-    res$test_between[[1]][i, prepared$cols_ci] <- 
-      res$test_between[[1]][i, ]$est_diff + 
-      stats::qnorm(CI_SIZE)* res$test_between[[1]][i, ]$se
-  }
-  
+
    # write estimation time to results_row ----
   res$estimation[[1]] <- tibble::tibble(
     condition = "complete_data"
