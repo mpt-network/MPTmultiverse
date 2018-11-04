@@ -70,14 +70,13 @@ A \code{tibble} with one row per estimation \code{method} and the
   \code{\link{nlminb}}). The boostrap methods contain an additional column,
   \code{parameter}, that contains the information which (if any) parameters
   are empirically non-identifiable based on the bootstrapped distribution of
-  parameter estimates (i.e., for which the range of the boostrap distribution
-  is larger than \code{mpt_options()$max_ci_indiv} which defaults to
-  \code{0.99}). For the Bayesian methods this is a \code{tibble} containing
-  information of the posterior dsitribution (i.e., mean, quantiles, SD, SE,
-  \code{n.eff}, and R-hat) for each parameter.
+  parameter estimates (see above for exact description). For the Bayesian
+  methods this is a \code{tibble} containing information of the posterior
+  dsitribution (i.e., mean, quantiles, SD, SE, \code{n.eff}, and R-hat) for
+  each parameter.
   \item \code{estimation}: Time it took for each estimation method and group.
   \item \code{options}: Options used for estimation. Obtained by running
-  `mpt_options()`
+  \code{\link{mpt_options}()}
 }
 
 With the exception of the first five columns (i.e., after \code{method}) all
@@ -101,10 +100,10 @@ need to match the column names in \code{data}. Results are returned in one
 \code{tibble} with one row per estimation method.
 }
 \details{
-This functions is a fancy wrapper for packages \code{MPTinR} and
+This functions is a fancy wrapper for packages \pkg{MPTinR} and
   \pkg{TreeBUGS} applying various frequentist and Bayesian estimation methods
   to the same data set using a single MPT model and collecting the results
-  in a single \code{tibble} where each row corresponds to one
+  in one \code{tibble} where each row corresponds to one
   estimation method. Note that parameter restrictions (e.g., equating
   different parameters or fixing them to a constant) need to be part of the
   model (i.e., the \code{.eqn} file) and cannot be passed as an argument.
@@ -155,7 +154,42 @@ This functions is a fancy wrapper for packages \code{MPTinR} and
       \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
         \link[TreeBUGS]{betaMPTcpp})}
     }
-}
+  }
+  \subsection{Frequentist/Maximum-Likelihood Methods}{
+    For the \emph{complete pooling asymptotic approach}, the group-level parameter
+    estimates and goodness-of-fit statistics are the maximum-likelihood and
+    G-squared values returned by \code{MPTinR}. The parameter differences are
+    based on these values, the standard errors of the difference is simply
+    the pooled standard error of the individual parameters. The overall fit
+    (column \code{gof}) is based on an additional fit to the completely
+    aggregated data.
+    
+    For the \emph{no pooling asymptotic approach}, the individual-level
+    maximum-likelihood estimates are reported in column \code{est_indiv} and
+    \code{gof_indiv} and provide the basis for the other results. The
+    group-level parameters are simply the means of the individual-level
+    parameters, the SE is the SE of the mean for these parameter (i.e.,
+    SD/sqrt(N), where N excludes parameters estimated as NA), and the CI is
+    based on mean and SE. The group-level and overall fit is the sum of the
+    individual G-squares, sum of individual-level df, and corresponding
+    chi-square df. The difference between the conditions and corresponding
+    statistics are based on a t-test comparing the individual-level
+    estimates. The CIs of the difference are based on the SEs (which are
+    derived from an equivalent linear model).
+    
+    The individual-level estimates of the \code{bootstrap based no-pooling}
+    approaches are identical to the asymptotic ones. However, the SE is the
+    SD of the bootstrapped distribution of parameter estimates, the CIs are
+    the corresponding quantiles of the bootstrapped distribution, and the
+    p-value is obtained from the bootstrapped G-square distribution. The
+    group-level estimates are also the mean of the individual-level
+    estimates, however, after excluding those parameters that are empirically
+    not identified based on the CIs derived from the bootstrap distribution.
+    Specifically, we calculate the range from maximum and minimum CI value
+    and exclude those individuals for which the range is larger than
+    \code{mpt_options()$max_ci_indiv} which defaults to \code{0.99}. (PLEASE
+    CHECK)
+  }
 }
 \examples{
 

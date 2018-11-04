@@ -22,7 +22,7 @@ mpt_options(...)
   \item{\code{n.PPP}: }{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use. Defaults to the number of available cores on your machine.}
   \item{\code{ci_size}: }{Numeric.}
-  \item{\code{max_ci_indiv}: }{Numeric.}
+  \item{\code{max_ci_indiv}: }{Numeric. Used for excluding individual parameter estimates in the bootstrap approaches. If the range of the CI (i.e., distance between minimum and maximum) is larger than this value, the estimate is excluded from the group-level estimates.}
   \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
   \item{\code{save_models}: }{Logical.}
 }}
