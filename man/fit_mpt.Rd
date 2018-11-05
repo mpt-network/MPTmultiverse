@@ -37,10 +37,13 @@ e.g., \code{core = c("Dn", "Do")}. All other parameters are treated as
 auxiliary parameters.}
 }
 \value{
-A \code{tibble} with one row per estimation \code{method} and the following columns:
+A \code{tibble} with one row per estimation \code{method} and the
+  following columns:
 \enumerate{
-  \item \code{model}: Model file name (copied from \code{model} argument), \code{character}
-  \item \code{dataset}: Name of data set (copied from \code{dataset} argument), \code{character}
+  \item \code{model}: Name of model file (copied from \code{model} argument),
+  \code{character}
+  \item \code{dataset}: Name of data set (copied from \code{dataset}
+  argument), \code{character}
   \item \code{pooling}: \code{character} specifying the level of pooling with
   three potential values: \code{c("complete", "no", "partial")}
   \item \code{package}: \code{character} specifying the package used for
@@ -49,7 +52,8 @@ A \code{tibble} with one row per estimation \code{method} and the following colu
   following potential values: \code{c("asymptotic", "PB/MLE", "NPB/MLE",
   "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}
   \item \code{est_group}: Group-level parameter estimates per condition/group.
-  \item \code{est_indiv}: Individual-level parameter estimates (if provided by method).
+  \item \code{est_indiv}: Individual-level parameter estimates (if provided
+  by method).
   \item \code{test_between}: Parameter differences between the levels of the
   between-subjects condition (if specified).
   \item \code{gof}: Overall goodness of fit across all individuals.
@@ -66,19 +70,18 @@ A \code{tibble} with one row per estimation \code{method} and the following colu
   \code{\link{nlminb}}). The boostrap methods contain an additional column,
   \code{parameter}, that contains the information which (if any) parameters
   are empirically non-identifiable based on the bootstrapped distribution of
-  parameter estimates (i.e., for which the range of the boostrap distribution
-  is larger than \code{mpt_options()$max_ci_indiv} which defaults to
-  \code{0.99}). For the Bayesian methods this is a \code{tibble} containing
-  information of the posterior dsitribution (i.e., mean, quantiles, SD, SE,
-  \code{n.eff}, and R-hat) for each parameter.
+  parameter estimates (see above for exact description). For the Bayesian
+  methods this is a \code{tibble} containing information of the posterior
+  dsitribution (i.e., mean, quantiles, SD, SE, \code{n.eff}, and R-hat) for
+  each parameter.
   \item \code{estimation}: Time it took for each estimation method and group.
   \item \code{options}: Options used for estimation. Obtained by running
-  `mpt_options()`
+  \code{\link{mpt_options}()}
 }
 
 With the exception of the first five columns (i.e., after \code{method}) all
-columns are \code{list} columns typically holding one \code{tibble} per cell. The
-simplest way to analyze the results is separately per column using
+columns are \code{list} columns typically holding one \code{tibble} per cell.
+The simplest way to analyze the results is separately per column using
 \code{\link[tidyr]{unnest}}. Examples for this are given below.
 }
 \description{
@@ -97,13 +100,18 @@ need to match the column names in \code{data}. Results are returned in one
 \code{tibble} with one row per estimation method.
 }
 \details{
-This functions is a fancy wrapper for packages \code{MPTinR} and
+This functions is a fancy wrapper for packages \pkg{MPTinR} and
   \pkg{TreeBUGS} applying various frequentist and Bayesian estimation methods
   to the same data set using a single MPT model and collecting the results
-  are returned in a single \code{tibble} where each row corresponds to one
+  in one \code{tibble} where each row corresponds to one
   estimation method. Note that parameter restrictions (e.g., equating
   different parameters or fixing them to a constant) need to be part of the
   model (i.e., the \code{.eqn} file) and cannot be passed as an argument.
+  
+  The settings for the various methods are specified via function
+  \code{\link{mpt_options}}. The default settings use all available cores for
+  calculating the boostrap distribution as well as independent MCMC chains
+  and should be appropriate for most situations.
 
   The data can have a single between-subjects condition (specified via
   \code{condition}). This condition can have more than two levels. If
@@ -118,35 +126,83 @@ This functions is a fancy wrapper for packages \code{MPTinR} and
   simply include separate trees and separate sets of parameters for each
   within-subjects condition. This allows to at least compare the estimates
   for each within-subjects condition across estimation method.
+  
+  \subsection{Implemented Methods}{
+    Maximum-likelihood estimation with \pkg{MPTinR} via
+    \code{\link[MPTinR]{fit.mpt}}:
+    \itemize{
+      \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete
+      pooling}
+      \item{\code{"asymptotic_no"}: }{ Asymptotic ML theory, no pooling}
+      \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
+      \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
+    }
+     
+    Bayesian estimation with \pkg{TreeBUGS}
+    \itemize{
+      \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
+        \link[TreeBUGS]{simpleMPT})}
+      \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling 
+        (C++, \link[TreeBUGS]{simpleMPT})}
+      \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, 
+        \link[TreeBUGS]{traitMPT})}
+      \item{\code{"trait_uncorrelated"}: }{latent-trait model without
+        correlation parameters, partial pooling (JAGS,
+        \link[TreeBUGS]{traitMPT})}
+      \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, 
+        \link[TreeBUGS]{betaMPT})}
+      \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
+        \link[TreeBUGS]{betaMPTcpp})}
+    }
+  }
+  \subsection{Frequentist/Maximum-Likelihood Methods}{
+    For the \emph{complete pooling asymptotic approach}, the group-level parameter
+    estimates and goodness-of-fit statistics are the maximum-likelihood and
+    G-squared values returned by \code{MPTinR}. The parameter differences are
+    based on these values, the standard errors of the difference is simply
+    the pooled standard error of the individual parameters. The overall fit
+    (column \code{gof}) is based on an additional fit to the completely
+    aggregated data.
+    
+    For the \emph{no pooling asymptotic approach}, the individual-level
+    maximum-likelihood estimates are reported in column \code{est_indiv} and
+    \code{gof_indiv} and provide the basis for the other results. Whether or
+    not an individual-level parameter estimate is judged as identifiable
+    (column \code{identifiable}) is based on separate fits with different
+    random starting values. If, in these separate, fits the same objective
+    criterion is reached several times (i.e., \code{Log.Likelihood} within
+    .01 of best fit), but the parameter estimate differs (i.e., different
+    estimates within .01 of each other), then an estimate is flagged as
+    non-identifiable. If they are the same (i.e., within .01 of each other)
+    they are marked as identifiable. The group-level parameters are simply
+    the means of the identifiable individual-level parameters, the SE is the
+    SE of the mean for these parameter (i.e., SD/sqrt(N), where N excludes
+    non-identifiable parameters and thise estimated as NA), and the CI is
+    based on mean and SE. The group-level and overall fit is the sum of the
+    individual G-squares, sum of individual-level df, and corresponding
+    chi-square df. The difference between the conditions and corresponding
+    statistics are based on a t-test comparing the individual-level estimates
+    (again, after excluding non-identifiable estimates). The CIs of the
+    difference are based on the SEs (which are derived from a linear model
+    equivalent to the t-test).
+    
+    The individual-level estimates of the \code{bootstrap based no-pooling}
+    approaches are identical to the asymptotic ones. However, the SE is the
+    SD of the bootstrapped distribution of parameter estimates, the CIs are
+    the corresponding quantiles of the bootstrapped distribution, and the
+    p-value is obtained from the bootstrapped G-square distribution.
+    Identifiability of individual-level parameter estimates is also based on
+    the bootstrap distribution of estimates. Specifically, we calculate the
+    range of the CI (i.e., maximum minus minimum CI value) and flag those
+    parameters as non-identifiable for which the range is larger than
+    \code{mpt_options()$max_ci_indiv}, which defaults to \code{0.99}. Thus,
+    in the default settings we say a parameter is non-identifiable if the
+    bootstrap based CI extends from 0 to 1. The group-level estimates are the
+    mean of the identifiable individual-level estimates. And difference
+    between conditions is calculated in the same manner as for the asymptotic
+    case using the identifiable individual-level parameter esatimates.
+  }
 }
-\section{Implemented Methods}{
-
-Maximum-likelihood estimation with \pkg{MPTinR} via \code{\link[MPTinR]{fit.mpt}}:
-\itemize{
-  \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete
-  pooling}
-  \item{\code{"asymptotic_no"}: }{ Asymptotic ML theory, no pooling}
-  \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
-  \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
-}
- 
-Bayesian estimation with \pkg{TreeBUGS}
-\itemize{
-  \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
-    \link[TreeBUGS]{simpleMPT})}
-  \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling 
-    (C++, \link[TreeBUGS]{simpleMPT})}
-  \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, 
-    \link[TreeBUGS]{traitMPT})}
-  \item{\code{"trait_uncorrelated"}: }{latent-trait model without correlation 
-    parameters, partial pooling (JAGS, \link[TreeBUGS]{traitMPT})}
-  \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, 
-    \link[TreeBUGS]{betaMPT})}
-  \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
-    \link[TreeBUGS]{betaMPTcpp})}
-}
-}
-
 \examples{
 
 # ------------------------------------------------------------------------------
@@ -159,7 +215,7 @@ DATA_FILE <- system.file("extdata", "smith_et_al_2011.csv", package = "MPTmultiv
 # data <- read.csv2(DATA_FILE, fileEncoding = "UTF-8-BOM")
 ### if .csv format uses commata "," (international format):
 data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
-data <- data[c(1:10, 113:122),]
+data <- data[c(1:10, 113:122),]  ## select only subset of data for example
 head(data)
 
 COL_CONDITION <- "WM_EX"  # name of the variable encoding group membership
@@ -176,12 +232,21 @@ data[[COL_CONDITION]] <- factor(
 # define core parameters:
 CORE <- c("C1", "C2")
 
+## save options so they can be reset later:
+
+
 # set test options for a quick and unreliable run:
-mpt_options("test")
-mpt_options() # to see the settings 
-## Note: settings are also saved in the results tibble
+
+
 
 \dontrun{
+op <- mpt_options() 
+## to reset default options (which you would want) use:
+mpt_options("default")
+
+mpt_options() # to see the settings 
+## Note: settings are also saved in the results tibble
+  
 ## without specifying method, all are used per default
 fit_all <- fit_mpt(
   dataset = DATA_FILE
@@ -191,29 +256,55 @@ fit_all <- fit_mpt(
   , core = CORE
 )
 
+mpt_options(op) ## reset options  
+}
+
+load(system.file("extdata", "prospective_memory_example.rda", package = "MPTmultiverse"))
+
 ### Analysis of results requires dplyr and tidyr (or just 'tidyverse')
 library("dplyr")
 library("tidyr")
 
-glimpse(fit_all) 
+
 ## first few columns identify model, data, and estimation approach/method
 ## remaining columns are list columns containing the results for each method
 ## use unnest to work with each of the results columns
+glimpse(fit_all) 
 
+# Although we requested all 10 methods, only 9 worked:
+fit_all$method
+# Jags variant of beta MPT is missing.
+
+## Let us inspect the group-level estimates
 fit_all \%>\% 
   select(method, pooling, est_group) \%>\% 
   unnest() 
 
+# we can also plot the group-level estimates:
+plot(fit_all, which = "est")
 
+
+## Next we take a look at the GoF
 fit_all \%>\% 
   select(method, pooling, gof_group) \%>\% 
   unnest() \%>\% 
   as.data.frame()
 
-  
-}
+# Again, we can plot it as well
+plot(fit_all, which = "gof2")  ## use "gof1" for overall GoF
+
+## Finally, we take a look at the differences between conditions
+fit_all \%>\% 
+  select(method, pooling, test_between) \%>\% 
+  unnest() 
+
+# and then we plot it
+plot(fit_all, which = "test_between")
 
 ### Also possible to only use individual methods:
+op2 <- mpt_options() ## save options for later resetting
+mpt_options("test")
+mpt_options("n.CPU" = 1) # use 1 core to run on CRAN
 
 only_asymptotic <- fit_mpt(
   method = "asymptotic_no"
@@ -226,8 +317,8 @@ only_asymptotic <- fit_mpt(
 
 dplyr::glimpse(only_asymptotic)
 
-all_bootstrap <- fit_mpt(
-  method = c("pb_no", "npb_no")
+bayes_complete <- fit_mpt(
+  method = c("simple_pooling")
   , dataset = DATA_FILE
   , data = data
   , model = EQN_FILE
@@ -235,7 +326,10 @@ all_bootstrap <- fit_mpt(
   , core = CORE
 )
 
-dplyr::glimpse(all_bootstrap)
+dplyr::glimpse(bayes_complete)
+
+## reset options:
+mpt_options(op2) 
 }
 \references{
 Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences

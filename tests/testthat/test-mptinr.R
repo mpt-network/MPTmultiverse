@@ -137,7 +137,7 @@ test_that("No-pooling approaches work", {
                  0.01, 0.02, 0, 0.08, 0, 0, 0, 0.09), 
                tolerance = 0.01)
 
-  
+  mpt_options(op)
 })
 
 
@@ -187,5 +187,6 @@ test_that("Complete-pooling approaches work", {
   expect_equal(only_asymptotic$gof[[1]]$p, 
                0.117, 
                tolerance = 0.001)
+  mpt_options(op)
   
 })

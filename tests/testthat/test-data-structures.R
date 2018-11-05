@@ -101,6 +101,7 @@ test_that("make_results_row()"
         , ci_0.1 = "numeric"
         , ci_0.9 = "numeric"
         , ci_0.975 = "numeric"
+        , identifiable = "logical"
       )
     )
     

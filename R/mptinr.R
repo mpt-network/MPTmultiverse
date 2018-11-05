@@ -66,6 +66,41 @@ mpt_mptinr <- function(
 }
 
 
+test_between_no <- function(test_between, indiv_pars, CI_SIZE, cols_ci) {
+  for (i in seq_len(nrow(test_between))) {
+    # all these should be character
+    tmp_par <- test_between$parameter[i]
+    tmp_c1 <- test_between$condition1[i]
+    tmp_c2 <- test_between$condition2[i]
+    
+    tmp_df <- indiv_pars %>%
+      dplyr::filter(
+        .data$identifiable,
+        .data$parameter == tmp_par,
+        .data$condition %in% 
+          c(tmp_c1, tmp_c2)
+      )
+    
+    ## skip calculation in case of only one observation per group
+    try({
+      
+      tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
+                             tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
+      
+      tmp_lm <- stats::lm(est ~ condition, tmp_df)
+      
+      tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
+      
+      test_between[ i , c("est_diff" , "se", "p") ] <- 
+        c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
+      
+      test_between[i, cols_ci] <- test_between[i, ]$est_diff + 
+        stats::qnorm(CI_SIZE)* test_between[i, ]$se
+    }, silent = TRUE)
+  }
+  return(test_between)
+}
+
   
 ################
 ## no pooling ##
@@ -74,6 +109,7 @@ mpt_mptinr <- function(
 #' @importFrom tibble tibble
 #' @importFrom rlang .data sym
 #' @importFrom magrittr %>%
+#' @importFrom stats qnorm
 #' @keywords internal
 
 mpt_mptinr_no <- function(
@@ -150,6 +186,16 @@ mpt_mptinr_no <- function(
     ## make est_indiv and gof_indiv
     for (i in seq_len(nrow(prepared$data))) {
       
+      ## get results from fitting runs to check if parameters are identified
+      all_pars <- do.call(
+        "rbind"
+        , purrr::map(fit_mptinr$optim.runs$individual[[i]], "par")
+      )
+      colnames(all_pars) <- dimnames(fit_mptinr$parameters$individual)[[1]]
+      all_pars <- as.data.frame(all_pars)
+      all_pars$objective <- purrr::map_dbl(fit_mptinr$optim.runs$individual[[i]], "objective") 
+      all_pars$minimum <- abs(all_pars$objective - min(all_pars$objective)) < 0.01
+      
       for (p in prepared$parameters) {
         
         res[["asymptotic_no"]]$est_indiv[[1]][
@@ -162,6 +208,23 @@ mpt_mptinr_no <- function(
             res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "se" ] <-
           fit_mptinr$parameters$individual[p, "upper.conf",i] - 
           fit_mptinr$parameters$individual[p,"estimates",i]
+        
+        ## check if individual parameter is identifiable and flag otherwise
+        pars_at_optimum <- all_pars[all_pars$minimum, p]
+        if (length(pars_at_optimum) > 1) {
+          if (all(abs(pars_at_optimum[1] - pars_at_optimum) < 0.01)) {
+            res[["asymptotic_no"]]$est_indiv[[1]][
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "identifiable" ] <-
+              TRUE
+          } else {
+            res[["asymptotic_no"]]$est_indiv[[1]][
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "identifiable" ] <-
+              FALSE
+          }
+        }
+        
       }
     }
     
@@ -174,12 +237,13 @@ mpt_mptinr_no <- function(
     #### make est_group ####
     
     est_group2 <- res[["asymptotic_no"]]$est_indiv[[1]] %>%
+      dplyr::filter(.data$identifiable | is.na(.data$identifiable)) %>% 
       dplyr::group_by(.data$condition, .data$parameter, .data$core) %>%
       dplyr::summarise(estN = mean(.data$est),
                        se = stats::sd(.data$est) / 
                          sqrt(sum(!is.na(.data$est)))) %>%
       dplyr::ungroup() %>%
-      dplyr::rename(est = estN)
+      dplyr::rename(est = .data$estN)
     for (i in seq_along(CI_SIZE)) {
       est_group2[, prepared$cols_ci[i]] <- est_group2[,"est"] + 
         stats::qnorm(CI_SIZE[i])*est_group2[,"se"]
@@ -249,30 +313,10 @@ mpt_mptinr_no <- function(
     # ----------------------------------------------------------------------------  
     # make test_between
     
-    for (i in seq_len(nrow(res[["asymptotic_no"]]$test_between[[1]]))) {
-      tmp_par <- res[["asymptotic_no"]]$test_between[[1]]$parameter[i]
-      tmp_c1 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition1[i])
-      tmp_c2 <- as.character(res[["asymptotic_no"]]$test_between[[1]]$condition2[i])
-      
-      tmp_df <- res[["asymptotic_no"]]$est_indiv[[1]][ 
-        res[["asymptotic_no"]]$est_indiv[[1]]$parameter == tmp_par & 
-          res[["asymptotic_no"]]$est_indiv[[1]]$condition %in% 
-          c(as.character(tmp_c1), as.character(tmp_c2)) , ]
-      
-      tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
-                             tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
-      
-      tmp_lm <- stats::lm(formula = est ~ condition, data = tmp_df)
-      
-      tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
-      
-      res[["asymptotic_no"]]$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
-        c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
-      
-      res[["asymptotic_no"]]$test_between[[1]][i, prepared$cols_ci] <- 
-        res[["asymptotic_no"]]$test_between[[1]][i, ]$est_diff + 
-        stats::qnorm(CI_SIZE) * res[["asymptotic_no"]]$test_between[[1]][i, ]$se
-    }
+    res[["asymptotic_no"]]$test_between[[1]] <- 
+      test_between_no(test_between = res[["asymptotic_no"]]$test_between[[1]], 
+                      indiv_pars = res[["asymptotic_no"]]$est_indiv[[1]], 
+                      CI_SIZE = CI_SIZE, cols_ci = prepared$cols_ci)
     
     ### copy information that is same ----
     
@@ -422,14 +466,16 @@ get_pb_results <- function(dataset
     
   }
   
-    #### make est_group ####
+  ## check for identifiability
   
-  tmp <- res$est_indiv[[1]]
-  tmp$range_ci <- tmp[, prepared$cols_ci[length(prepared$cols_ci)]][[1]] - 
-    tmp[, prepared$cols_ci[1]][[1]]
+  tmp_range_ci <- res$est_indiv[[1]][, prepared$cols_ci[length(prepared$cols_ci)]][[1]] - 
+    res$est_indiv[[1]][, prepared$cols_ci[1]][[1]]
+  res$est_indiv[[1]]$identifiable <- tmp_range_ci < MAX_CI_INDIV
   
-  non_identified_pars <-  tmp %>%
-    dplyr::filter(.data$range_ci > MAX_CI_INDIV) %>% 
+  #### make est_group ####
+  
+  non_identified_pars <-  res$est_indiv[[1]] %>% 
+    dplyr::filter(!.data$identifiable) %>% 
     dplyr::group_by(.data$id) %>% 
     dplyr::summarise(parameter = paste0(.data$parameter, collapse = ", ")) %>% 
     dplyr::ungroup()
@@ -445,13 +491,14 @@ get_pb_results <- function(dataset
             call. = FALSE)    
   }
   
-  est_group <- tmp %>%
+  est_group <- res$est_indiv[[1]] %>%
+    dplyr::filter(.data$identifiable) %>%  ## exclude non-identified pars.
     dplyr::group_by(.data$condition, .data$parameter, .data$core) %>%
     dplyr::summarise(estN = mean(.data$est),
                      se = stats::sd(.data$est) / 
                        sqrt(sum(!is.na(.data$est)))) %>%
     dplyr::ungroup() %>%
-    dplyr::rename(est = estN)
+    dplyr::rename(est = .data$estN)
   for (i in seq_along(CI_SIZE)) {
     est_group[, prepared$cols_ci[i]] <- est_group[,"est"] + 
       stats::qnorm(CI_SIZE[i])*est_group[,"se"]
@@ -462,6 +509,15 @@ get_pb_results <- function(dataset
                       res$est_group[[1]][, c("condition", "parameter")],
                       by = c("condition", "parameter"))
   
+  # ----------------------------------------------------------------------------  
+  # make test_between
+  
+  res$test_between[[1]] <- 
+    test_between_no(test_between = res$test_between[[1]], 
+                    indiv_pars = res$est_indiv[[1]], 
+                      CI_SIZE = CI_SIZE, cols_ci = prepared$cols_ci)
+  
+  # ----------------------------------------------------------------------------  
   # make gof_group for parametric-bootstrap approach
   
   res$gof_group[[1]]$type <- paste0(bootstrap, "-G2")
@@ -470,19 +526,7 @@ get_pb_results <- function(dataset
   tmp <- fit_mptinr$goodness.of.fit$individual
   tmp$condition <- as.character(prepared$data$condition)
   gof_group <- tmp %>%
-    dplyr::group_by(.data$condition) %>%
-    dplyr::summarise(stat_obs = sum(.data$G.Squared),
-              stat_df = sum(.data$df))
-  gof_group$p <- NA_real_
-  
-  
-  # ----------------------------------------------------------------------------
-  # make gof_group for parametric-bootstrap approach
-  
-  tmp <- fit_mptinr$goodness.of.fit$individual
-  tmp$condition <- as.character(prepared$data$condition)
-  gof_group <- tmp %>%
-    dplyr::group_by(.data$condition) %>%
+    dplyr::group_by(.data$condition) %>%  
     dplyr::summarise(stat_obs = sum(.data$G.Squared),
               stat_df = sum(.data$df))
   gof_group$p <- NA_real_
@@ -538,35 +582,7 @@ get_pb_results <- function(dataset
     (sum(res$gof[[1]]$stat_obs < g2_cond) + 1) /
     (MPTINR_OPTIONS$bootstrap_samples + 1)
   
-  # ----------------------------------------------------------------------------  
-  # make test_between
-  
-  for (i in seq_len(nrow(res$test_between[[1]]))) {
-    # all these should be character
-    tmp_par <- res$test_between[[1]]$parameter[i]
-    tmp_c1 <- res$test_between[[1]]$condition1[i]
-    tmp_c2 <- res$test_between[[1]]$condition2[i]
-    
-    tmp_df <- res$est_indiv[[1]][ 
-      res$est_indiv[[1]]$parameter == tmp_par & 
-        res$est_indiv[[1]]$condition %in% 
-        c(tmp_c1, tmp_c2), ]
-    
-    tmp_t <- stats::t.test(tmp_df[ tmp_df$condition == tmp_c1,  ]$est, 
-                    tmp_df[ tmp_df$condition == tmp_c2,  ]$est)
-    
-    tmp_lm <- stats::lm(est ~ condition, tmp_df)
-    
-    tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
-    
-    res$test_between[[1]][ i , c("est_diff" , "se", "p") ] <- 
-      c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
-    
-    res$test_between[[1]][i, prepared$cols_ci] <- 
-      res$test_between[[1]][i, ]$est_diff + 
-      stats::qnorm(CI_SIZE)* res$test_between[[1]][i, ]$se
-  }
-  
+
    # write estimation time to results_row ----
   res$estimation[[1]] <- tibble::tibble(
     condition = "individual"

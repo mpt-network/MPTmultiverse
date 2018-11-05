@@ -16,9 +16,9 @@
 #'   \item{\code{Neff_min}: }{Numeric. The minimum number of effective samples you are willing to accept.}
 #'   \item{\code{extend_max}: }{Numeric.}
 #'   \item{\code{n.PPP}: }{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
-#'   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use. Defaults to the number of available cores on your machine.}
+#'   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use for obtaining the parametric bootstrap dsitribution. Defaults to the number of available cores on your machine.}
 #'   \item{\code{ci_size}: }{Numeric.}
-#'   \item{\code{max_ci_indiv}: }{Numeric.}
+#'   \item{\code{max_ci_indiv}: }{Numeric. Used for excluding individual parameter estimates in the bootstrap approaches. If the range of the CI (i.e., distance between minimum and maximum) is larger than this value, the estimate is excluded from the group-level estimates.}
 #'   \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
 # ' TODO  \item{\code{catch_warnings}: }{Logical. Whether to store warnings and errors as additional coluumns in the output.}
 #'   \item{\code{save_models}: }{Logical.}
@@ -43,7 +43,7 @@ mpt_options <- function(...){
   if(length(args)==0L) return(fetched)
   
   # Provide some shorthand terms:
-  if(args[[1]] %in% c("test", "default")){
+  if(args[[1]][[1]] %in% c("test", "default")){
     changed <- switch(
       args[[1]]
       , test = set_test_options()
@@ -108,17 +108,17 @@ set_default_options <- function() {
   
   list(
     mptinr = list(
-      bootstrap_samples = 2e3
-      , n.optim = 2e1
+      bootstrap_samples = 1000
+      , n.optim = 10
     )
     , treebugs = list(
-      n.chains = 4
+      n.chains = 3
       , n.iter = 5e4
       , n.adapt = 1e4
       , n.burnin = 2e4
       , n.thin = 1e1
-      , Rhat_max = 1.01
-      , Neff_min = 1e3
+      , Rhat_max = 1.05
+      , Neff_min = 2000
       , extend_max = 2e1
       , n.PPP = 5e3
     )
