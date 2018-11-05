@@ -96,13 +96,14 @@
 #' \code{"gof1"} for overall goodness-of-fit statistics, and
 #' \code{"gof2"} for group-wise goodness-of-fit statistics.
 #' @param save Logical. Indicates whether the plot should also be saved as a .pdf file.
+#' @param ... ignored.
 #' 
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @importFrom graphics plot
 #' @export
 
-plot.multiverseMPT <- function(x, which = "est", save = FALSE){
+plot.multiverseMPT <- function(x, which = "est", save = FALSE, ...){
   
   shapes <- c(16, 18, 15, 1, 0, 8, 11, 12, 4, 6)
   
