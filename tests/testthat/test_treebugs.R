@@ -36,6 +36,11 @@ test_that("Partial Pooling approaches work", {
   expect_equal(res_bayes$pooling, "partial")
   expect_equal(res_bayes$method, "trait")
   
+  expect_equal(nrow(res_bayes$est_indiv[[1]]), 4 * 11)
+  expect_equal(nrow(res_bayes$est_rho[[1]]), 3*2*2)
+  expect_equal(nrow(res_bayes$fungibility[[1]]), 3*2*2)
+  expect_equal(nrow(res_bayes$test_between[[1]]), 4)
+  
   ## dput(round(res_bayes$est_group[[1]]$est, 2))
   expect_equal(res_bayes$est_group[[1]]$est, 
                c(c(0.91, 0.84, 0.63, 0.83, 0.88, 0.94, 0.78, 0.78)), 
@@ -45,5 +50,6 @@ test_that("Partial Pooling approaches work", {
   expect_equal(res_bayes$gof_group[[1]]$stat_obs, 
                c(2, 1.36, 195.16, 158.33), 
                tolerance = 0.1)
+  
   
 })

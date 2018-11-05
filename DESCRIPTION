@@ -41,6 +41,7 @@ Imports:
     MPTinR,
     TreeBUGS,
     runjags,
+    coda,
     purrr,
     broom,
     readr

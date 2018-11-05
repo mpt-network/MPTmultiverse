@@ -132,6 +132,48 @@ make_results_row <- function(
   }
   ## est_covariate <- ##MISSING
   
+  if (method == "trait"){
+    param_pairs <- utils::combn(x = parameters, m = 2 , simplify = FALSE)
+    
+    tmp_est_rho <- tmp_fungibility <- vector("list", length(pairs))
+    for (i in seq_along(param_pairs)) {
+      
+      tmp_tibble <- tibble::as_tibble(
+        expand.grid(
+          parameter1 = param_pairs[[i]][1],
+          parameter2 = param_pairs[[i]][2],
+          condition = conditions, 
+          stringsAsFactors = FALSE
+        )) %>% 
+        dplyr::mutate(core1 = .data$parameter1 %in% core,
+                      core2 = .data$parameter2 %in% core) %>%  
+        dplyr::select(.data$parameter1, .data$parameter2, 
+                      .data$core1, .data$core2, 
+                      .data$condition)
+      
+      tmp_fungibility[[i]] <- tmp_tibble %>% 
+        dplyr::mutate(correlation = NA_real_)
+      
+      tibble_ci <- tibble::as_tibble(
+        matrix(NA_real_, nrow(tmp_tibble), 
+               length(getOption("MPTmultiverse")$ci_size),
+               dimnames = list(NULL, paste0("ci_", getOption("MPTmultiverse")$ci_size))))
+      
+      tmp_est_rho[[i]] <- tmp_tibble %>% 
+        dplyr::mutate(est = NA_real_, 
+                      se= NA_real_, 
+                      p = NA_real_) %>% 
+        dplyr::bind_cols(tibble_ci)
+    }
+    fungibility <- dplyr::bind_rows(tmp_fungibility) %>% 
+      dplyr::arrange(match(.data$condition, conditions))
+    est_rho <- dplyr::bind_rows(tmp_est_rho) %>% 
+      dplyr::arrange(match(.data$condition, conditions))
+  } else {
+    est_rho <- tibble::tibble()
+    fungibility <- tibble::tibble()
+  }
+  
   ## create gof empty df
   gof <- tibble::tibble(
     type = "",
@@ -181,11 +223,12 @@ make_results_row <- function(
     method = method,
     est_group = list(est_group),
     est_indiv = list(est_ind),
+    est_rho = list(est_rho),
     test_between = list(test_between),
-    #est_cov = est_cov,
     gof = list(gof),
     gof_group = list(gof_group),
     gof_indiv = list(gof_indiv),
+    fungibility = list(fungibility),
     test_homogeneity = list(test_homogeneity),
     convergence = list(tibble::tibble()),
     estimation = list(tibble::tibble()),

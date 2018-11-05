@@ -241,6 +241,7 @@ mpt_treebugs <- function (
   
   # don't save T2 if complete pooling was used ----
   # Why? I think it would be worthwhile
+  # Daniel: T2 refers to the covariance matrix, which is not defined for aggregated frequencies.
   if (pooling != "complete"){
     result_row$gof[[1]] <- tibble::add_row(result_row$gof[[1]])   # T1 & T2
     result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
@@ -256,6 +257,42 @@ mpt_treebugs <- function (
     , time_difference = unname(estimation_time)
   )
 
+  if (method == "trait"){
+    parnames <- coda::varnames(treebugs_fit[[1]]$runjags$mcmc)
+    par_mat <- expand.grid("parameter1" = parameters, "parameter2" = parameters,
+                            stringsAsFactors = FALSE)
+    
+    # Parameter correlations & fungibility
+    sel_rho <- grep("rho[", parnames, fixed = TRUE, value = TRUE)
+    sel_mean <- grep("mean[", parnames, fixed = TRUE, value = TRUE)
+
+    for (i in seq_along(conditions)){
+      mcmc <- treebugs_fit[[i]]$runjags$mcmc[,sel_rho]
+      rho_summ <- TreeBUGS::summarizeMCMC(mcmc, probs = CI_SIZE)
+      bayesp <- colMeans(do.call("rbind", mcmc) <= 0)
+      res <- data.frame(par_mat,
+                        rho_summ[,c("Mean", "SD")], 
+                        p = ifelse(bayesp > .5, 1 - bayesp, bayesp) * 2,  # two-sided Bayesian p values
+                        rho_summ[,2 + seq_along(CI_SIZE)])
+      colnames(res)[3:9] <- colnames(result_row$est_rho[[1]])[6:12]
+      
+      samples <- do.call("rbind", treebugs_fit[[i]]$runjags$mcmc[,sel_mean])
+      colnames(samples) <- parameters
+      rmat <- stats::cor(samples)
+
+      for (j in 1:nrow(par_mat)){
+        sel_row <-
+          result_row$est_rho[[1]]$parameter1 == par_mat$parameter1[j] &
+          result_row$est_rho[[1]]$parameter2 == par_mat$parameter2[j] &
+          result_row$est_rho[[1]]$condition == conditions[i]
+        if (sum(sel_row) > 0){
+          result_row$est_rho[[1]][sel_row,-(1:5)] <- res[j,-(1:2)]
+          result_row$fungibility[[1]][sel_row, "correlation"] <- rmat[par_mat$parameter1[j], 
+                                                                      par_mat$parameter2[j]]
+        }
+      }
+    }
+  }
   
   # save model objects to the working directory if requested by user ----
   if(all_options$save_models){
@@ -277,7 +314,6 @@ mpt_treebugs <- function (
   # return ----
   result_row
 }
-
 
 
 mpt_treebugs_safe <- purrr::possibly(
