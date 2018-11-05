@@ -139,6 +139,35 @@
 #'     between conditions is calculated in the same manner as for the asymptotic
 #'     case using the identifiable individual-level parameter esatimates.
 #'   }
+#'
+#'   \subsection{Bayesian Methods}{
+#'     The \emph{simple approaches} fit fixed-effects MPT models.
+#'     \code{"simple"} uses no pooling and thus assumes independent uniform priors
+#'     for the individual-level parameters. Group-level means are
+#'     obtained as generated quantities by averaging the posterior samples
+#'     across participants. \code{"simple_pooling"} aggregates observed
+#'     frequencies across participants and assumes a uniform prior for the
+#'     group-level parameters.
+#'
+#'     The \emph{latent-trait approaches} transform the individual-level
+#'     parameters to a latent probit scale using the inverse cumulative standard
+#'     normal distribution. For these probit values, a multivariate normal
+#'     distribution is assumed at the group level. Whereas \code{"trait"}
+#'     estimates the corresponding correlation matrix of the parameters
+#'     (reported in the column \code{est_rho}), \code{"trait_uncorrelated"}
+#'     assumes that the parameters are uncorrelated.
+#'     
+#'     For all Bayesian methods, the posterior distribution of the parameters is
+#'     summarized by the posterior mean (in the column \code{est}), posterior
+#'     standard deviation (\code{se}), and credbility intervals (\code{ci_*}).
+#'     For parameter differences (\code{test_between}) and correlations
+#'     (\code{est_rho}), Bayesian p-values are computed (column \code{p}) by
+#'     counting the relative proportion of posterior samples that are smaller
+#'     than zero. Goodness of fit is tested with the T1 statistic
+#'     (observed vs. posterior-predicted average frequencies, \code{focus =
+#'     "mean"}) and the T2 statistic (observed vs. posterior-predicted
+#'     covariance of frequencies, \code{focus = "cov"}).
+#'    }
 #' 
 #' @return A \code{tibble} with one row per estimation \code{method} and the
 #'   following columns:
@@ -156,12 +185,16 @@
 #'   "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}
 #'   \item \code{est_group}: Group-level parameter estimates per condition/group.
 #'   \item \code{est_indiv}: Individual-level parameter estimates (if provided
-#'   by method).
+#'   by method). 
+#'   \item \code{est_rho}: Estimated correlation of individual-level parameters
+#'   on the probit scale (only in \code{method="trait"}). 
 #'   \item \code{test_between}: Parameter differences between the levels of the
 #'   between-subjects condition (if specified).
 #'   \item \code{gof}: Overall goodness of fit across all individuals.
 #'   \item \code{gof_group}: Group-level goodness of fit.
 #'   \item \code{gof_indiv}: Individual-level goodness of fit.
+#'   \item \code{fungibility}:  Posterior correlation of the group-level means 
+#'   \code{pnorm(mu)} (only in \code{method="trait"}). 
 #'   \item \code{test_homogeneity}: Chi-square based test of participant
 #'   homogeneity proposed by Smith and Batchelder (2008). This test is the same
 #'   for each estimation method.
