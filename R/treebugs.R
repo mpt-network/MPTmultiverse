@@ -89,8 +89,6 @@ mpt_treebugs <- function (
   
   gof_group <- list()
   treebugs_fit <- list()
-  estimation_time <- list()
-  
   
   for (i in seq_along(conditions)){
     cond <- conditions[i]
@@ -137,8 +135,10 @@ mpt_treebugs <- function (
       }
     })
     
-    estimation_time[[conditions[i]]] <- Sys.time() - t0
-    
+    result_row$estimation[[1]]$time_difference[
+      result_row$estimation[[1]]$condition == cond
+    ] <- Sys.time() - t0
+
     # convergence summary (n.eff / Rhat / all estimates)
     tsum <- tibble::as_tibble(summ) %>% 
       dplyr::mutate(parameter = rownames(summ),
@@ -249,11 +249,12 @@ mpt_treebugs <- function (
   
   result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
   
-  estimation_time <- unlist(estimation_time)
-  result_row$estimation[[1]] <- tibble::tibble(
-    condition = names(estimation_time)
-    , time_difference = unname(estimation_time)
-  )
+  # estimation_time <- unlist(estimation_time)
+
+  # result_row$estimation[[1]] <- tibble::tibble(
+  #   condition = names(estimation_time)
+  #   , time_difference = unname(estimation_time)
+  # )
 
   
   # save model objects to the working directory if requested by user ----
