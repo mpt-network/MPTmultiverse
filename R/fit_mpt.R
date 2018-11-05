@@ -220,6 +220,11 @@ fit_mpt <- function(
     , "betacpp"
   )
   
+  # catch the function call that was used,
+  # and other stuff that should be save along the results
+  matched_call <- match.call()
+  used_model <- utils::read.table(model, skip = 1, stringsAsFactors = FALSE)
+  
   if(missing(method)) {
     method <- available_methods
   }
@@ -342,5 +347,10 @@ fit_mpt <- function(
 
   y <- dplyr::bind_rows(res)
   class(y) <- c("multiverseMPT", class(y))
+  attr(y, "call") <- matched_call
+  attr(y, "model_file") <- model
+  attr(y, "data_file") <- dataset
+  attr(y, "model") <- used_model
+  attr(y, "data") <- data
   y
 }
