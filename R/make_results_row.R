@@ -209,9 +209,16 @@ make_results_row <- function(
     , p = NA_real_
   )
   
+  # some overall statistics of estimation, currently only holds needed time
+  estimation <- tibble::tibble(
+    condition = c("complete_data", unique(data$condition), "individual")
+    , time_difference = as.difftime(NA_real_, units = "secs")
+  )
+  
   
   # save used options in a tidy format ----
   used_options <- tidy_options(mpt_options())
+
   
 
   ## data structure for results
@@ -231,7 +238,7 @@ make_results_row <- function(
     fungibility = list(fungibility),
     test_homogeneity = list(test_homogeneity),
     convergence = list(tibble::tibble()),
-    estimation = list(tibble::tibble()),
+    estimation = list(estimation),
     options = list(used_options)
   )
 }

@@ -86,22 +86,23 @@
 
 #' Plot multiverseMPT
 #' 
-#' Plot the output from a multiverse MPT analysis.
+#' Plot the results from a multiverse MPT analysis.
 #'  
 #' @param x An object of class \code{multiverseMPT}.
-#' @param which Character. Which information do you want to be plotted? Possible
-#' values are \code{"est"} for parameter estimates, \code{"gof1"} for goodness-of-fit statistics,
-#' \code{"test_between"} for ... and \code{"gof2"} for ...
-#' @param save Logical.
-#' @param write.csv Logical.
-#' @param ... Further arguments, currently ignored.
+#' @param which Character. Which information should be plotted? Possible
+#' values are
+#' \code{"est"} for parameter estimates,
+#' \code{"test_between"} for between-subjects comparisions,
+#' \code{"gof1"} for overall goodness-of-fit statistics, and
+#' \code{"gof2"} for group-wise goodness-of-fit statistics.
+#' @param save Logical. Indicates whether the plot should also be saved as a .pdf file.
 #' 
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @importFrom graphics plot
 #' @export
 
-plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE, ...){
+plot.multiverseMPT <- function(x, which = "est", save = FALSE){
   
   shapes <- c(16, 18, 15, 1, 0, 8, 11, 12, 4, 6)
   
@@ -109,10 +110,10 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   prefix <- paste0(gsub("\\.eqn", "", results$model[1]), "_", 
                    gsub("\\.", "_", paste0(results$dataset[1],"_")))
   
-  if (write.csv){
-    readr::write_csv(tidyr::unnest(results, .data$est_group), paste0(prefix,"estimates.csv"))
-    readr::write_csv(tidyr::unnest(results, .data$gof), paste0(prefix,"gof.csv"))
-  }
+  # if (write.csv){
+  #   readr::write_csv(tidyr::unnest(results, .data$est_group), paste0(prefix,"estimates.csv"))
+  #   readr::write_csv(tidyr::unnest(results, .data$gof), paste0(prefix,"gof.csv"))
+  # }
   
   
   dd <- ggplot2::position_dodge(width = .75)
@@ -144,7 +145,7 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   res_between$approach <- interaction(res_between$method, res_between$pooling, res_between$package)
   
   if (nrow(res_between) > 0){
-    if (write.csv) readr::write_csv(res_between, paste0(prefix,"test_between.csv"))
+    # if (write.csv) readr::write_csv(res_between, paste0(prefix,"test_between.csv"))
     
     
     gg_est2 <- ggplot2::ggplot(
@@ -197,7 +198,7 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, write.csv = FALSE
   
   
   if (nrow(res_between) > 0){
-    if (write.csv) readr::write_csv(tidyr::unnest(results, .data$gof_group), paste0(prefix,"gof_group.csv"))
+    # if (write.csv) readr::write_csv(tidyr::unnest(results, .data$gof_group), paste0(prefix,"gof_group.csv"))
     
     gof_group <- tidyr::unnest(results, .data$gof_group)
     gof_group$approach <- interaction(gof_group$method, gof_group$pooling, gof_group$package)

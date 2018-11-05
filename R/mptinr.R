@@ -325,7 +325,7 @@ mpt_mptinr_no <- function(
     
     # write estimation time to results_row ----
     res[["asymptotic_no"]]$estimation[[1]] <- tibble::tibble(
-      condition = "complete_data"
+      condition = "individual"
       , time_difference = additional_time
     )
     
@@ -585,7 +585,7 @@ get_pb_results <- function(dataset
 
    # write estimation time to results_row ----
   res$estimation[[1]] <- tibble::tibble(
-    condition = "complete_data"
+    condition = "individual"
     , time_difference = (t2 - t1) + additional_time
   )
   
@@ -688,7 +688,11 @@ mpt_mptinr_complete <- function(dataset,
                             model.filename = model,
                             n.optim = MPTINR_OPTIONS$n.optim,
                             show.messages = FALSE, output = "full")
-  t_complete_data <- Sys.time() - t0
+  
+  res$estimation[[1]]$time_difference[
+    res$estimation[[1]]$condition == "complete_data"
+  ] <- Sys.time() - t0
+
   ## gof
   
   res$gof[[1]][1,"type"] <- "G2"
@@ -712,8 +716,7 @@ mpt_mptinr_complete <- function(dataset,
     , convergence = fit_mptinr_agg$best.fits[[1]]$convergence
   )
   
-  t_cond <- list()
-  
+
   for (i in seq_along(prepared$conditions)) {
     t0 <- Sys.time()
     fit_mptinr_tmp <- MPTinR::fit.mpt(colSums(
@@ -722,7 +725,10 @@ mpt_mptinr_complete <- function(dataset,
                               n.optim = MPTINR_OPTIONS$n.optim,
                               show.messages = FALSE,
                               output = "full")
-    t_cond[[prepared$conditions[i]]] <- Sys.time() - t0
+    
+    res$estimation[[1]]$time_difference[
+      res$estimation[[1]]$condition == prepared$conditions[i]
+      ] <- Sys.time() - t0
     
     res$gof_group[[1]][
       res$gof_group[[1]]$condition == 
@@ -804,10 +810,10 @@ mpt_mptinr_complete <- function(dataset,
             call. = FALSE)
   }
   
-  res$estimation[[1]] <- tibble::tibble(
-    condition = c("complete_data", names(t_cond))
-    , time_difference = as.numeric(c(t_complete_data, unlist(t_cond)))
-  )
+  # res$estimation[[1]] <- tibble::tibble(
+  #   condition = c("complete_data", names(t_cond))
+  #   , time_difference = as.difftime(c(t_complete_data, unlist(t_cond)))
+  # )
   
   return(res)
 }

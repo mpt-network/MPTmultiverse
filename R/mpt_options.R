@@ -20,7 +20,7 @@
 #'   \item{\code{ci_size}: }{Numeric.}
 #'   \item{\code{max_ci_indiv}: }{Numeric. Used for excluding individual parameter estimates in the bootstrap approaches. If the range of the CI (i.e., distance between minimum and maximum) is larger than this value, the estimate is excluded from the group-level estimates.}
 #'   \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
-# ' TODO  \item{\code{catch_warnings}: }{Logical. Whether to store warnings and errors as additional coluumns in the output.}
+# ' TODO  \item{\code{catch_warnings}: }{Logical. Whether to store warnings and errors as additional columns in the output.}
 #'   \item{\code{save_models}: }{Logical.}
 #' }
 #'   
@@ -108,7 +108,7 @@ set_default_options <- function() {
   
   list(
     mptinr = list(
-      bootstrap_samples = 1000
+      bootstrap_samples = 1e3
       , n.optim = 10
     )
     , treebugs = list(
@@ -118,7 +118,7 @@ set_default_options <- function() {
       , n.burnin = 2e4
       , n.thin = 1e1
       , Rhat_max = 1.05
-      , Neff_min = 2000
+      , Neff_min = 2e3
       , extend_max = 2e1
       , n.PPP = 5e3
     )

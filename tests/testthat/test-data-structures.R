@@ -164,6 +164,26 @@ test_that("make_results_row()"
     )
     
     expect_identical(
+      column_classes$test_homogeneity
+      , expected = list(
+        condition = "character"
+        , chisq = "numeric"
+        , df = "numeric"
+        , p = "numeric"
+      )
+    )
+    
+    expect_identical(
+      column_classes$estimation
+      , expected = list(
+        condition = "character"
+        , time_difference = "difftime"
+      )
+    )
+    
+    # column `convergence` is initialized as an empty list, so missing here
+    
+    expect_identical(
       column_classes$options
       , expected = list(
         bootstrap_samples = "numeric"
