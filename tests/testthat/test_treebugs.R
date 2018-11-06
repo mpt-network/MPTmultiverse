@@ -2,7 +2,7 @@ context("TreeBUGS basic tests")
 
 test_that("Partial Pooling approaches work", {
   #testthat::skip_on_cran()
-  #testthat::skip_on_travis()
+  testthat::skip_on_travis()
 
   EQN_FILE <- system.file("extdata", "prospective_memory.eqn", package = "MPTmultiverse")
   DATA_FILE <- system.file("extdata", "smith_et_al_2011.csv", package = "MPTmultiverse")
