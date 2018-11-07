@@ -170,8 +170,8 @@ make_results_row <- function(
     est_rho <- dplyr::bind_rows(tmp_est_rho) %>% 
       dplyr::arrange(match(.data$condition, conditions))
   } else {
-    est_rho <- tibble::tibble()
-    fungibility <- tibble::tibble()
+    est_rho <- tibble::tibble(condition = character(), parameter1 = character(), parameter2 = character())
+    fungibility <- tibble::tibble(condition = character(), parameter1 = character(), parameter2 = character())
   }
   
   ## create gof empty df
