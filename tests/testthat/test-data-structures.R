@@ -23,7 +23,7 @@ test_that("make_results_row()"
       , dataset = DATA_FILE
       , pooling = "partial"
       , package = "TreeBUGS"
-      , method = "betacpp"
+      , method = "trait"
       , data = data
       # , parameters = c("test1", "test2", "test3")
       , id = "id"
@@ -108,6 +108,24 @@ test_that("make_results_row()"
     )
     
     expect_identical(
+      column_classes$est_rho
+      , expected = list(
+        parameter1 = "character"
+        , parameter2 = "character"
+        , core1 = "logical"
+        , core2 = "logical"
+        , condition = "character"
+        , est = "numeric"
+        , se = "numeric"
+        , p = "numeric"
+        , ci_0.025 = "numeric"
+        , ci_0.1 = "numeric"
+        , ci_0.9 = "numeric"
+        , ci_0.975 = "numeric"
+      )
+    )
+    
+    expect_identical(
       column_classes$test_between
       , expected = list(
         parameter = "character"
@@ -160,6 +178,18 @@ test_that("make_results_row()"
         , stat_pred = "numeric"
         , stat_df = "numeric"
         , p = "numeric"
+      )
+    )
+    
+    expect_identical(
+      column_classes$fungibility
+      , expected = list(
+        parameter1 = "character"
+        , parameter2 = "character"
+        , core1 = "logical"
+        , core2 = "logical"
+        , condition = "character"
+        , correlation = "numeric"
       )
     )
     
