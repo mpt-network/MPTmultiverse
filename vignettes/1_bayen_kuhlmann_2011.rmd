@@ -119,23 +119,40 @@ results <- fit_mpt(
 )
 ```
 
-```{r echo = FALSE}
+After computations finished, which may take a couple of days, check if model estimation worked by using the function `check_results`.
+
+```{r echo = FALSE, eval = FALSE}
 save(results, file = "../inst/extdata/results_bayen_kuhlmann.RData")
 ```
 
+```{r echo = FALSE}
+load(file = system.file("extdata", "results_bayen_kuhlmann.RData", package = "MPTmultiverse"))
+```
 
-### Post-processing of Results
-
-```{r results, eval = FALSE}
-# convergence results
+```{r}
 check_results(results)
+```
 
+In this example, convergence failed for the no-pooling maximum-likelihood approach.
+A possible means to resolve this issue could be increasing the number of optimization runs, which can be done by typing `mpt_options(n.iter = 40)` and re-run.
+For the Bayesian approaches, the `betacpp` did not reach an effective sample size $\mathit{ESS} > 2{,}000$. Increasing the number of iterations by typing `mpt_options(n.iter = 2e5)`, and re-running, should solve this problem.
+
+
+
+
+
+
+```{r save, eval = FALSE}
 # store results
 save(
   results
   , file = "results_bayen_kuhlmann.RData"
 )
 ```
+
+
+### Post-processing of Results
+
 
 The analysis output `results` is an object of class `multiverseMPT`, that has its own `plot()` method.
 Type `?plot.multiverseMPT` to see the documentation of possible arguments to this method.
