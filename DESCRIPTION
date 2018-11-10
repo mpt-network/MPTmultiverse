@@ -8,8 +8,9 @@ Description:
     <doi:10.1177/1745691616658637>) offers a principled alternative in which results 
     for all possible combinations of reasonable modeling choices are reported. 
     MPTmultiverse performs a multiverse analysis for multinomial processing tree 
-    (MPT, Riefer & Batchelder, 1988, <doi:10.1037/0033-295X.95.3.318>) models across 
-    maximum-likelihood/frequentist and Bayesian estimation approaches. For the 
+    (MPT, Riefer & Batchelder, 1988, <doi:10.1037/0033-295X.95.3.318>) models combining 
+    maximum-likelihood/frequentist and Bayesian estimation approaches with 
+    different levels of pooling (i.e., data aggregation). For the 
     frequentist approaches, no pooling (with and without parametric or nonparametric 
     bootstrap) and complete pooling are implemented using 
     MPTinR <https://cran.r-project.org/package=MPTinR>. 
