@@ -7,8 +7,8 @@ output:
   knitr:::html_vignette:
     toc: yes
 vignette: >
-  %\VignetteIndexEntry{Overview of MPT Multiverse: An Example Application}
   %\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{Overview of MPT Multiverse: An Example Application}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
   chunk_output_type: console
@@ -51,7 +51,7 @@ Here we use parts of the data from Experiment 1 reported in Bayen and Kuhlman (2
 
 We use the same model as Bayen and Kuhlman (2011), model variant 4 of the 2-high threshold source-memory model (2HTSM) introduced by Bayen, Murnane, and Erdfelder (1996). Model variant 4 of the 2HTSM separates observed source-memory data into 4 parameters: Parameter $D$ (item recognition); parameter $d$ (source memory); parameter $b$ (probability of guessing that an item is old); and parameter $g$ (probability of guessing that an item comes from source A versus source B).
 
-Both data and model come with package `MPTmultiverse` so their location can be obtained using function `system.file`. In other applications, the file paths need to be provided by the user to match the location of data and model on their file system.
+Both data and model come with package `MPTmultiverse` so their location can be obtained using function `system.file`. In other applications, the file paths need to be provided by the user to match the location of data and model on their file system. It often makes sense to set the working directory to the directory in which the data and model file resides, either via `setwd()` or via the menu.
 
 ```{r model-and-data, fig.height=5}
 # load packages
@@ -145,6 +145,19 @@ results <- fit_mpt(
   , core = c("D", "d")
 )
 ```
+
+After fitting it is a good idea to save the results as a binary `R` data file for later. This is easiest done using `save()`. 
+
+```{r, eval=FALSE}
+save(results, file = "results_bayen_kuhlmann_2HTSM4.RData")
+```
+
+One can also directly save in a subfolder of the current working directory (if the subfolder exists).
+
+```{r, eval=FALSE}
+save(results, file = "fits/results_bayen_kuhlmann_2HTSM4.RData")
+```
+
 
 ## Checking the Fit
 

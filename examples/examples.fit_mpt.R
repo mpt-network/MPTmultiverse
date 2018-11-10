@@ -26,13 +26,6 @@ data[[COL_CONDITION]] <- factor(
 # define core parameters:
 CORE <- c("C1", "C2")
 
-## save options so they can be reset later:
-
-
-# set test options for a quick and unreliable run:
-
-
-
 \dontrun{
 op <- mpt_options() 
 ## to reset default options (which you would want) use:
@@ -55,28 +48,30 @@ mpt_options(op) ## reset options
 
 load(system.file("extdata", "prospective_memory_example.rda", package = "MPTmultiverse"))
 
-### Analysis of results requires dplyr and tidyr (or just 'tidyverse')
+# Although we requested all 10 methods, only 9 worked:
+fit_all$method
+# Jags variant of beta MPT is missing.
+
+# the returned method has a plot method. For example, for the group-level estimates:
+plot(fit_all, which = "est")
+
+\dontrun{
+### Full analysis of results requires dplyr and tidyr (or just 'tidyverse')
 library("dplyr")
 library("tidyr")
-
 
 ## first few columns identify model, data, and estimation approach/method
 ## remaining columns are list columns containing the results for each method
 ## use unnest to work with each of the results columns
 glimpse(fit_all) 
 
-# Although we requested all 10 methods, only 9 worked:
-fit_all$method
-# Jags variant of beta MPT is missing.
-
 ## Let us inspect the group-level estimates
 fit_all %>% 
   select(method, pooling, est_group) %>% 
   unnest() 
 
-# we can also plot the group-level estimates:
+## which we can plot again
 plot(fit_all, which = "est")
-
 
 ## Next we take a look at the GoF
 fit_all %>% 
@@ -95,11 +90,8 @@ fit_all %>%
 # and then we plot it
 plot(fit_all, which = "test_between")
 
-### Also possible to only use individual methods:
-op2 <- mpt_options() ## save options for later resetting
-mpt_options("test")
-mpt_options("n.CPU" = 1) # use 1 core to run on CRAN
 
+### Also possible to only use individual methods:
 only_asymptotic <- fit_mpt(
   method = "asymptotic_no"
   , dataset = DATA_FILE
@@ -109,7 +101,7 @@ only_asymptotic <- fit_mpt(
   , core = CORE
 )
 
-dplyr::glimpse(only_asymptotic)
+glimpse(only_asymptotic)
 
 bayes_complete <- fit_mpt(
   method = c("simple_pooling")
@@ -119,8 +111,6 @@ bayes_complete <- fit_mpt(
   , condition = COL_CONDITION
   , core = CORE
 )
+glimpse(bayes_complete)
 
-dplyr::glimpse(bayes_complete)
-
-## reset options:
-mpt_options(op2) 
+}
