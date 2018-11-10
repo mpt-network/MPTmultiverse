@@ -1,5 +1,5 @@
 ^development\.R$
-vignettes
+vignettes\NOT_USED
 examples
 ^\.travis\.yml$
 ^.*\.Rproj$

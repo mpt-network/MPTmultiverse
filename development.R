@@ -2,11 +2,14 @@
 library("devtools")
 library("testthat")
 load_all()
+
 test()
 
 document()
 
 check()
+
+build_vignettes()
 
 library(usethis) ## see: https://github.com/r-lib/usethis
 
