@@ -10,6 +10,7 @@ document()
 check()
 
 build_vignettes()
+build()
 
 library(usethis) ## see: https://github.com/r-lib/usethis
 

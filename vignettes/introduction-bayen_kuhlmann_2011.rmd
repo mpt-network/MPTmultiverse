@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
 - First, it performs analysis within a *Bayesian* or a *frequentist/maximum-likelihood* statistical framework. 
 - Second, it performs the analysis across different levels of *pooling*, that is, different levels of data aggregation. Overall, three different levels of pooling are explored: complete pooling (i.e., data completely aggregated across participants), no pooling (i.e., separate models are fitted to the individual-level data and the results are combined after fitting), and partial pooling (i.e., hierarchical-models that combine group-level parameters with individual-level parameters as random-effects). 
 
-For the frequentist approaches, no pooling (with and without parametric or nonparametric bootstrap) and complete pooling are implemented using [`MPTinR`](https://cran.r-project.org/package=MPTinR). For the Bayesian approaches, no pooling, complete pooling, and three different variants of partial pooling are implemented using [`TreeBUGS`](https://cran.r-project.org/package=TreeBUGS).
+For the frequentist approaches, no pooling (with and without parametric or nonparametric bootstrap) and complete pooling are implemented using [`MPTinR`](https://cran.r-project.org/package=MPTinR) (Singmann & Kellen, 2013). For the Bayesian approaches, no pooling, complete pooling, and three different variants of partial pooling are implemented using [`TreeBUGS`](https://cran.r-project.org/package=TreeBUGS) (Heck, Arnold, & Arnold, 2017).
 
 # Prerequisites
 
@@ -195,7 +195,8 @@ Bayen and Kuhlman (2011) report a difference in the $g$ parameter across conditi
 results %>% 
   select(pooling:method, test_between) %>% 
   unnest() %>% 
-  filter(parameter == "g")
+  filter(parameter == "g") %>% 
+  print(width = 150)
 ```
 
 Inspecting the differences across the analysis multiverse shows that the estimated difference is negative in each case and the 95% credibility/confidence intervals around the estimate do not include zero for 6 out of the 10 methods. Only the CIs for the no-pooling frequentist methods as well as the most sophisticated model, the latent trait model, include 0. However, the 80% CIs do not include zero for all methods. Thus, taken together this provides evidence that the $g$ parameter is larger in the `load` compared to the `no_load` condition. 
@@ -232,7 +233,9 @@ plot(results, save = FALSE, "gof2")
 # References
 
 - Bayen, U. J., & Kuhlmann, B. G. (2011). Influences of source–item contingency and schematic knowledge on source monitoring: Tests of the probability-matching account. *Journal of Memory and Language*, 64(1), 1–17. https://doi.org/10.1016/j.jml.2010.09.001
-- Bayen, U. J., Murnane, K., & Erdfelder, E. (1996). Source discrimination, item detection, and multinomial models of source monitoring. Journal of Experimental Psychology: Learning, Memory, and Cognition, 22(1), 197–215. https://doi.org/10.1037/0278-7393.22.1.197
+- Bayen, U. J., Murnane, K., & Erdfelder, E. (1996). Source discrimination, item detection, and multinomial models of source monitoring. *Journal of Experimental Psychology: Learning, Memory, and Cognition*, 22(1), 197–215. https://doi.org/10.1037/0278-7393.22.1.197
+- Heck, D. W., Arnold, N. R., & Arnold, D. (2017). TreeBUGS: An R package for hierarchical multinomial-processing-tree modeling. *Behavior Research Methods*, 1–21. https://doi.org/10.3758/s13428-017-0869-7
+- Singmann, H., & Kellen, D. (2013). MPTinR: Analysis of multinomial processing tree models in R. *Behavior Research Methods*, 45(2), 560–575. https://doi.org/10.3758/s13428-012-0259-0
 - Steegen, S., Tuerlinckx, F., Gelman, A., & Vanpaemel, W. (2016). Increasing Transparency Through a Multiverse Analysis. *Perspectives on Psychological Science*, 11(5), 702–712. https://doi.org/10.1177/1745691616658637
 
 
