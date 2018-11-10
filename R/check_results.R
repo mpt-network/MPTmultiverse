@@ -11,12 +11,15 @@
 check_results <- function(results) {
   #browser()
   expected <- structure(list(
-    pooling = c("no", "no", "complete", "no", "complete", "partial", "partial", "partial"), 
-    package = c("MPTinR", "MPTinR", "MPTinR", "TreeBUGS", "TreeBUGS", "TreeBUGS", "TreeBUGS", "TreeBUGS"), 
-    method = c("PB/MLE", "asymptotic", "asymptotic", "simple", "simple", "trait", "beta", "trait_uncorrelated")), 
+    pooling = c("no", "no", "no", "complete", "no", "complete", "partial", 
+                "partial", "partial", "partial"), 
+    package = c("MPTinR", "MPTinR", "MPTinR", "MPTinR", "TreeBUGS", "TreeBUGS", 
+                "TreeBUGS", "TreeBUGS", "TreeBUGS", "TreeBUGS"), 
+    method = c("NPB/MLE", "PB/MLE", "asymptotic", "asymptotic", "simple", 
+               "simple", "trait", "trait_uncorrelated", "beta", "betacpp")), 
     .Names = c("pooling", "package", "method"), 
     class = c("tbl_df", "tbl", "data.frame"
-    ), row.names = c(NA, -8L))
+    ), row.names = c(NA, -10L))
   missing <- dplyr::anti_join(expected, results[, 3:5], by = c("pooling", "package", "method"))
   if (nrow(missing) > 0) {
     cat("## Following analysis approaches missing from results:\n", 
@@ -29,22 +32,32 @@ check_results <- function(results) {
   cat("## MPTinR: no pooling\n")
   
   tryCatch({
-    for(meth in c("asymptotic", "PB/MLE")){
+    for(meth in c("asymptotic", "PB/MLE", "NPB/MLE")){
       
       conv_mptinr_no <- results %>% 
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
         dplyr::select("convergence") %>% 
         tidyr::unnest()
       
-      not_id <- conv_mptinr_no %>% 
+      not_id <- results %>% 
+        dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
+        dplyr::select("est_indiv") %>% 
+        tidyr::unnest() %>% 
         dplyr::group_by(.data$condition) %>% 
-        dplyr::summarise(proportion = mean(!is.na(.data$parameter)))
-      not_id2 <- suppressWarnings(conv_mptinr_no %>% 
-                                    dplyr::group_by(.data$condition) %>% 
-                                    dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
-                                    tidyr::unnest(.data$not_identified)) 
+        dplyr::summarise(proportion = mean(!.data$identifiable))
+      
+      not_id2 <- results %>% 
+        dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
+        dplyr::select("est_indiv") %>% 
+        tidyr::unnest() %>%
+        dplyr::filter(!.data$identifiable) %>% 
+        dplyr::group_by(.data$condition) %>% 
+        dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
+        tidyr::unnest(.data$not_identified) %>% 
+        suppressWarnings()
+      
       if (any(not_id$proportion > 0)) {
-        cat("Based on", meth, "CIs, proportion of participants with non-identified parameters:\n")
+        cat("Based on", meth, "method, proportion of participants with non-identified parameters:\n")
         cat(format(not_id)[-c(1,3)], "", sep = "\n")
         
         cat("Based on", meth, "CIs, table of non-identified parameters:\n")
@@ -53,11 +66,12 @@ check_results <- function(results) {
       } else {
         cat("Based on", meth, "CIs, all parameters of all participants seem to be identifiable.\n")
       }
+      cat("\n")
     }
   }, error = function(e) 
     cat("Convergence checks failed for unkown reason.\n"))
   
-  cat("\n\n")
+  cat("\n")
   
   
   ### MPTinR: complete pooling ###
