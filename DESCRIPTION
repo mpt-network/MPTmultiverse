@@ -19,10 +19,10 @@ Description:
     TreeBUGS <https://cran.r-project.org/package=TreeBUGS>. The main function is 
     fit_mpt() who performs the multiverse analysis in one call.
 Authors@R: c(
-    person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
-    , person("Henrik", "Singmann", role = c("aut"), 
+    person("Henrik", "Singmann", role = c("aut"), 
         email="singmann@gmail.com", comment=c(ORCID="0000-0002-4842-3657"))
     , person(c("Daniel", "W."), "Heck", email = "heck@uni-mannheim.de", role = c("aut"))
+    , person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut", "cre"))
     , person("Frederik", "Aust", email = "frederik.aust@uni-koeln.de", role = c("ctb"), 
         comment = c(ORCID = "0000-0003-4900-788X"))
   )
