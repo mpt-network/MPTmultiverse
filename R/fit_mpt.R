@@ -385,5 +385,8 @@ fit_mpt <- function(
   attr(y, "data_file") <- dataset
   attr(y, "model") <- used_model
   attr(y, "data") <- data
+  attr(y, "id") <- id
+  attr(y, "condition") <- condition
+  attr(y, "core") <- core
   y
 }
