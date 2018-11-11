@@ -4,13 +4,13 @@
 \alias{fit_mpt}
 \title{Multiverse Analysis for MPT Models}
 \usage{
-fit_mpt(method, dataset, data, model, id = NULL, condition = NULL,
-  core = NULL)
+fit_mpt(model, dataset, data, id = NULL, condition = NULL,
+  core = NULL, method)
 }
 \arguments{
-\item{method}{\code{character} vector specifying which analysis approaches
-should be performed (see Description below). Defaults to all available
-methods.}
+\item{model}{A model definition, typically the path to an \code{.eqn} model
+file containing the model equations. Category names need to match column
+names in \code{data}.}
 
 \item{dataset}{scalar \code{character} vector. Name of the data set that will
 be copied to the results \code{tibble}.}
@@ -19,10 +19,6 @@ be copied to the results \code{tibble}.}
 names need to match category names in \code{model} (i.e., different from
 \pkg{MPTinR} behavior, order of categories is not important, matching is
 done via name).}
-
-\item{model}{A model definition, typically the path to an \code{.eqn} model
-file containing the model equations. Category names need to match column
-names in \code{data}.}
 
 \item{id}{scalar \code{character} vector. Name of the column that contains
 the subject identifier. If not specified, it is assumed that each row
@@ -35,6 +31,10 @@ comparisons are performed.}
 \item{core}{\code{character} vector defining the core parameters of interest,
 e.g., \code{core = c("Dn", "Do")}. All other parameters are treated as
 auxiliary parameters.}
+
+\item{method}{\code{character} vector specifying which analysis approaches
+should be performed (see Description below). Defaults to all available
+methods.}
 }
 \value{
 A \code{tibble} with one row per estimation \code{method} and the
@@ -90,8 +90,9 @@ The simplest way to analyze the results is separately per column using
 }
 \description{
 Performs a multiverse analysis for multinomial processing tree (MPT) models
-across maximum-likelihood/frequentist and Bayesian estimation approaches. For
-the frequentist approaches, no pooling (with and without parametric or
+across different levels of pooling (i.e., data aggregation) and across
+maximum-likelihood/frequentist and Bayesian estimation approaches. For the
+frequentist approaches, no pooling (with and without parametric or
 nonparametric bootstrap) and complete pooling  are implemented using
 \pkg{MPTinR}. For the Bayesian approaches, no pooling, complete pooling, and
 three different variants of partial pooling are implemented using
@@ -106,11 +107,12 @@ need to match the column names in \code{data}. Results are returned in one
 \details{
 This functions is a fancy wrapper for packages \pkg{MPTinR} and
   \pkg{TreeBUGS} applying various frequentist and Bayesian estimation methods
-  to the same data set using a single MPT model and collecting the results
-  in one \code{tibble} where each row corresponds to one
-  estimation method. Note that parameter restrictions (e.g., equating
-  different parameters or fixing them to a constant) need to be part of the
-  model (i.e., the \code{.eqn} file) and cannot be passed as an argument.
+  to the same data set with different levels of pooling/aggregation using a
+  single MPT model and collecting the results in one \code{tibble} where each
+  row corresponds to one estimation method. Note that parameter restrictions
+  (e.g., equating different parameters or fixing them to a constant) need to
+  be part of the model (i.e., the \code{.eqn} file) and cannot be passed as
+  an argument.
   
   The settings for the various methods are specified via function
   \code{\link{mpt_options}}. The default settings use all available cores for
@@ -123,15 +125,45 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
   of the differences, and confidence-intervals of the differences are
   calculated for each parameter. Please note that \code{condition} is
   silently converted to \code{character} in the output. Thus, a specific
-  ordering of the \code{factor} levels in the output cannot be guaranteed.
+  ordering of the \code{factor} levels in the output cannot be guaranteed. If
+  the data has more than one between-subjects condition, these need to be
+  combined into one condition for this function.
   
   Parameter differences or other support for within-subject conditions is not
   provided. The best course of action for within-subjects conditions is to
   simply include separate trees and separate sets of parameters for each
   within-subjects condition. This allows to at least compare the estimates
-  for each within-subjects condition across estimation method.
+  for each within-subjects condition across levels of pooling and estimation
+  methods.
   
-  \subsection{Implemented Methods}{
+  \subsection{Pooling}{
+  The following pooling levels are provided (not all by all estimation approaches, see below).
+  \itemize{
+      \item{\emph{Complete pooling:} }{The traditional analysis approach in the MPT
+      literature in which data is aggregated across participants within each
+      between-subjects condition. This approach assumes that there are no
+      individual-dfferences. Produces one set of model parameters per condition.}
+      \item{\emph{No pooling:} }{The model is fitted to the individual-level data in
+      an independent manner (i.e., no data aggregation). This approach
+      assumes that there is no similarity across participants and usually
+      requires considerable amounts of data on the individual-level. Produces
+      one set of model parameters per participant. Group-level estimates are
+      based on averaging the individual-level estimates.}
+    \item{\emph{Partial pooling:} }{Data is fitted simultaneously to the
+    individual-level data assuming that the individual-level parameters come
+    from a group-level distribution. Individual-level parameters are often
+    treated as random-effects which are nested in the group-level parameters,
+    which is why this approach is also called hierarchical modeling. This
+    approach assumes both individual-level differences and similarities.
+    Produces one set of model parameters per participant plus one set of
+    group-level parameters. Thus, although partial pooling models usually
+    have more parameters than the no-pooling approaches, they are usually
+    less flexible as the hierarchical-structure provides regularization of
+    the individual-level parameters. }
+    }
+  }
+  
+  \subsection{Implemented Estimation Methods}{
     Maximum-likelihood estimation with \pkg{MPTinR} via
     \code{\link[MPTinR]{fit.mpt}}:
     \itemize{
@@ -221,8 +253,10 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
     normal distribution. For these probit values, a multivariate normal
     distribution is assumed at the group level. Whereas \code{"trait"}
     estimates the corresponding correlation matrix of the parameters
-    (reported in the column \code{est_rho}), \code{"trait_uncorrelated"}
-    assumes that the parameters are uncorrelated.
+    (reported in the column \code{est_rho}), \code{"trait_uncorrelated"} does
+    not estimate this correlation matrix (i.e., parameters can still be
+    correlated across individuals, but this is not accounted for in the
+    model).
     
     For all Bayesian methods, the posterior distribution of the parameters is
     summarized by the posterior mean (in the column \code{est}), posterior
@@ -275,9 +309,9 @@ mpt_options() # to see the settings
   
 ## without specifying method, all are used per default
 fit_all <- fit_mpt(
-  dataset = DATA_FILE
+  model = EQN_FILE
+  , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
   , condition = COL_CONDITION
   , core = CORE
 )
@@ -332,25 +366,24 @@ plot(fit_all, which = "test_between")
 
 ### Also possible to only use individual methods:
 only_asymptotic <- fit_mpt(
-  method = "asymptotic_no"
+  model = EQN_FILE
   , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
   , condition = COL_CONDITION
   , core = CORE
+  , method = "asymptotic_no"
 )
-
-glimpse(only_asymptotic)
+only_asymptotic$est_group
 
 bayes_complete <- fit_mpt(
-  method = c("simple_pooling")
+  model = EQN_FILE
   , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
   , condition = COL_CONDITION
   , core = CORE
+  , method = "simple_pooling"
 )
-glimpse(bayes_complete)
+bayes_complete$est_group
 
 }
 }

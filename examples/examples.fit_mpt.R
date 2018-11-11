@@ -36,9 +36,9 @@ mpt_options() # to see the settings
   
 ## without specifying method, all are used per default
 fit_all <- fit_mpt(
-  dataset = DATA_FILE
+  model = EQN_FILE
+  , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
   , condition = COL_CONDITION
   , core = CORE
 )
@@ -93,24 +93,23 @@ plot(fit_all, which = "test_between")
 
 ### Also possible to only use individual methods:
 only_asymptotic <- fit_mpt(
-  method = "asymptotic_no"
+  model = EQN_FILE
   , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
   , condition = COL_CONDITION
   , core = CORE
+  , method = "asymptotic_no"
 )
-
-glimpse(only_asymptotic)
+only_asymptotic$est_group
 
 bayes_complete <- fit_mpt(
-  method = c("simple_pooling")
+  model = EQN_FILE
   , dataset = DATA_FILE
   , data = data
-  , model = EQN_FILE
   , condition = COL_CONDITION
   , core = CORE
+  , method = "simple_pooling"
 )
-glimpse(bayes_complete)
+bayes_complete$est_group
 
 }
