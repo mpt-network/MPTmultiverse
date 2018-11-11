@@ -26,18 +26,18 @@ knitr::opts_chunk$set(
 
 # Package Overview
 
-`MPTmultiverse` provide a single function, `fit_mpt()`, that performs a *multiverse analysis* for multinomial processing tree models. The idea of a multiverse analysis (Steegen, Tuerlinckx, Gelman, & Vanpaemel, 2016) is to perform and report all possible combinations of reasonable modeling choices. This contrasts with a more common analysis approach in which only one specific analysis (i.e., one path through a garden of forking paths) is reported. 
+`MPTmultiverse` provides a single function, `fit_mpt()`, that performs a *multiverse analysis* for multinomial processing tree models. The idea of a multiverse analysis (Steegen, Tuerlinckx, Gelman, & Vanpaemel, 2016) is to perform and report all possible combinations of reasonable modeling choices. This contrasts with a more common analysis approach in which only one specific analysis (i.e., one path through a garden of forking paths) is reported. 
 
 `fit_mpt` performs a multiverse analysis combining two different factors.
 
-- First, it performs analysis within a *Bayesian* or a *frequentist/maximum-likelihood* statistical framework. 
-- Second, it performs the analysis across different levels of *pooling*, that is, different levels of data aggregation. Overall, three different levels of pooling are explored: complete pooling (i.e., data completely aggregated across participants), no pooling (i.e., separate models are fitted to the individual-level data and the results are combined after fitting), and partial pooling (i.e., hierarchical-models that combine group-level parameters with individual-level parameters as random-effects). 
+- First, it performs analyses within a *Bayesian* or a *frequentist/maximum-likelihood* statistical framework. 
+- Second, it performs analyses across different levels of *pooling*, that is, different levels of data aggregation. Overall, three different levels of pooling are explored: complete pooling (i.e., data completely aggregated across participants), no pooling (i.e., separate models are fitted to the individual-level data and the results are combined after fitting), and partial pooling (i.e., hierarchical models that combine group-level parameters with individual-level parameters as random-effects). 
 
 For the frequentist approaches, no pooling (with and without parametric or nonparametric bootstrap) and complete pooling are implemented using [`MPTinR`](https://cran.r-project.org/package=MPTinR) (Singmann & Kellen, 2013). For the Bayesian approaches, no pooling, complete pooling, and three different variants of partial pooling are implemented using [`TreeBUGS`](https://cran.r-project.org/package=TreeBUGS) (Heck, Arnold, & Arnold, 2017).
 
 # Prerequisites
 
-First of all, make sure that you have installed the *latest* version of `R`, of all necessary `R` packages, *and* of `JAGS`. To install `JAGS`, go to [mcmc-jags.sourceforge.net](http://mcmc-jags.sourceforge.net/) and follow installation instructions. After that, install or update the required R packages:
+First of all, make sure that you have installed the *latest* version of `R`, of all necessary `R` packages, *and* of `JAGS`. To install `JAGS`, go to [mcmc-jags.sourceforge.net](http://mcmc-jags.sourceforge.net/) and follow installation instructions. After that, install or update the required `R` packages:
 
 ```{r update-packages, eval = FALSE}
 install.packages("MPTmultiverse")
@@ -47,7 +47,7 @@ update.packages(ask = FALSE)
 
 # Example Data: Bayen & Kuhlmann (2011)
 
-Here we use parts of the data from Experiment 1 reported in Bayen and Kuhlman (2011) investigating source-memory of participants under two different cognitive load conditions. The 24 participants in the `load` condition generated a random number between one and nine every time they heard a tone, which happened every 2 s during the entire study phase, and said it out loud. The 24 participants in the `no_load` condition performed the study phase without secondary task. Participants and both conditions performed the test phase in the same manner. 
+Here we use parts of the data from Experiment 1 reported in Bayen and Kuhlmann (2011) investigating source-memory of participants under two different cognitive load conditions. The 24 participants in the `load` condition generated a random number between one and nine every time they heard a tone, which happened every 2 s during the entire study phase, and said it out loud. The 24 participants in the `no_load` condition performed the study phase without a secondary task. Participants and both conditions performed the test phase in the same manner. 
 
 We use the same model as Bayen and Kuhlman (2011), model variant 4 of the 2-high threshold source-memory model (2HTSM) introduced by Bayen, Murnane, and Erdfelder (1996). Model variant 4 of the 2HTSM separates observed source-memory data into 4 parameters: Parameter $D$ (item recognition); parameter $d$ (source memory); parameter $b$ (probability of guessing that an item is old); and parameter $g$ (probability of guessing that an item comes from source A versus source B).
 
@@ -175,13 +175,13 @@ load(file = system.file("extdata", "results_bayen_kuhlmann.RData", package = "MP
 check_results(results)
 ```
 
-In this example, for the no-pooling asymptotic approaches the rate of participants with non-identified parameters is very low. For the bootstrap-based approaches the results pattern is different. Here we see that the rate of participants with non-identified parameters in the `load` condition is considerably higher, around .17 versus .03 in the `no_load` condition. Particularly, the $d$ parameter show problematic behavior.
+In this example, for the no-pooling asymptotic approaches the rate of participants with non-identified parameters is very low. For the bootstrap-based approaches the results pattern is different. Here we see that the rate of participants with non-identified parameters in the `load` condition is considerably higher, around .17 versus .03 in the `no_load` condition. Particularly, the $d$ parameter shows problematic behavior.
 
 For the Bayesian approaches, the `betacpp` did not reach an effective sample size $\mathit{ESS} > 2{,}000$. Increasing the number of iterations by typing `mpt_options(n.iter = 2e5)`, and re-running, should solve this problem.
 
 ## Returned Object
 
-`fit_mpt` returns a `tibble` with an additional class, `multiverseMPT`, with one row per estimation method. When using the default setting and if all methods succeed, `fit_mpt` uses ten estimation methods and thus this `tibble` contains ten rows. The first five column contains information about data and method and the remaining columns contain the results. Most of the results columns are `list` columns and inspection of the content is performed most conveniently using packages `dplyr` and `tidyr`. We therefore load these packages before taking a glimpse at the columns. 
+`fit_mpt` returns a `tibble` with an additional class, `multiverseMPT`, with one row per estimation method. When using the default setting and if all methods succeed, `fit_mpt` uses ten estimation methods and thus this `tibble` contains ten rows. The first five columns contain information about data and method and the remaining columns contain the results. Most of the results columns are `list` columns and inspection of the content is performed most conveniently using packages `dplyr` and `tidyr`. We therefore load these packages before taking a glimpse at the columns. 
 
 ```{r}
 library("dplyr")
@@ -189,7 +189,7 @@ library("tidyr")
 glimpse(results)
 ```
 
-Bayen and Kuhlman (2011) report a difference in the $g$ parameter across conditions (they actually report an interaction with a further within-subject, but this is not considered here). Thus, we can take a look at the difference in $g$ parameter across conditions and methods in the following manner. We first select the column containing the results of the between-condition tests, `unnest` this column, and then selecting only data containing the relevant parameter.
+Bayen and Kuhlman (2011) report a difference in the $g$ parameter across conditions (they actually report an interaction with a further within-subjects factor, but this is not considered here). Thus, we can take a look at the difference in $g$ parameter across conditions and methods in the following manner: We first select the column containing the results of the between-condition tests, `unnest` this column, and then select only data containing the relevant parameter.
 
 ```{r}
 results %>% 
@@ -199,11 +199,11 @@ results %>%
   print(width = 150)
 ```
 
-Inspecting the differences across the analysis multiverse shows that the estimated difference is negative in each case and the 95% credibility/confidence intervals around the estimate do not include zero for 6 out of the 10 methods. Only the CIs for the no-pooling frequentist methods as well as the most sophisticated model, the latent trait model, include 0. However, the 80% CIs do not include zero for all methods. Thus, taken together this provides evidence that the $g$ parameter is larger in the `load` compared to the `no_load` condition. 
+Inspecting the differences across the analysis multiverse shows that the estimated difference is negative in each case and the 95% credibility/confidence intervals around the estimate do not include zero for 6 out of the 10 methods. Only the CIs for the no-pooling frequentist methods as well as the most sophisticated model, the latent trait model, include 0. However, the 80% CIs do not include zero for all methods. Taken together, this provides evidence that the $g$ parameter is larger in the `load` compared to the `no_load` condition. 
 
 ## Plotting Results
 
-The analysis output `results` is an object of class `multiverseMPT`, that has its own `plot()` method. The `plot` method returns `ggplot2` objects which allows further customization (such as using `themes`).
+The analysis output `results` is an object of class `multiverseMPT`, that has its own `plot()` method. The `plot` method returns `ggplot2` objects, which allows further customization (such as using `themes`).
 Type `?plot.multiverseMPT` to see the documentation of possible arguments to this method.
 
 To plot group-level parameter estimates use:
