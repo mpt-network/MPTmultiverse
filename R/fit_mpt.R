@@ -229,13 +229,13 @@
 #' @export
 
 fit_mpt <- function(
-  method
+  model
   , dataset
   , data
-  , model
   , id = NULL
   , condition = NULL
   , core = NULL
+  , method
 ) {
   
   available_methods <- c(
