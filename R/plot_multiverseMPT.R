@@ -166,7 +166,7 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, ...){
       , position = dd, width = 0.5
     ) +
     ggplot2::geom_point(position = dd) + ggplot2::ylim(-1, 1) + 
-    ggplot2::scale_shape_manual(values=shapes) +
+    # ggplot2::scale_shape_manual(values=shapes) +
     ggplot2::geom_hline(yintercept = 0, lty = 2)
 
     if(save) ggplot2::ggsave(paste0(prefix,"test_between.pdf"), gg_est2, h = 4.5, w = 8)
