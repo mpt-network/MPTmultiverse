@@ -128,14 +128,14 @@ mpt_options()
 
 ## Model Fitting 
 
-In the next call, the main computations are performed. In the default settings, the ten analysis options offered by `MPTmultiverse` are performed. Type `?fit_mpt` in the R console if you want to see what these options are and find out more about the parameters of the function. The help page also contains a comprehensive overview of the results object returned by `fit_mpt`.
+The main computations are performed with a call to `fit_mpt`. In the default settings, the ten analysis options offered by `MPTmultiverse` are performed. Type `?fit_mpt` in the R console if you want to see what these options are and find out more about the parameters of the function. The help page also contains a comprehensive overview of the results object returned by `fit_mpt`.
 
-```{r echo = FALSE}
-set.seed(42)
-mpt_options("default")
-```
+Before fitting, we set a seed to make the analysis reproducible and set the options to the default settings. 
 
 ```{r analysis, results = 'hide', eval = FALSE}
+set.seed(42)
+mpt_options("default")
+
 results <- fit_mpt(
   model = EQN_FILE
   , dataset = DATA_FILE
@@ -146,7 +146,15 @@ results <- fit_mpt(
 )
 ```
 
-After fitting it is a good idea to save the results as a binary `R` data file for later. This is easiest done using `save()`. 
+After fitting it is a good idea to save the results as a binary `R` data file for later. This is easiest done using `save()`. To save all information necessary to recreate the analysis we only need to save the results `tibble` as it contains both data and model as attributes (see `str(results, 1)`).
+
+We can automatically create a file name for the file holding the results based on the model and data file.
+
+```{r, eval=FALSE}
+save(results, file = paste0(EQN_FILE, "-", DATA_FILE, ".RData"))
+```
+
+In the current example this would usually lead to quite a long filename (e.g., see `EQN_FILE`), so one can also use a custom filename.
 
 ```{r, eval=FALSE}
 save(results, file = "results_bayen_kuhlmann_2HTSM4.RData")
