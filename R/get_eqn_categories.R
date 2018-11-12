@@ -17,7 +17,7 @@ get_eqn_categories <- function (model.filename)
   tmp.ordered <- tmp.in[order(tmp.in$V1), , drop = FALSE]
   tmp.spl <- split(tmp.ordered, factor(tmp.ordered$V1))
   tmp.spl <- lapply(tmp.spl, function(d.f) d.f[order(d.f[, 2]), ])
-  unlist(lapply(tmp.spl, function(x) unique(x$V2)))
+  as.character(unlist(lapply(tmp.spl, function(x) unique(x$V2))))
   # model <- lapply(tmp.spl, parse.eqn)
   # names(model) <- NULL
   # model
