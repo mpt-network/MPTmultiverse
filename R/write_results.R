@@ -3,7 +3,7 @@
 #' Exports the results to csv format. 
 #' 
 #' @param results An object of class multiverseMPT.
-#' @param path a path where to save the files (e.g., \code{"C:/results/"})
+#' @param path a path where to save the files (e.g., \code{"C:/results/modelX_dataY_"})
 #' @export
 write_results <- function(results, path = "MPTmultiverse_"
                           # what = c("est_group", "est_indiv", "est_rho", 

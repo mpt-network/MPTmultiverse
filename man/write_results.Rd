@@ -9,7 +9,7 @@ write_results(results, path = "MPTmultiverse_")
 \arguments{
 \item{results}{An object of class multiverseMPT.}
 
-\item{path}{a path where to save the files (e.g., \code{"C:/results/"})}
+\item{path}{a path where to save the files (e.g., \code{"C:/results/modelX_dataY_"})}
 }
 \description{
 Exports the results to csv format.
