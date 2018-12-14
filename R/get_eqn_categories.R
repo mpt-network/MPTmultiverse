@@ -38,5 +38,5 @@ get_eqn_trees <- function(model_file) {
   n_cat <- lapply(X = tmp_split, FUN = function(x) {
     length(unique(x$V2))
   })
-  as.character(mapply(FUN = rep, each = n_cat, x = names(tmp_split)))
+  as.character(unlist(mapply(FUN = rep, each = n_cat, x = names(tmp_split))))
 }
