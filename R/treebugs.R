@@ -222,7 +222,9 @@ mpt_treebugs <- function (
         for(p in parameters){
           test_between <- TreeBUGS::betweenSubjectMPT(treebugs_fit[[i]], treebugs_fit[[j]], 
                                             par1 = p, stat = "x-y")
-          test_summ <- TreeBUGS::summarizeMCMC(test_between$mcmc, probs = CI_SIZE)
+          test_summ <- TreeBUGS::summarizeMCMC(test_between$mcmc, 
+                                               probs = CI_SIZE, 
+                                               batchSize = 2)
           bayesp <- mean(do.call("rbind", test_between$mcmc) <= 0)
           
           sel_row <- 
@@ -269,7 +271,8 @@ mpt_treebugs <- function (
 
     for (i in seq_along(conditions)){
       mcmc <- treebugs_fit[[i]]$runjags$mcmc[,sel_rho]
-      rho_summ <- TreeBUGS::summarizeMCMC(mcmc, probs = CI_SIZE)
+      rho_summ <- TreeBUGS::summarizeMCMC(mcmc, probs = CI_SIZE,
+                                          batchSize = 2)
       bayesp <- colMeans(do.call("rbind", mcmc) <= 0)
       res <- data.frame(par_mat,
                         rho_summ[,c("Mean", "SD")], 
