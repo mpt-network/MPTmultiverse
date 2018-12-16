@@ -21,7 +21,7 @@
 #'   \item{\code{max_ci_indiv}: }{Numeric. Used for excluding individual parameter estimates in the bootstrap approaches. If the range of the CI (i.e., distance between minimum and maximum) is larger than this value, the estimate is excluded from the group-level estimates.}
 #'   \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
 # ' TODO  \item{\code{catch_warnings}: }{Logical. Whether to store warnings and errors as additional columns in the output.}
-#'   \item{\code{save_models}: }{Logical.}
+#'   \item{\code{save_models}: }{Logical. Default is \code{FALSE} which does not save the individual MCMC samples in \code{.RData} files. Instead only summairzes are retained in \code{results} object.}
 #' }
 #'   
 #' 
@@ -127,7 +127,7 @@ set_default_options <- function() {
     , ci_size = c(.025, .1, .9, .975)
     , max_ci_indiv = .99
     , n.CPU = parallel::detectCores()
-    , save_models = TRUE
+    , save_models = FALSE
   )
 }
 

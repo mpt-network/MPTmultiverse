@@ -24,7 +24,7 @@ mpt_options(...)
   \item{\code{ci_size}: }{Numeric.}
   \item{\code{max_ci_indiv}: }{Numeric. Used for excluding individual parameter estimates in the bootstrap approaches. If the range of the CI (i.e., distance between minimum and maximum) is larger than this value, the estimate is excluded from the group-level estimates.}
   \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
-  \item{\code{save_models}: }{Logical.}
+  \item{\code{save_models}: }{Logical. Default is \code{FALSE} which does not save the individual MCMC samples in \code{.RData} files. Instead only summairzes are retained in \code{results} object.}
 }}
 }
 \description{
