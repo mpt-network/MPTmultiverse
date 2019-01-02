@@ -38,7 +38,6 @@ make_results_row <- function(
   package,
   method,
   data,
-  # parameters,
   id,
   condition,
   core = NULL  # character vector specifying which are core parameters
@@ -94,8 +93,8 @@ make_results_row <- function(
     colnames(est_group)[ncol(est_group)] <- paste0("ci_", getOption("MPTmultiverse")$ci_size[i])
   }
   
-  
-  # group comparisons
+  # ----------------------------------------------------------------------------
+  # test_between: group comparisons
   if (length(conditions) > 1) {
     
     pairs <- utils::combn(
@@ -128,8 +127,22 @@ make_results_row <- function(
     }
     test_between <- dplyr::bind_rows(tmp_test_between) 
   } else {
-    test_between <- tibble::tibble()
+    # Return a zero-row tibble if no between-Ss condition is analyzed ----
+    test_between <- tibble::tibble(
+      parameter = character(0)
+      , core = logical(0)
+      , condition1 = character(0)
+      , condition2 = character(0)
+      , est_diff = numeric(0)
+      , se = numeric(0)
+      , p = numeric(0)
+    )
+    CI <- getOption("MPTmultiverse")$ci_size
+    for (i in seq_along(CI)) {
+      test_between[[paste0("ci_", CI[i])]] <- numeric(0)
+    }
   }
+  
   ## est_covariate <- ##MISSING
   
   if (method == "trait"){
