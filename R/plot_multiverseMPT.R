@@ -107,8 +107,9 @@ plot.multiverseMPT <- function(x, which = "est", save = FALSE, ...){
   
   args <- list(...)
   
-  shapes <- c(16, 18, 15, 1, 0, 8, 11, 12, 4, 6)
-  if(!is.null(args$shapes)) {
+  if(is.null(args$shapes)) {
+    shapes <- seq_len(nrow(x))
+  } else {
     shapes <- args$shapes
   }
   
