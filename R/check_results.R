@@ -31,8 +31,10 @@ check_results <- function(results) {
   
   cat("## MPTinR: no pooling\n")
   
+  mpt_no_pool <- c("asymptotic", "PB/MLE", "NPB/MLE")
+  mpt_no_pool <- mpt_no_pool[mpt_no_pool %in% results$method]
   tryCatch({
-    for(meth in c("asymptotic", "PB/MLE", "NPB/MLE")){
+    for(meth in mpt_no_pool){
       
       conv_mptinr_no <- results %>% 
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
