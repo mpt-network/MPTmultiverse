@@ -51,11 +51,10 @@ check_results <- function(results) {
         dplyr::select("est_indiv") %>% 
         tidyr::unnest() %>%
         dplyr::filter(!.data$identifiable) %>% 
-        dplyr::group_by(.data$condition) %>% 
-        dplyr::summarise(not_identified = list(broom::tidy(table(.data$parameter)))) %>% 
-        tidyr::unnest(.data$not_identified) %>% 
-        suppressWarnings()
-      
+        dplyr::group_by(.data$condition, .data$parameter) %>% 
+        dplyr::count() %>% 
+        dplyr::ungroup()
+
       if (any(not_id$proportion > 0)) {
         cat("Based on", meth, "method, proportion of participants with non-identified parameters:\n")
         cat(format(not_id)[-c(1,3)], "", sep = "\n")
@@ -87,9 +86,12 @@ check_results <- function(results) {
     comp_prob <- (conv_mptinr_comp$convergence != 0) | 
       (conv_mptinr_comp$rank.fisher != conv_mptinr_comp$n.parameters)
     
-    if (any(comp_prob)) {
+    if (any(comp_prob, na.rm = TRUE)) {
       cat("Convergence problems:\n")
       cat(format(conv_mptinr_comp[comp_prob,])[-c(1,3)], "", sep = "\n")
+    } else if (any(is.na(comp_prob))) {
+      cat("Convergence problems:\n")
+      cat(format(conv_mptinr_comp[is.na(comp_prob),])[-c(1,3)], "", sep = "\n")
     } else {
       cat("No convergence problems.\n")
     }
