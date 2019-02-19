@@ -33,7 +33,7 @@ Depends:
 Imports:
     parallel,
     magrittr,
-    tidyr, 
+    tidyr,
     dplyr,
     tibble,
     rlang,
@@ -45,7 +45,8 @@ Imports:
     coda,
     purrr,
     broom,
-    readr
+    readr,
+    limSolve
 Suggests:
     knitr,
     rmarkdown,

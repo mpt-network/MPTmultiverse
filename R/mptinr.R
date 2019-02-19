@@ -740,7 +740,10 @@ mpt_mptinr_complete <- function(dataset,
       fit_mptinr_tmp$parameters[
         res$est_group[[1]][res$est_group[[1]]$condition == prepared$conditions[i], ]$parameter, "estimates"]
 
-    par_se <- sqrt(diag(solve(fit_mptinr_tmp$hessian[[1]])))
+    par_se <- rep(NA_real_, length(rownames(fit_mptinr_tmp$parameters)))
+    par_se <- tryCatch(sqrt(diag(solve(fit_mptinr_tmp$hessian[[1]]))),
+                       error = function(x) 
+                         sqrt(diag(limSolve::Solve(fit_mptinr_tmp$hessian[[1]]))))
     names(par_se) <- rownames(fit_mptinr_tmp$parameters)
     
     res$est_group[[1]][
