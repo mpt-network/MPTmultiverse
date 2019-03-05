@@ -333,7 +333,7 @@ mpt_mptinr_no <- function(
   
   
   if ("pb" %in% bootstrap) {
-    res[["pb_no"]] <- get_pb_results(dataset = dataset
+    try(res[["pb_no"]] <- get_pb_results(dataset = dataset
                                      , prepared = prepared
                                      , model = model
                                      , id = id
@@ -342,10 +342,10 @@ mpt_mptinr_no <- function(
                                      , fit_mptinr = fit_mptinr
                                      , additional_time = additional_time
                                      , convergence = convergence
-                                     , core = core)
+                                     , core = core))
   }
   if ("npb" %in% bootstrap) {
-    res[["npb_no"]] <- get_pb_results(dataset = dataset
+    try(res[["npb_no"]] <- get_pb_results(dataset = dataset
                                      , prepared = prepared
                                      , model = model
                                      , id = id
@@ -354,7 +354,7 @@ mpt_mptinr_no <- function(
                                      , fit_mptinr = fit_mptinr
                                      , additional_time = additional_time
                                      , convergence = convergence
-                                     , core = core)
+                                     , core = core))
   }
   # return
   dplyr::bind_rows(res)
