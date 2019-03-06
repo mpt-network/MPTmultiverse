@@ -49,7 +49,7 @@ test_that("No-pooling approaches work", {
                tolerance = 0.01)
   
   ## required to skip remaining if not using latest RNG
-  testthat::skip_if_not(getRversion() < "3.6.0")
+  testthat::skip_if(getRversion() < "3.6.0")
   
   only_pb <- fit_mpt(
     method = "pb_no"
