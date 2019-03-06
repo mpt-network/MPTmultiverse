@@ -48,6 +48,9 @@ test_that("No-pooling approaches work", {
                  NA), 
                tolerance = 0.01)
   
+  ## required to skip remaining if not using latest RNG
+  testthat::skip_if_not(getRversion() < "3.6.0")
+  
   only_pb <- fit_mpt(
     method = "pb_no"
     , dataset = DATA_FILE
@@ -87,10 +90,10 @@ test_that("No-pooling approaches work", {
   
   # dput(round(only_pb$est_indiv[[1]]$se, 2))
   expect_equal(only_pb$est_indiv[[1]]$se, 
-               c(0.02, 0, 0, 0.11, 0.02, 0.04, 0, 0.07, 0.05, 0.06, 0.24, 0.28, 
-                 0.02, 0.03, 0, 0.08, 0.04, 0.05, 0.29, 0.29, 0.06, 0.02, 0, 0.12, 
-                 0.05, 0.02, 0, 0.08, 0.03, 0, 0.24, 0.22, 0.02, 0.03, 0, 0.08, 
-                 0.02, 0.02, 0, 0.09, 0, 0, 0, 0.09), 
+               c(0.02, 0, 0, 0.09, 0.02, 0.04, 0, 0.1, 0.06, 0.03, 0.34, 0.34, 
+                 0.04, 0.04, 0, 0.08, 0.03, 0.04, 0.32, 0.27, 0.06, 0.02, 0, 0.14, 
+                 0.04, 0.02, 0, 0.09, 0.02, 0, 0.28, 0.24, 0.03, 0.02, 0, 0.05, 
+                 0.01, 0.02, 0, 0.09, 0, 0, 0, 0.12), 
                tolerance = 0.01)
   
   
@@ -117,7 +120,7 @@ test_that("No-pooling approaches work", {
   
   # dput(round(only_npb$gof_group[[1]]$p, 2))
   expect_equal(only_npb$gof_group[[1]]$p, 
-              c(0.73, 0.91), 
+              c(0.64, 1), 
                tolerance = 0.01)
   
   
@@ -131,10 +134,10 @@ test_that("No-pooling approaches work", {
   
   # dput(round(only_npb$est_indiv[[1]]$se, 2))
   expect_equal(only_npb$est_indiv[[1]]$se, 
-               c(0.03, 0, 0, 0.1, 0.01, 0.04, 0, 0.11, 0.02, 0.03, 0.12, 0.07, 
-                 0.04, 0.03, 0, 0.04, 0.03, 0.05, 0.11, 0, 0.04, 0.02, 0, 0.09, 
-                 0.06, 0.02, 0, 0.08, 0.02, 0, 0.26, 0.23, 0.04, 0.02, 0, 0.09, 
-                 0.01, 0.02, 0, 0.08, 0, 0, 0, 0.09), 
+               c(0.02, 0, 0, 0.09, 0.01, 0.03, 0, 0.14, 0.04, 0.05, 0.33, 0.3, 
+                 0.02, 0.03, 0, 0.07, 0.03, 0.04, 0.36, 0.36, 0.05, 0.02, 0, 0.13, 
+                 0.04, 0.03, 0, 0.11, 0.04, 0, 0.23, 0.21, 0.05, 0.03, 0, 0.08, 
+                 0.02, 0.02, 0, 0.06, 0, 0, 0, 0.08), 
                tolerance = 0.01)
 
   mpt_options(op)
