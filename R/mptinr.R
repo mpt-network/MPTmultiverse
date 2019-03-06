@@ -57,8 +57,9 @@ mpt_mptinr <- function(
     )
   }
   
-  for(i in 1:length(res)) {
-    res[[i]]$test_homogeneity[[1]] <- homogeneity_tests
+  for(i in seq_len(length(res))) {
+    if (nrow(res[[i]]) > 0) 
+      res[[i]]$test_homogeneity[[1]] <- homogeneity_tests
   }
   
   # return
