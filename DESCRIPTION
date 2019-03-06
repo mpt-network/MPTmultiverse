@@ -44,7 +44,6 @@ Imports:
     runjags,
     coda,
     purrr,
-    broom,
     readr,
     limSolve
 Suggests:
