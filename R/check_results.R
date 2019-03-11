@@ -36,16 +36,16 @@ check_results <- function(results) {
   tryCatch({
     for(meth in mpt_no_pool){
       
-      conv_mptinr_no <- results %>% 
-        dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
-        dplyr::select("convergence") %>% 
-        tidyr::unnest()
+      # conv_mptinr_no <- results %>% 
+      #   dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
+      #   dplyr::select("convergence") %>% 
+      #   tidyr::unnest()
       
       not_id <- results %>% 
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>% 
         dplyr::select("est_indiv") %>% 
         tidyr::unnest() %>% 
-        dplyr::group_by(.data$condition) %>% 
+        dplyr::group_by(.data$condition, .data$core) %>% 
         dplyr::summarise(proportion = mean(!.data$identifiable))
       
       not_id2 <- results %>% 
@@ -53,16 +53,16 @@ check_results <- function(results) {
         dplyr::select("est_indiv") %>% 
         tidyr::unnest() %>%
         dplyr::filter(!.data$identifiable) %>% 
-        dplyr::group_by(.data$condition, .data$parameter) %>% 
+        dplyr::group_by(.data$condition, .data$core, .data$parameter) %>% 
         dplyr::count() %>% 
         dplyr::ungroup()
 
       if (any(not_id$proportion > 0)) {
         cat("Based on", meth, "method, proportion of participants with non-identified parameters:\n")
-        cat(format(not_id)[-c(1,3)], "", sep = "\n")
+        cat(format(not_id, n = Inf)[-c(1,3)], "", sep = "\n")
         
         cat("Based on", meth, "CIs, table of non-identified parameters:\n")
-        cat(format(not_id2)[-c(1,3)], sep = "\n")
+        cat(format(not_id2, n = Inf)[-c(1,3)], sep = "\n")
         
       } else {
         cat("Based on", meth, "CIs, all parameters of all participants seem to be identifiable.\n")
