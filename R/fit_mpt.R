@@ -37,7 +37,7 @@
 #'   e.g., \code{core = c("Dn", "Do")}. All other parameters are treated as
 #'   auxiliary parameters.
 #' @example examples/examples.fit_mpt.R
-#' 
+#'
 #' @details This functions is a fancy wrapper for packages \pkg{MPTinR} and
 #'   \pkg{TreeBUGS} applying various frequentist and Bayesian estimation methods
 #'   to the same data set with different levels of pooling/aggregation using a
@@ -46,7 +46,7 @@
 #'   (e.g., equating different parameters or fixing them to a constant) need to
 #'   be part of the model (i.e., the \code{.eqn} file) and cannot be passed as
 #'   an argument.
-#'   
+#'
 #'   The settings for the various methods are specified via function
 #'   \code{\link{mpt_options}}. The default settings use all available cores for
 #'   calculating the boostrap distribution as well as independent MCMC chains
@@ -61,14 +61,14 @@
 #'   ordering of the \code{factor} levels in the output cannot be guaranteed. If
 #'   the data has more than one between-subjects condition, these need to be
 #'   combined into one condition for this function.
-#'   
+#'
 #'   Parameter differences or other support for within-subject conditions is not
 #'   provided. The best course of action for within-subjects conditions is to
 #'   simply include separate trees and separate sets of parameters for each
 #'   within-subjects condition. This allows to at least compare the estimates
 #'   for each within-subjects condition across levels of pooling and estimation
 #'   methods.
-#'   
+#'
 #'   \subsection{Pooling}{
 #'   The following pooling levels are provided (not all by all estimation approaches, see below).
 #'   \itemize{
@@ -95,7 +95,7 @@
 #'     the individual-level parameters. }
 #'     }
 #'   }
-#'   
+#'
 #'   \subsection{Implemented Estimation Methods}{
 #'     Maximum-likelihood estimation with \pkg{MPTinR} via
 #'     \code{\link[MPTinR]{fit.mpt}}:
@@ -106,21 +106,21 @@
 #'       \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
 #'       \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
 #'     }
-#'      
+#'
 #'     Bayesian estimation with \pkg{TreeBUGS}
 #'     \itemize{
 #'       \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
 #'         \link[TreeBUGS]{simpleMPT})}
-#'       \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling 
+#'       \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling
 #'         (C++, \link[TreeBUGS]{simpleMPT})}
-#'       \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, 
+#'       \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS,
 #'         \link[TreeBUGS]{traitMPT})}
 #'       \item{\code{"trait_uncorrelated"}: }{latent-trait model without
 #'         correlation parameters, partial pooling (JAGS,
 #'         \link[TreeBUGS]{traitMPT})}
-#'       \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, 
+#'       \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS,
 #'         \link[TreeBUGS]{betaMPT})}
-#'       \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
+#'       \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++,
 #'         \link[TreeBUGS]{betaMPTcpp})}
 #'     }
 #'   }
@@ -132,7 +132,7 @@
 #'     the pooled standard error of the individual parameters. The overall fit
 #'     (column \code{gof}) is based on an additional fit to the completely
 #'     aggregated data.
-#'     
+#'
 #'     For the \emph{no pooling asymptotic approach}, the individual-level
 #'     maximum-likelihood estimates are reported in column \code{est_indiv} and
 #'     \code{gof_indiv} and provide the basis for the other results. Whether or
@@ -154,7 +154,7 @@
 #'     (again, after excluding non-identifiable estimates). The CIs of the
 #'     difference are based on the SEs (which are derived from a linear model
 #'     equivalent to the t-test).
-#'     
+#'
 #'     The individual-level estimates of the \code{bootstrap based no-pooling}
 #'     approaches are identical to the asymptotic ones. However, the SE is the
 #'     SD of the bootstrapped distribution of parameter estimates, the CIs are
@@ -190,7 +190,7 @@
 #'     not estimate this correlation matrix (i.e., parameters can still be
 #'     correlated across individuals, but this is not accounted for in the
 #'     model).
-#'     
+#'
 #'     For all Bayesian methods, the posterior distribution of the parameters is
 #'     summarized by the posterior mean (in the column \code{est}), posterior
 #'     standard deviation (\code{se}), and credbility intervals (\code{ci_*}).
@@ -202,7 +202,7 @@
 #'     "mean"}) and the T2 statistic (observed vs. posterior-predicted
 #'     covariance of frequencies, \code{focus = "cov"}).
 #'    }
-#' 
+#'
 #' @return A \code{tibble} with one row per estimation \code{method} and the
 #'   following columns:
 #' \enumerate{
@@ -219,16 +219,16 @@
 #'   "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}
 #'   \item \code{est_group}: Group-level parameter estimates per condition/group.
 #'   \item \code{est_indiv}: Individual-level parameter estimates (if provided
-#'   by method). 
+#'   by method).
 #'   \item \code{est_rho}: Estimated correlation of individual-level parameters
-#'   on the probit scale (only in \code{method="trait"}). 
+#'   on the probit scale (only in \code{method="trait"}).
 #'   \item \code{test_between}: Parameter differences between the levels of the
 #'   between-subjects condition (if specified).
 #'   \item \code{gof}: Overall goodness of fit across all individuals.
 #'   \item \code{gof_group}: Group-level goodness of fit.
 #'   \item \code{gof_indiv}: Individual-level goodness of fit.
-#'   \item \code{fungibility}:  Posterior correlation of the group-level means 
-#'   \code{pnorm(mu)} (only in \code{method="trait"}). 
+#'   \item \code{fungibility}:  Posterior correlation of the group-level means
+#'   \code{pnorm(mu)} (only in \code{method="trait"}).
 #'   \item \code{test_homogeneity}: Chi-square based test of participant
 #'   homogeneity proposed by Smith and Batchelder (2008). This test is the same
 #'   for each estimation method.
@@ -248,13 +248,13 @@
 #'   \item \code{options}: Options used for estimation. Obtained by running
 #'   \code{\link{mpt_options}()}
 #' }
-#' 
+#'
 #' With the exception of the first five columns (i.e., after \code{method}) all
 #' columns are \code{list} columns typically holding one \code{tibble} per cell.
 #' The simplest way to analyze the results is separately per column using
 #' \code{\link[tidyr]{unnest}}. Examples for this are given below.
 #'
-#' @references 
+#' @references
 #'   Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences
 #'   in categorical data. \emph{Psychonomic Bulletin & Review}, 15(4), 713-731.
 #'   \url{https://doi.org/10.3758/PBR.15.4.713}
@@ -271,7 +271,7 @@ fit_mpt <- function(
   , core = NULL
   , method
 ) {
-  
+
   available_methods <- c(
     # MPTinR ----
     "asymptotic_complete"
@@ -286,81 +286,81 @@ fit_mpt <- function(
     , "beta"
     , "betacpp"
   )
-  
+
   # catch the function call that was used,
   # and other stuff that should be save along the results
   matched_call <- match.call()
   used_model <- utils::read.table(model, skip = 1, stringsAsFactors = FALSE)
-  
+
   if(missing(method)) {
     method <- available_methods
   }
-  
+
   method <- match.arg(
     arg = method
     , choices = available_methods
     , several.ok = TRUE
   )
-  
+
   # set options ----
   silent_jags <- getOption("MPTmultiverse")$silent_jags
-  runjags::runjags.options(silent.jags = silent_jags, 
+  runjags::runjags.options(silent.jags = silent_jags,
                            silent.runjags = silent_jags)
-  
+
   # prepare data ----
   if (missing(data)) {
     data <- as.data.frame(readr::read_csv(dataset))
   }
-  
+
   if(is.null(condition)) {
     data$ExpCond <- "no_condition"
     condition <- "ExpCond"
   }
-  
+
   if(is.null(id)) {
     data$Subject <- 1:nrow(data)
     id <- "Subject"
   }
-  
+
   # Ensure that all variables are character
   data$ExpCond <- as.character(data[[condition]])
   data$Subject <- as.character(data[[id]])
-  
-  
+
+
   # check MPT file
   mpt_model <- TreeBUGS::readEQN(model)
-  
+
   if(!is.data.frame(mpt_model)) {
     "I can't comprehend your .eqn file."
   }
 
-  
+
   # remove extraneous colums and check if all specified columns are present
   # in data
   freq_cols <- get_eqn_categories(model)
   valid_cols <- c(id, condition, freq_cols)
   check_cols <- valid_cols %in% colnames(data)
-  
+
   if(!all(check_cols)) {
     stop("Variable \"", paste(valid_cols[!check_cols], collapse = ", "), "\" not found in data.frame.")
   }
-  
+
   data <- data[, valid_cols]
-  
-  
+
+
   # Check NAs ----
   nas_found <- unlist(lapply(X = data, FUN = anyNA))
-  
+
   if(any(nas_found)) {
     stop("Variable \"", paste(valid_cols[nas_found], collapse = ", "), "\" contains missing values.")
   }
-  
+
   # Check whether freqencies are integer ----
   not_integer <- unlist(lapply(X = data[, freq_cols], FUN = function(x) {
       any(as.integer(x)!=x)
     }
   ))
-  
+
   if(any(not_integer)) {
     stop("Variable \"", paste(freq_cols[not_integer], collapse = ", "), "\" contains non-integer values.")
   }
@@ -376,15 +376,15 @@ fit_mpt <- function(
       warning("With your current mpt_options(), it is not possible to obtain the specified number of effective samples.")
     }
   }
-  
-  
+
+
   # Ensure that id and condition are character, also drops unused levels
   data[[id]] <- as.character(data[[id]])
   data[[condition]] <- as.character(data[[condition]])
 
-  
+
   res <- list()
-  
+
   # MPTinR part ----
   if (any(method %in% c("asymptotic_complete", "asymptotic_no", "pb_no", "npb_no"))) {
     res[["mptinr"]] <- mpt_mptinr(
@@ -397,7 +397,7 @@ fit_mpt <- function(
       , core = core
     )
   }
-  
+
   # TreeBUGS part ----
   res[["treebugs"]] <- dplyr::bind_rows(
     purrr::map(

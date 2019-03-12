@@ -53,16 +53,16 @@ A \code{tibble} with one row per estimation \code{method} and the
   "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}
   \item \code{est_group}: Group-level parameter estimates per condition/group.
   \item \code{est_indiv}: Individual-level parameter estimates (if provided
-  by method). 
+  by method).
   \item \code{est_rho}: Estimated correlation of individual-level parameters
-  on the probit scale (only in \code{method="trait"}). 
+  on the probit scale (only in \code{method="trait"}).
   \item \code{test_between}: Parameter differences between the levels of the
   between-subjects condition (if specified).
   \item \code{gof}: Overall goodness of fit across all individuals.
   \item \code{gof_group}: Group-level goodness of fit.
   \item \code{gof_indiv}: Individual-level goodness of fit.
-  \item \code{fungibility}:  Posterior correlation of the group-level means 
-  \code{pnorm(mu)} (only in \code{method="trait"}). 
+  \item \code{fungibility}:  Posterior correlation of the group-level means
+  \code{pnorm(mu)} (only in \code{method="trait"}).
   \item \code{test_homogeneity}: Chi-square based test of participant
   homogeneity proposed by Smith and Batchelder (2008). This test is the same
   for each estimation method.
@@ -113,7 +113,7 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
   (e.g., equating different parameters or fixing them to a constant) need to
   be part of the model (i.e., the \code{.eqn} file) and cannot be passed as
   an argument.
-  
+
   The settings for the various methods are specified via function
   \code{\link{mpt_options}}. The default settings use all available cores for
   calculating the boostrap distribution as well as independent MCMC chains
@@ -128,14 +128,14 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
   ordering of the \code{factor} levels in the output cannot be guaranteed. If
   the data has more than one between-subjects condition, these need to be
   combined into one condition for this function.
-  
+
   Parameter differences or other support for within-subject conditions is not
   provided. The best course of action for within-subjects conditions is to
   simply include separate trees and separate sets of parameters for each
   within-subjects condition. This allows to at least compare the estimates
   for each within-subjects condition across levels of pooling and estimation
   methods.
-  
+
   \subsection{Pooling}{
   The following pooling levels are provided (not all by all estimation approaches, see below).
   \itemize{
@@ -162,7 +162,7 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
     the individual-level parameters. }
     }
   }
-  
+
   \subsection{Implemented Estimation Methods}{
     Maximum-likelihood estimation with \pkg{MPTinR} via
     \code{\link[MPTinR]{fit.mpt}}:
@@ -173,21 +173,21 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
       \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
       \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
     }
-     
+
     Bayesian estimation with \pkg{TreeBUGS}
     \itemize{
       \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
         \link[TreeBUGS]{simpleMPT})}
-      \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling 
+      \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling
         (C++, \link[TreeBUGS]{simpleMPT})}
-      \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS, 
+      \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS,
         \link[TreeBUGS]{traitMPT})}
       \item{\code{"trait_uncorrelated"}: }{latent-trait model without
         correlation parameters, partial pooling (JAGS,
         \link[TreeBUGS]{traitMPT})}
-      \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS, 
+      \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS,
         \link[TreeBUGS]{betaMPT})}
-      \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++, 
+      \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++,
         \link[TreeBUGS]{betaMPTcpp})}
     }
   }
@@ -199,7 +199,7 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
     the pooled standard error of the individual parameters. The overall fit
     (column \code{gof}) is based on an additional fit to the completely
     aggregated data.
-    
+
     For the \emph{no pooling asymptotic approach}, the individual-level
     maximum-likelihood estimates are reported in column \code{est_indiv} and
     \code{gof_indiv} and provide the basis for the other results. Whether or
@@ -221,7 +221,7 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
     (again, after excluding non-identifiable estimates). The CIs of the
     difference are based on the SEs (which are derived from a linear model
     equivalent to the t-test).
-    
+
     The individual-level estimates of the \code{bootstrap based no-pooling}
     approaches are identical to the asymptotic ones. However, the SE is the
     SD of the bootstrapped distribution of parameter estimates, the CIs are
@@ -257,7 +257,7 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
     not estimate this correlation matrix (i.e., parameters can still be
     correlated across individuals, but this is not accounted for in the
     model).
-    
+
     For all Bayesian methods, the posterior distribution of the parameters is
     summarized by the posterior mean (in the column \code{est}), posterior
     standard deviation (\code{se}), and credbility intervals (\code{ci_*}).
