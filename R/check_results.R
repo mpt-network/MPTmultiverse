@@ -46,7 +46,9 @@ check_results <- function(results) {
         dplyr::select("est_indiv") %>%
         tidyr::unnest() %>%
         dplyr::group_by(.data$condition, .data$core) %>%
-        dplyr::summarise(proportion = mean(!.data$identifiable))
+        dplyr::summarise(proportion = mean(!.data$identifiable |
+                                             is.na(.data$identifiable))) %>%
+        dplyr::ungroup()
 
       not_id2 <- results %>%
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>%
