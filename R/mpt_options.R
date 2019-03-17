@@ -1,8 +1,8 @@
 #' Options Settings for MPT Comparison
-#' 
+#'
 #' Set and examine a variety of \emph{options} which affect the way MPT models
 #' are estimated.
-#' 
+#'
 #' @param ... Named parameters to set. Possible values are:
 #' \itemize{
 #'   \item{\code{bootstrap_samples}: }{Numeric. The number of bootstrap samples to be drawn for the calculation parametric bootstrap confidence intervals.}
@@ -23,25 +23,25 @@
 # ' TODO  \item{\code{catch_warnings}: }{Logical. Whether to store warnings and errors as additional columns in the output.}
 #'   \item{\code{save_models}: }{Logical. Default is \code{FALSE} which does not save the individual MCMC samples in \code{.RData} files. Instead only summairzes are retained in \code{results} object.}
 #' }
-#'   
-#' 
-#' @examples 
+#'
+#'
+#' @examples
 #' # Examine options:
 #' mpt_options()
-#' 
+#'
 #' # Set number of MCMC chains to 20:
 #' mpt_options(n.chains = 20)
 #' mpt_options()
-#' 
+#'
 #' @export
- 
+
 mpt_options <- function(...){
-  
+
   fetched <- getOption("MPTmultiverse")
   args <- c(...)
-  
+
   if(length(args)==0L) return(fetched)
-  
+
   # Provide some shorthand terms:
   if(args[[1]][[1]] %in% c("test", "default")){
     changed <- switch(
@@ -75,7 +75,7 @@ mpt_options <- function(...){
 
 set_test_options <- function() { # nocov start
   cat("Setting options for a quick test run.\nDo not interpret results!")
-  
+
   list(
     mptinr = list(
       bootstrap_samples = 1e1
@@ -105,7 +105,7 @@ set_test_options <- function() { # nocov start
 #' @keywords internal
 
 set_default_options <- function() {
-  
+
   list(
     mptinr = list(
       bootstrap_samples = 1e3
