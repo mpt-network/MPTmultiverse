@@ -91,6 +91,7 @@ set_test_options <- function() { # nocov start
       , Neff_min = 2
       , extend_max = 1
       , n.PPP = 4e1
+      , prior.beta = "dgamma(1,.1)"
     )
     , silent_jags = FALSE
     # , catch_warnings = TRUE
@@ -121,6 +122,7 @@ set_default_options <- function() {
       , Neff_min = 2e3
       , extend_max = 2e1
       , n.PPP = 5e3
+      , prior.beta = "dgamma(1,.1)"
     )
     , silent_jags = TRUE
     # , catch_warnings = TRUE

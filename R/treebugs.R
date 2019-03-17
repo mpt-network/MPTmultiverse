@@ -102,9 +102,13 @@ mpt_treebugs <- function (
                      n.iter = TREEBUGS_MCMC$n.iter,
                      n.adapt = TREEBUGS_MCMC$n.adapt,
                      n.burnin = TREEBUGS_MCMC$n.burnin,
-                     n.thin = TREEBUGS_MCMC$n.thin)
+                     n.thin = TREEBUGS_MCMC$n.thin,
+                     alpha = TREEBUGS_MCMC$prior.beta,
+                     beta = TREEBUGS_MCMC$prior.beta)
+    if (method == "betacpp" && TREEBUGS_MCMC$prior.beta != "dgamma(1,.1)")
+      stop('betacpp not compatible with custom priors as defined via mpt_options(prior.beta = "dgamma(1,.1)")')
     if (method %in% c("simple", "betacpp")){
-      fit_args$n.adapt <- NULL
+      fit_args$n.adapt <- fit_args$alpha <- fit_args$beta <- NULL
       fit_args <- c(fit_args, cores = unname(all_options$n.CPU))
     }
     # print(c(fit_args, prior_args))
