@@ -141,7 +141,7 @@ mpt_treebugs <- function (
 
     result_row$estimation[[1]]$time_difference[
       result_row$estimation[[1]]$condition == cond
-    ] <- Sys.time() - t0
+    ] <- difftime(Sys.time(), t0, units = "secs")
 
     # convergence summary (n.eff / Rhat / all estimates)
     tsum <- tibble::as_tibble(summ) %>%
