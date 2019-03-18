@@ -74,12 +74,15 @@ mpt_treebugs <- function (
     data <- stats::aggregate(data[, col_freq], list(condition = data$condition), sum)
     data[[condition]] <- data$condition
     data[[id]] <- data$id <- as.character(1:nrow(data))
-    if(condition!="condition"){
+    if(condition != "condition"){
       data$condition <- NULL
     }
 
     freq_list <- lapply(freq_list, function(x) as.matrix(colSums(x)))
   }
+
+  # ----------------------------------------------------------------------------
+  # Customize prior if necessary
   if (method == "trait_uncorrelated"){
     method <- "trait"
     prior_args <- list(df = 1, V = NA, xi = "dnorm(0,1)")
@@ -87,6 +90,15 @@ mpt_treebugs <- function (
     prior_args <- NULL
   }
 
+  if (method == "beta") {
+    prior_args <- list(
+      alpha = TREEBUGS_MCMC$prior.beta,
+      beta = TREEBUGS_MCMC$prior.beta
+    )
+  }
+
+  # ----------------------------------------------------------------------------
+  # Run MCMC function from TreeBUGS
   gof_group <- list()
   treebugs_fit <- list()
 
@@ -96,22 +108,21 @@ mpt_treebugs <- function (
     data_group <- data[sel_condition, col_freq]   #freq_list[[i]]
     rownames(data_group) <- data[[id]][sel_condition]
 
-    fit_args <- list(eqnfile=model,
+    fit_args <- list(eqnfile = model,
                      data = data_group,
                      n.chains = TREEBUGS_MCMC$n.chains,
                      n.iter = TREEBUGS_MCMC$n.iter,
                      n.adapt = TREEBUGS_MCMC$n.adapt,
                      n.burnin = TREEBUGS_MCMC$n.burnin,
-                     n.thin = TREEBUGS_MCMC$n.thin,
-                     alpha = TREEBUGS_MCMC$prior.beta,
-                     beta = TREEBUGS_MCMC$prior.beta)
+                     n.thin = TREEBUGS_MCMC$n.thin)
     if (method == "betacpp" && TREEBUGS_MCMC$prior.beta != "dgamma(1,.1)")
       stop('betacpp not compatible with custom priors as defined via mpt_options(prior.beta = "dgamma(1,.1)")')
     if (method %in% c("simple", "betacpp")){
       fit_args$n.adapt <- fit_args$alpha <- fit_args$beta <- NULL
       fit_args <- c(fit_args, cores = unname(all_options$n.CPU))
     }
-    # print(c(fit_args, prior_args))
+
+
     t0 <- Sys.time()
     treebugs_function <- ifelse(method == "betacpp",
                                 "TreeBUGS::betaMPTcpp",
@@ -120,7 +131,8 @@ mpt_treebugs <- function (
                                  args = c(fit_args, prior_args))
     summ <- treebugs_fit[[i]]$mcmc.summ
 
-    # continue MCMC sampling (only for betaMPT and traitMPT)
+    # --------------------------------------------------------------------------
+    # adaptively continue MCMC sampling (only available for betaMPT and traitMPT)
     ext_cnt <- 0
     try({
       while (
@@ -148,6 +160,7 @@ mpt_treebugs <- function (
       dplyr::mutate(parameter = rownames(summ),
              condition = as.character(cond)) %>%
       dplyr::select(.data$condition, .data$parameter, .data$Mean : .data$Rhat)
+
     result_row$convergence[[1]] <- dplyr::bind_rows(result_row$convergence[[1]], tsum)
 
     # parameter estimates
