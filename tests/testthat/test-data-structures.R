@@ -3,10 +3,10 @@ context("Results structures")
 test_that("make_results_row()"
   , {
     testthat::skip_on_cran()
-    
+
     EQN_FILE <- system.file("extdata", "prospective_memory.eqn", package = "MPTmultiverse")
     DATA_FILE <- system.file("extdata", "smith_et_al_2011.csv", package = "MPTmultiverse")
-    
+
     data <- read.csv(DATA_FILE, fileEncoding = "UTF-8-BOM")
     data <- data[c(1:5, 113:118),]
     COL_CONDITION <- "WM_EX"
@@ -17,7 +17,7 @@ test_that("make_results_row()"
     ))
     data$id <- as.character(1:nrow(data))
     capture_output(mpt_options("test"))
-    
+
     object <- MPTmultiverse:::make_results_row(
       model = EQN_FILE
       , dataset = DATA_FILE
@@ -30,7 +30,7 @@ test_that("make_results_row()"
       , condition = "WM_EX"
       , core = c("C1", "C2")
     )
-    
+
     # check column names
     expect_identical(
       object = colnames(object)
@@ -54,12 +54,12 @@ test_that("make_results_row()"
         , "options"
       )
     )
-    
+
     # Extract column classes
     column_classes <- lapply(X = object[, -c(1:5)], FUN = function(x) {
       lapply(X = x[[1]], FUN = class)
     })
-    
+
     expect_identical(
       column_classes$est_group
       , expected = list(
@@ -74,7 +74,7 @@ test_that("make_results_row()"
         , ci_0.975 = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$est_group
       , expected = list(
@@ -89,7 +89,7 @@ test_that("make_results_row()"
         , ci_0.975 = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$est_indiv
       , expected = list(
@@ -106,7 +106,7 @@ test_that("make_results_row()"
         , identifiable = "logical"
       )
     )
-    
+
     expect_identical(
       column_classes$est_rho
       , expected = list(
@@ -124,7 +124,7 @@ test_that("make_results_row()"
         , ci_0.975 = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$test_between
       , expected = list(
@@ -141,7 +141,7 @@ test_that("make_results_row()"
         , ci_0.975 = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$gof
       , expected = list(
@@ -153,7 +153,7 @@ test_that("make_results_row()"
         , p = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$gof_group
       , expected = list(
@@ -166,7 +166,7 @@ test_that("make_results_row()"
         , p = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$gof_indiv
       , expected = list(
@@ -180,7 +180,7 @@ test_that("make_results_row()"
         , p = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$fungibility
       , expected = list(
@@ -192,7 +192,7 @@ test_that("make_results_row()"
         , correlation = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$test_homogeneity
       , expected = list(
@@ -202,7 +202,7 @@ test_that("make_results_row()"
         , p = "numeric"
       )
     )
-    
+
     expect_identical(
       column_classes$estimation
       , expected = list(
@@ -210,9 +210,9 @@ test_that("make_results_row()"
         , time_difference = "difftime"
       )
     )
-    
+
     # column `convergence` is initialized as an empty list, so missing here
-    
+
     expect_identical(
       column_classes$options
       , expected = list(
@@ -227,11 +227,12 @@ test_that("make_results_row()"
         , Neff_min = "numeric"
         , extend_max = "numeric"
         , n.PPP = "numeric"
+        , prior.beta = "character"
         , ci_size = "list"
         , max_ci_indiv = "numeric"
       )
     )
-    
-    
+
+
   }
 )

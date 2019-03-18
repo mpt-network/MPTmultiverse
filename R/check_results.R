@@ -118,7 +118,7 @@ check_results <- function(results) {
 
     tmp_convergence <- res_tree[i, ]$convergence[[1]] %>%
       dplyr::filter(.data$Rhat > getOption("MPTmultiverse")$treebugs$Rhat_max) %>%
-      mutate(parameter = label_parameter(.data$parameter, params),
+      dplyr::mutate(parameter = label_parameter(.data$parameter, params),
              core = grepl("COREPARAMETER", .data$parameter),
              parameter = gsub("COREPARAMETER", "", x = .data$parameter))
 
@@ -138,7 +138,7 @@ check_results <- function(results) {
 
     tmp_neff <- res_tree[i,]$convergence[[1]] %>%
       dplyr::filter(!is.na(.data$Rhat), .data$n.eff < getOption("MPTmultiverse")$treebugs$Neff_min) %>%
-      mutate(parameter = label_parameter(.data$parameter, params),
+      dplyr::mutate(parameter = label_parameter(.data$parameter, params),
              core = grepl("COREPARAMETER", .data$parameter),
              parameter = gsub("COREPARAMETER", "", x = .data$parameter))
 
