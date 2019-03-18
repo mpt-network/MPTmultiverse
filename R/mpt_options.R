@@ -37,36 +37,32 @@
 
 mpt_options <- function(...){
 
-  fetched <- getOption("MPTmultiverse")
-  args <- c(...)
+  opts <- getOption("MPTmultiverse")
+  args <- list(...)
 
-  if(length(args)==0L) return(fetched)
+  if(length(args)==0L) return(opts)
 
   # Provide some shorthand terms:
   if(args[[1]][[1]] %in% c("test", "default")){
-    changed <- switch(
+    opts <- switch(
       args[[1]]
       , test = set_test_options()
       , default = set_default_options()
     )
   } else {
-    changed <- lapply(
-      X = fetched
-      , FUN = function(x, args){
-        if(is.list(x)) {
-          sub_args <- args[names(args)%in%names(x)]
-          x[names(sub_args)] <- sub_args
-        }
-        x
+    for (i in names(args)) {
+      if(i %in% names(opts$mptinr)) {
+        opts$mptinr[[i]] <- unname(args[[i]])
       }
-      , args = args
-    )
-
-    sub_args <- args[names(args)%in%names(fetched)]
-    changed[names(sub_args)] <- sub_args
-
+      if(i %in% names(opts$treebugs)) {
+        opts$treebugs[[i]] <- unname(args[[i]])
+      }
+      if (i %in% names(opts)) {
+        opts[[i]] <- unname(args[[i]])
+      }
+    }
   }
-  options(list(MPTmultiverse = changed))
+  options(list(MPTmultiverse = opts))
 }
 
 
