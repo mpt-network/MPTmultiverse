@@ -1,6 +1,6 @@
 Package: MPTmultiverse
 Title: Multiverse Analysis of Multinomial Processing Tree Models
-Version: 0.3-0
+Version: 0.3-1
 Description:
     Statistical or cognitive modeling usually requires a number of more or less 
     arbitrary choices creating one specific path through a 'garden of forking paths'. 

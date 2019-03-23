@@ -2,6 +2,7 @@
 
 S3method(plot,multiverseMPT)
 export(check_results)
+export(check_set)
 export(fit_mpt)
 export(mpt_options)
 export(write_check_results)
