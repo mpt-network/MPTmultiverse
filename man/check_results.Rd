@@ -19,8 +19,17 @@ write_check_results(DATA_FILE, results, append = FALSE)
 \code{DATA_FILE}.}
 }
 \description{
-Set of helper functions that allow checking if model estimation worked as intended. Depending on the method and function, these functions return slightly different information.
+Set of helper functions that allow checking if model estimation
+  worked as intended. Depending on the method and function, these functions
+  return slightly different information.
 }
 \details{
-\code{check_results} produces relatively verbose output detailing diagnostic information for each method. For the frequentist methods, this is based on either the rank of the observed Fischer (or Hessian) matrix of the MLE estimate or based on empirical identifiability (based either on repeated re-runs or the width of the bootstrapped parameter distribution). For the Bayesian methods, this is convergence statistics R-hat and number of effective samples. \code{write_check_results} writes the results of \code{check_results} to a specififed file.
+\code{check_results} produces relatively verbose output detailing
+  diagnostic information for each method. For the frequentist methods, this
+  is based on either the rank of the observed Fischer (or Hessian) matrix of
+  the MLE estimate or based on empirical identifiability (based either on
+  repeated re-runs or the width of the bootstrapped parameter distribution).
+  For the Bayesian methods, this is convergence statistics R-hat and number
+  of effective samples. \code{write_check_results} writes the results of
+  \code{check_results} to a specififed file.
 }
