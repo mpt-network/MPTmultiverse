@@ -1,13 +1,15 @@
-#' Check results from a multiverse analysis
+#' Check results from MPTmultiverse
 #'
-#' This is a helper function to see if the model estimation worked as intended.
+#' @description  Set of helper functions that allow checking if model estimation worked as intended. Depending on the method and function, these functions return slightly different information.
+#'
+#' @details   \code{check_results} produces relatively verbose output detailing diagnostic information for each method. For the frequentist methods, this is based on either the rank of the observed Fischer (or Hessian) matrix of the MLE estimate or based on empirical identifiability (based either on repeated re-runs or the width of the bootstrapped parameter distribution). For the Bayesian methods, this is convergence statistics R-hat and number of effective samples. \code{write_check_results} writes the results of \code{check_results} to a specififed file.
+#'
 #'
 #' @param results An object of class multiverseMPT.
 #'
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
-
 check_results <- function(results) {
   #browser()
   expected <- structure(list(
@@ -159,16 +161,16 @@ check_results <- function(results) {
 
 }
 
-#' Write check_results
-#'
-#' Helper function to write the output from check_results() to a file.
-#'
-#' @param DATA_FILE Character. File name to use.
-#' @param results An object of class multiverseMPT.
-#' @export
 
-write_check_results <- function(DATA_FILE, results){
-  sink(paste0(DATA_FILE, "_check_results.txt"))
+#' @param DATA_FILE character string. File name to use.
+#' @param append logical. If \code{TRUE}, output will be appended to
+#'   \code{DATA_FILE}; otherwise, it will overwrite the contents of
+#'   \code{DATA_FILE}.
+#' @export
+#' @rdname check_results
+## @describeIn check_results writes check results to file.
+write_check_results <- function(DATA_FILE, results, append = FALSE){
+  sink(paste0(DATA_FILE, "_check_results.txt"), append = append)
   cat("################ OPTIONS ################\n\n")
   cat("TreeBUGS:\n") ; print(getOption("MPTmultiverse")$treebugs)
   cat("\nMPTinR:\n") ; print(getOption("MPTmultiverse")$mptinr)
