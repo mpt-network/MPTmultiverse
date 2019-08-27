@@ -43,13 +43,16 @@ mpt_options <- function(...){
   if(length(args)==0L) return(opts)
 
   # Provide some shorthand terms:
-  if(args[[1]][[1]] %in% c("test", "default")){
+  if ((args[[1]][[1]] %in% c("test", "default"))[[1]]){
     opts <- switch(
       args[[1]]
       , test = set_test_options()
       , default = set_default_options()
     )
   } else {
+    if (is.list(args[[1]])) {
+      args <- args[[1]]
+    }
     for (i in names(args)) {
       if(i %in% names(opts$mptinr)) {
         opts$mptinr[[i]] <- unname(args[[i]])
@@ -58,7 +61,12 @@ mpt_options <- function(...){
         opts$treebugs[[i]] <- unname(args[[i]])
       }
       if (i %in% names(opts)) {
-        opts[[i]] <- unname(args[[i]])
+        if (is.list(args[[i]])) {
+          opts[[i]][names(opts[[i]])[names(opts[[i]]) %in% names(args[[i]])]] <-
+            args[[i]][names(opts[[i]])[names(opts[[i]]) %in% names(args[[i]])]]
+        } else {
+          opts[[i]] <- unname(args[[i]])
+        }
       }
     }
   }
