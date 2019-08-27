@@ -31,7 +31,6 @@ get_info <- function(
   # and other stuff that should be save along the results
   matched_call <- match.call()
   ##used_model <- utils::read.table(model, skip = 1, stringsAsFactors = FALSE)
-  model_branches <- try(read.EQN.model(model))
 
   # prepare data ----
   if (missing(data)) {
@@ -41,6 +40,10 @@ get_info <- function(
   if(is.null(condition)) {
     data$ExpCond <- "no_condition"
     condition <- "ExpCond"
+  }
+
+  if (is.null(data[[id]])) {
+    stop("id column is not in data.", call. = FALSE)
   }
 
   if(is.null(id)) {
@@ -101,6 +104,9 @@ get_info <- function(
   names(trees) <- freq_cols
   n_per_tree <- vector(mode = "list", length = length(unique(trees)))
   names(n_per_tree) <- unname(unique(trees))
+
+  model_branches <- try(read.EQN.model(model))
+  try(names(model_branches) <- unname(unique(trees)))
 
   for(i in trees) {
     n_per_tree[[i]] <- rowSums(data[, names(trees[trees == i])])
