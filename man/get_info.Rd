@@ -5,7 +5,7 @@
 \title{Collect Model Equations and Data per Tree}
 \usage{
 get_info(model, dataset, data, id = NULL, condition = NULL,
-  include_data = FALSE, autosave = TRUE)
+  include_data = FALSE, core = NULL, autosave = TRUE)
 }
 \arguments{
 \item{model}{A model definition, typically the path to an \code{.eqn} model
@@ -31,6 +31,10 @@ comparisons are performed.}
 \item{include_data}{If \code{FALSE} (the default) the response frequencies
 are not part of the output, but only the number of observations per tree.
 If \code{TRUE}, the full data is part of the output.}
+
+\item{core}{\code{character} vector defining the core parameters of interest,
+e.g., \code{core = c("Dn", "Do")}. All other parameters are treated as
+auxiliary parameters.}
 
 \item{autosave}{If \code{TRUE} (the default) the results are automatically
 saved in the current working directory in a file with name derived from

@@ -23,6 +23,7 @@ get_info <- function(
   , id = NULL
   , condition = NULL
   , include_data = FALSE
+  , core = NULL
   , autosave = TRUE
 ) {
 
@@ -119,9 +120,10 @@ get_info <- function(
     , dataset = basename(dataset)
     , data = data_out
     , data_tree = data_tree
+    , core = core
   )
   if (autosave) {
-    outname <- paste(basename(dataset), basename(model), "info", sep = "_")
+    outname <- make.names(paste(basename(dataset), basename(model), "info", sep = "_"))
     assign(outname, out)
     save(list = outname, file = paste0(outname, ".RData"))
   }
