@@ -45,7 +45,8 @@ Imports:
     coda,
     purrr,
     readr,
-    limSolve
+    limSolve,
+    utils
 Suggests:
     knitr,
     rmarkdown,

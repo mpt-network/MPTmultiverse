@@ -14,6 +14,7 @@
 #'   saved in the current working directory in a file with name derived from
 #'   both model and data.
 #'
+#' @importFrom utils read.table
 #' @export
 get_info <- function(
   model
@@ -61,7 +62,7 @@ get_info <- function(
 
   # remove extraneous colums and check if all specified columns are present
   # in data
-  freq_cols <- MPTmultiverse:::get_eqn_categories(model)
+  freq_cols <- get_eqn_categories(model)
   valid_cols <- c(id, condition, freq_cols)
   check_cols <- valid_cols %in% colnames(data)
 
@@ -95,7 +96,7 @@ get_info <- function(
 
   # summarize the design of your study
   participants <- table(data[[condition]])
-  trees <- MPTmultiverse:::get_eqn_trees(model)
+  trees <- get_eqn_trees(model)
   names(trees) <- freq_cols
   n_per_tree <- vector(mode = "list", length = length(unique(trees)))
   names(n_per_tree) <- unname(unique(trees))
