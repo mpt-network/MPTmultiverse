@@ -64,8 +64,8 @@ check_results <- function(results) {
 
       not_id <- results %>%
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>%
-        dplyr::select("est_indiv") %>%
-        tidyr::unnest() %>%
+        dplyr::select(.data$est_indiv) %>%
+        tidyr::unnest(.data) %>%
         dplyr::group_by(.data$condition, .data$core) %>%
         dplyr::summarise(proportion = mean(!.data$identifiable |
                                              is.na(.data$identifiable))) %>%
@@ -73,8 +73,8 @@ check_results <- function(results) {
 
       not_id2 <- results %>%
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>%
-        dplyr::select("est_indiv") %>%
-        tidyr::unnest() %>%
+        dplyr::select(.data$est_indiv) %>%
+        tidyr::unnest(.data) %>%
         dplyr::filter(!.data$identifiable) %>%
         dplyr::group_by(.data$condition, .data$core, .data$parameter) %>%
         dplyr::count() %>%
@@ -105,8 +105,8 @@ check_results <- function(results) {
   tryCatch({
     conv_mptinr_comp <- results %>%
       dplyr::filter(.data$package == "MPTinR" & .data$pooling == "complete") %>%
-      dplyr::select("convergence") %>%
-      tidyr::unnest()
+      dplyr::select(.data$convergence) %>%
+      tidyr::unnest(.data)
 
     comp_prob <- (conv_mptinr_comp$convergence != 0) |
       (conv_mptinr_comp$rank.fisher != conv_mptinr_comp$n.parameters)
@@ -128,13 +128,13 @@ check_results <- function(results) {
   ### TreeBUGS
   res_tree <- results %>%
     dplyr::filter(.data$package == "TreeBUGS") %>%
-    dplyr::select(!!c("model", "dataset", "pooling", "package", "method", "convergence", "est_group"))
+    dplyr::select(.data$model, .data$dataset, .data$pooling, .data$package, .data$method, .data$convergence, .data$est_group)
 
   for (i in seq_len(nrow(res_tree))) {
     cat("## ", paste(res_tree[i, 1:5], collapse = " // "), ":\n", sep = "")
 
     params <- res_tree[i,] %>%
-      tidyr::unnest(.data$est_group) %>%
+      tidyr::unnest(cols = .data$est_group) %>%
       dplyr::select(.data$parameter, .data$core)
 
     tmp_convergence <- res_tree[i, ]$convergence[[1]] %>%
