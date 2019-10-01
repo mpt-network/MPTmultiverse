@@ -185,11 +185,24 @@ test_that("Complete-pooling approaches work", {
                c(6.86, 4.93),
                tolerance = 0.01)
 
-  expect_equal(only_asymptotic$est_indiv[[1]], tibble())
+  expect_equal(only_asymptotic$est_indiv[[1]], tibble::tibble())
 
   expect_equal(only_asymptotic$gof[[1]]$p,
                0.117,
                tolerance = 0.001)
   mpt_options(op)
+
+  # test_within
+  est_group <- only_asymptotic$est_group[[1]]
+  test_within <- only_asymptotic$test_within[[1]]
+
+  pairs <- combn(x = unique(est_group$parameter), m = 2)
+
+  for (j in seq_len(ncol(pairs))) {
+    est_diff <- est_group$est[est_group$parameter == pairs[1, j]] - est_group$est[est_group$parameter == pairs[2, j]]
+    expect_equal(object = est_diff, expected = test_within$est[test_within$parameter1 == pairs[1, j] & test_within$parameter2 == pairs[2, j]])
+  }
+
+
 
 })

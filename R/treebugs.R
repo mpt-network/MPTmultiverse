@@ -159,6 +159,50 @@ mpt_treebugs <- function (
       result_row$estimation[[1]]$condition == cond
     ] <- difftime(Sys.time(), t0, units = "secs")
 
+    # test_within --------------------------------------------------------------
+    test_within <- result_row$test_within[[1]]
+
+    # create list with all transforms
+    transform_pars <- as.list(apply(
+      X = test_within[test_within$condition == conditions[i], c("parameter1", "parameter2")]
+      , MARGIN = 1
+      , FUN = function(x) {
+      paste0(paste(c("diff", x), collapse = "__"), "=", x[1], "-", x[2])
+    }))
+
+    transformed_parameters <- TreeBUGS::transformedParameters(
+      treebugs_fit[[i]]
+      , transformedParameters = transform_pars
+      , level = "group"
+    )
+    proportions <- apply(X = do.call("rbind", transformed_parameters), MARGIN = 2, FUN = function(x){mean(x <= 0)})
+    tmp <- summary(
+      transformed_parameters
+      , quantiles = all_options$ci_size
+    )
+
+    pars <- strsplit(rownames(tmp$statistic), split = "__", fixed = TRUE)
+
+    for(j in seq_len(nrow(tmp$statistics))) {
+      diffname <- pars[[j]]
+      p1 <- diffname[2]
+      p2 <- diffname[3]
+
+      idx <- which(
+        test_within$condition == conditions[i] &
+        test_within$parameter1 == p1 &
+        test_within$parameter2 == p2)
+
+      test_within$est[idx] <- tmp$statistics[j, "Mean"]
+      test_within$se[idx] <- tmp$statistics[j, "SD"]
+      test_within$p[idx] <- 1 - abs(proportions[rownames(tmp$statistic)[j]] - .5) * 2
+
+      test_within[idx, paste0("ci_", all_options$ci_size)] <-
+       tmp$quantiles[rownames(tmp$statistic)[j], ]
+    }
+    result_row$test_within[[1]] <- test_within
+
+
     # convergence summary (n.eff / Rhat / all estimates)
     tsum <- tibble::as_tibble(summ) %>%
       dplyr::mutate(parameter = rownames(summ),

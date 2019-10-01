@@ -1,6 +1,6 @@
 Package: MPTmultiverse
 Title: Multiverse Analysis of Multinomial Processing Tree Models
-Version: 0.3-3
+Version: 0.3-4
 Description:
     Statistical or cognitive modeling usually requires a number of more or less 
     arbitrary choices creating one specific path through a 'garden of forking paths'. 
@@ -40,7 +40,7 @@ Imports:
     reshape2,
     ggplot2,
     MPTinR,
-    TreeBUGS,
+    TreeBUGS (>= 1.4.4),
     runjags,
     coda,
     purrr,
