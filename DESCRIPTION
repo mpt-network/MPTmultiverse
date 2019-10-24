@@ -22,7 +22,8 @@ Authors@R: c(
     person("Henrik", "Singmann", role = c("aut", "cre"), 
         email="singmann@gmail.com", comment=c(ORCID="0000-0002-4842-3657"))
     , person(c("Daniel", "W."), "Heck", email = "heck@uni-mannheim.de", role = c("aut"))
-    , person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut"))
+    , person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("aut"),
+        comment = c(ORCID = "0000-0002-3421-6665"))
     , person("Frederik", "Aust", email = "frederik.aust@uni-koeln.de", role = c("ctb"), 
         comment = c(ORCID = "0000-0003-4900-788X"))
   )
