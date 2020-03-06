@@ -114,7 +114,7 @@ test_within_no <- function(test_within, est_indiv) {
     p1 <- test_within$parameter1[i]
     p2 <- test_within$parameter2[i]
 
-    condition_data <-tmp_data[tmp_data$condition == c, ]
+    condition_data <-tmp_data[tmp_data$condition == c, , drop = FALSE]
     if(nrow(stats::na.omit(condition_data))>1) { # only calculate test if N > 1
       # two-sided *p* values
       t_out <- stats::t.test(x = condition_data[[p1]], y = condition_data[[p2]], paired = TRUE)
@@ -160,14 +160,7 @@ mpt_mptinr_no <- function(
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
 
-  bootstrap <- c()
-
-  if ("pb_no" %in% method) {
-    bootstrap <- c(bootstrap, "pb")
-  }
-  if ("npb_no" %in% method) {
-    bootstrap <- c(bootstrap, "npb")
-  }
+  bootstrap <- gsub(intersect(method, c("pb_no", "npb_no")), pattern = "_no", replacement = "")
 
   t0 <- Sys.time()
   fit_mptinr <- MPTinR::fit.mpt(prepared$data[,prepared$col_freq],
@@ -409,14 +402,20 @@ get_pb_results <- function(dataset
   , fit_mptinr
   , additional_time
   , convergence
-  , core = core) {
+  , core) {
 
   OPTIONS <- getOption("MPTmultiverse")
   MPTINR_OPTIONS <- OPTIONS$mptinr
   CI_SIZE <- OPTIONS$ci_size
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
 
-  cl <- parallel::makeCluster(rep("localhost", OPTIONS$n.CPU))
+  # only create a cluster if no default cluster is set
+  if(is.null(parallel::getDefaultCluster())) {
+    cl <- parallel::makeCluster(rep("localhost", OPTIONS$n.CPU))
+  } else {
+    cl <- parallel::getDefaultCluster()
+  }
+
   parallel::clusterEvalQ(cl, library("MPTinR"))
   parallel::clusterSetRNGStream(cl, iseed = sample.int(.Machine$integer.max, 1))
 
@@ -436,8 +435,8 @@ get_pb_results <- function(dataset
     t1 <- Sys.time()
     fit_pb <- parallel::clusterApplyLB(
       cl
-      , seq_len(nrow(prepared$data))
-      , get_pb_output
+      , x = seq_len(nrow(prepared$data))
+      , fun = get_pb_output
       , fit_mptinr = fit_mptinr
       , data = prepared$data
       , model_file = model
@@ -876,7 +875,6 @@ mpt_mptinr_complete <- function(dataset,
     test_within$se[i] <- sqrt(
       vec %*% variance_covariance_matrices[[c]] %*% vec
     )
-    # todo: add CIs
   }
   # two-sided *p* values
   test_within$statistic <- test_within$est / test_within$se
