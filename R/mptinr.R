@@ -487,10 +487,13 @@ get_pb_results <- function(dataset
           res$est_indiv[[1]]$parameter == p, "est" ] <-
         fit_mptinr$parameters$individual[p,"estimates",i]
 
-      res$est_indiv[[1]][
+      tmp_ci <- stats::quantile(fit_pb[[i]]$parameters$individual[p,"estimates",], probs = CI_SIZE)
+      for (cin in seq_along(prepared$cols_ci)) {
+        res$est_indiv[[1]][
         res$est_indiv[[1]]$id == prepared$data[i,"id"] &
-          res$est_indiv[[1]]$parameter == p, prepared$cols_ci ] <-
-        stats::quantile(fit_pb[[i]]$parameters$individual[p,"estimates",], probs = CI_SIZE)
+          res$est_indiv[[1]]$parameter == p,  prepared$cols_ci[cin]] <-
+          tmp_ci[cin]
+      }
 
       res$est_indiv[[1]][
         res$est_indiv[[1]]$id == prepared$data[i,"id"] &
