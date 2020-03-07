@@ -119,18 +119,21 @@ test_within_no <- function(test_within, est_indiv) {
       # two-sided *p* values
       t_out <- stats::t.test(x = condition_data[[p1]], y = condition_data[[p2]], paired = TRUE)
       test_within$est[i] <- t_out$estimate
-      test_within$se[i] <- t_out$stderr
+      if(getRversion() >= "3.6.0") {
+        test_within$se[i] <- t_out$stderr
+      }
       test_within$statistic[i] <- t_out$statistic
       test_within$df[i] <- unname(t_out$parameter)
       test_within$p[i] <- t_out$p.value
     }
   }
   # confidence intervals from normal theory
-  CI <- getOption("MPTmultiverse")$ci_size
-  for (i in seq_along(CI)) {
-    test_within[[paste0("ci_", CI[i])]] <- stats::qt(p = CI[i], df = test_within$df) * test_within$se + test_within$est
+  if(getRversion() >= "3.6.0") {
+    CI <- getOption("MPTmultiverse")$ci_size
+    for (i in seq_along(CI)) {
+      test_within[[paste0("ci_", CI[i])]] <- stats::qt(p = CI[i], df = test_within$df) * test_within$se + test_within$est
+    }
   }
-
 
   test_within
 }
