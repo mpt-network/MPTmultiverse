@@ -326,6 +326,10 @@ fit_mpt <- function(
   data$ExpCond <- as.character(data[[condition]])
   data$Subject <- as.character(data[[id]])
 
+  if(any(duplicated(data$Subject))) {
+    stop("Multiple rows per subject in data. Ensure that the subject identifier is properly specified and you correctly aggregated your data.")
+  }
+
 
   # check MPT file
   mpt_model <- TreeBUGS::readEQN(model)
