@@ -92,11 +92,16 @@ test_between_no <- function(test_between, indiv_pars, CI_SIZE, cols_ci) {
 
       tmp_se <- stats::coef(stats::summary.lm(tmp_lm))[2,"Std. Error"]
 
-      test_between[ i , c("est_diff" , "se", "p") ] <-
-        c(diff(rev(tmp_t$estimate)), tmp_se, tmp_t$p.value)
+      test_between[ i , "est_diff"] <- diff(rev(tmp_t$estimate))
+      test_between[ i , "se"] <- tmp_se
+      test_between[ i , "p" ] <- tmp_t$p.value
 
-      test_between[i, cols_ci] <- test_between[i, ]$est_diff +
-        stats::qnorm(CI_SIZE)* test_between[i, ]$se
+      for (j in seq_along(cols_ci)) {
+        test_between[i, cols_ci[j]] <- test_between[i, ]$est_diff +
+          stats::qnorm(CI_SIZE[j])* test_between[i, ]$se
+      }
+
+
     }, silent = TRUE)
   }
   return(test_between)
