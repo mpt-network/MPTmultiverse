@@ -128,8 +128,11 @@
 #'     For the \emph{complete pooling asymptotic approach}, the group-level parameter
 #'     estimates and goodness-of-fit statistics are the maximum-likelihood and
 #'     G-squared values returned by \code{MPTinR}. The parameter differences are
-#'     based on these values, the standard errors of the difference is simply
-#'     the pooled standard error of the individual parameters. The overall fit
+#'     based on these values. for between-subjects comparisons, the standard
+#'     errors of the differences are simply the pooled standard error of the
+#'     individual parameters; for within-subjects comparisons, the standard errors
+#'     of the differences are based on the respective linear transform of the estimated
+#'     variance-covariance matrix calculated from the Hessian matrix. The overall fit
 #'     (column \code{gof}) is based on an additional fit to the completely
 #'     aggregated data.
 #'
@@ -153,7 +156,9 @@
 #'     statistics are based on a t-test comparing the individual-level estimates
 #'     (again, after excluding non-identifiable estimates). The CIs of the
 #'     difference are based on the SEs (which are derived from a linear model
-#'     equivalent to the t-test).
+#'     equivalent to the t-test). Within-subjects comparisons are based on t-tests
+#'     for paired observations.
+#'
 #'
 #'     The individual-level estimates of the \code{bootstrap based no-pooling}
 #'     approaches are identical to the asymptotic ones. However, the SE is the
@@ -167,9 +172,9 @@
 #'     \code{mpt_options()$max_ci_indiv}, which defaults to \code{0.99}. Thus,
 #'     in the default settings we say a parameter is non-identifiable if the
 #'     bootstrap based CI extends from 0 to 1. The group-level estimates are the
-#'     mean of the identifiable individual-level estimates. And difference
-#'     between conditions is calculated in the same manner as for the asymptotic
-#'     case using the identifiable individual-level parameter esatimates.
+#'     mean of the identifiable individual-level estimates. The difference
+#'     between conditions (as well as within conditions) is calculated in the same manner as for the asymptotic
+#'     case using the identifiable individual-level parameter estimates.
 #'   }
 #'
 #'   \subsection{Bayesian Methods}{
@@ -194,7 +199,7 @@
 #'     For all Bayesian methods, the posterior distribution of the parameters is
 #'     summarized by the posterior mean (in the column \code{est}), posterior
 #'     standard deviation (\code{se}), and credbility intervals (\code{ci_*}).
-#'     For parameter differences (\code{test_between}) and correlations
+#'     For parameter differences (\code{test_between} and \code{test_within}) and correlations
 #'     (\code{est_rho}), Bayesian p-values are computed (column \code{p}) by
 #'     counting the relative proportion of posterior samples that are smaller
 #'     than zero. Goodness of fit is tested with the T1 statistic
@@ -224,6 +229,7 @@
 #'   on the probit scale (only in \code{method="trait"}).
 #'   \item \code{test_between}: Parameter differences between the levels of the
 #'   between-subjects condition (if specified).
+#'   \item \code{test_within}: Within-subjects parameter differences.
 #'   \item \code{gof}: Overall goodness of fit across all individuals.
 #'   \item \code{gof_group}: Group-level goodness of fit.
 #'   \item \code{gof_indiv}: Individual-level goodness of fit.
