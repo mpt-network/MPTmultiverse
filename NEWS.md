@@ -10,3 +10,4 @@
     - For the complete-pooling maximum-likelihood method, comparisons rely on the the point estimates
        of parameters and the estimates of the standard errors of differences calculated
        from the Hessian matrix.
+- Prepared `MPTmutliverse` for new `tibble` version.
