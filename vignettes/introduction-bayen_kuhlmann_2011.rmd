@@ -202,7 +202,7 @@ Bayen and Kuhlman (2011) report a difference in the $g$ parameter across conditi
 ```{r}
 results %>% 
   select(pooling:method, test_between) %>% 
-  unnest() %>% 
+  unnest(cols = test_between) %>% 
   filter(parameter == "g") %>% 
   print(width = 150)
 ```

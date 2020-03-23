@@ -83,7 +83,9 @@ mpt_treebugs <- function (
 
   # ----------------------------------------------------------------------------
   # Customize prior if necessary
+  method_for_printing <- method    # save method for later printing
   if (method == "trait_uncorrelated"){
+    method_for_printing <- method
     method <- "trait"
     prior_args <- list(df = 1, V = NA, xi = "dnorm(0,1)")
   } else {
@@ -137,23 +139,36 @@ mpt_treebugs <- function (
 
     # --------------------------------------------------------------------------
     # adaptively continue MCMC sampling (only available for betaMPT and traitMPT)
-    ext_cnt <- 0
-    try({
-      while (
-        ext_cnt < TREEBUGS_MCMC$extend_max && method %in% c("beta", "trait") &&
-        (any(stats::na.omit(summ[,"Rhat"]) > TREEBUGS_MCMC$Rhat_max)  ||
-         any(summ[summ[,"n.eff"] > 0,"n.eff"] < TREEBUGS_MCMC$Neff_min, na.rm = TRUE)) ){
-        cat("Drawing additional samples for method = ", method,
-            ". max(Rhat) = ", round(max(stats::na.omit(summ[summ[,"Rhat"] > 0,"Rhat"])), 2),
-            " ; min(n.eff) = ", round(min(summ[summ[,"n.eff"] > 0,"n.eff"], na.rm = TRUE), 1), "\n")
+    if(method %in% c("beta", "trait")) {
+      ext_cnt <- 0L
+      try({
+        repeat{
+          min_neff <- min(summ[summ[, "n.eff"] > 0, "n.eff"], na.rm = TRUE)
+          max_rhat <- max(summ[, "Rhat"], na.rm = TRUE)
 
-        treebugs_fit[[i]] <- TreeBUGS::extendMPT(treebugs_fit[[i]],
-                                       n.iter = TREEBUGS_MCMC$n.iter,
-                                       n.adapt = TREEBUGS_MCMC$n.adapt)
-        summ <- treebugs_fit[[i]]$mcmc.summ
-        ext_cnt <- ext_cnt + 1
-      }
-    })
+          if(ext_cnt == TREEBUGS_MCMC$extend_max) break
+          if(min_neff >= TREEBUGS_MCMC$Neff_min & max_rhat <= TREEBUGS_MCMC$Rhat_max) break
+
+          cat(
+            "Drawing additional samples for method \"", method_for_printing, "\".\n"
+            , "max(Rhat) = ", round(max_rhat, digits = 3L), ", "
+            , "min(n.eff) = ", round(min_neff, digits = 0L), "\n"
+            , if(max_rhat <= TREEBUGS_MCMC$Rhat_max){"Combining with"}else{"Discarding"}
+            , " previously drawn samples.\n"
+            , sep = ""
+          )
+          treebugs_fit[[i]] <- TreeBUGS::extendMPT(
+            treebugs_fit[[i]],
+            n.iter = TREEBUGS_MCMC$n.iter,
+            n.adapt = TREEBUGS_MCMC$n.adapt,
+            # combine only if we already reached stationary distribution:
+            combine = max_rhat <= TREEBUGS_MCMC$Rhat_max
+          )
+          summ <- treebugs_fit[[i]]$mcmc.summ
+          ext_cnt <- ext_cnt + 1L
+        }
+      })
+    }
 
     result_row$estimation[[1]]$time_difference[
       result_row$estimation[[1]]$condition == cond
@@ -197,8 +212,10 @@ mpt_treebugs <- function (
       test_within$se[idx] <- tmp$statistics[j, "SD"]
       test_within$p[idx] <- 1 - abs(proportions[rownames(tmp$statistic)[j]] - .5) * 2
 
-      test_within[idx, paste0("ci_", all_options$ci_size)] <-
-       tmp$quantiles[rownames(tmp$statistic)[j], ]
+      for (k in seq_along(all_options$ci_size)) { # comply with tibble 2.99
+        test_within[idx, paste0("ci_", all_options$ci_size[k])] <-
+          tmp$quantiles[rownames(tmp$statistic)[j], k, drop = TRUE]
+      }
     }
     result_row$test_within[[1]] <- test_within
 
@@ -218,8 +235,12 @@ mpt_treebugs <- function (
                                       summ = treebugs_fit[[i]]$mcmc.summ)
 
     sel_group <- result_row$est_group[[1]]$condition == conditions[i]
-    result_row$est_group[[1]][sel_group,-(1:3)] <-
-      summMPT$groupParameters$mean[paste0("mean_", parameters),1:6]
+
+    for (k in 1:6) { # comply with tibble 2.99
+      result_row$est_group[[1]][sel_group, 3 + k] <-
+        summMPT$groupParameters$mean[paste0("mean_", parameters), k]
+    }
+
 
     if (pooling != "complete"){
       # # old: array filled into data frame
@@ -280,7 +301,7 @@ mpt_treebugs <- function (
     }
   }
 
-  # between  subject comparisons
+  # between-subjects comparisons
   if (length(conditions) > 1){
     for (i in 1:(length(conditions) - 1)){
       for (j in 2:length(conditions)){
@@ -297,10 +318,18 @@ mpt_treebugs <- function (
             result_row$test_between[[1]]$condition1 == conditions[i] &
             result_row$test_between[[1]]$condition2 == conditions[j]
 
-          result_row$test_between[[1]][sel_row,-(1:4)] <-
-            c(test_summ[,c("Mean", "SD")],
-              p = ifelse(bayesp > .5, 1 - bayesp, bayesp) * 2,  # two-sided Bayesian p values
-              test_summ[,2 + seq_along(CI_SIZE)])
+          # comply with tibble 2.99
+          result_row$test_between[[1]]$est_diff[sel_row] <- test_summ[ , "Mean"]
+          result_row$test_between[[1]]$se[sel_row] <- test_summ[, "SD"]
+          result_row$test_between[[1]]$p[sel_row] <- ifelse(bayesp > .5, 1 - bayesp, bayesp) * 2 # two-sided Bayesian p values
+
+          for (cl in CI_SIZE) {
+            result_row$test_between[[1]][[paste0("ci_", cl)]][sel_row] <- test_summ[, paste0(cl * 100, "%")]
+          }
+
+          # result_row$test_between[[1]][sel_row,-(1:4)] <-
+          #   c(test_summ[, c("Mean", "SD")],
+          #     test_summ[, 2 + seq_along(CI_SIZE)])
         }
       }
     }
@@ -309,14 +338,23 @@ mpt_treebugs <- function (
   # don't save T2 if complete pooling was used ----
   # Why? I think it would be worthwhile
   # Daniel: T2 refers to the covariance matrix, which is not defined for aggregated frequencies.
+
   if (pooling != "complete"){
     result_row$gof[[1]] <- tibble::add_row(result_row$gof[[1]])   # T1 & T2
-    result_row$gof[[1]][2,-(1:2)] <- aggregate_ppp(gof_group, stat = "T2")
+
+    T2_stats <- aggregate_ppp(gof_group, stat = "T2")
+    result_row$gof[[1]]$stat_obs[2] <- T2_stats["stat_obs"]
+    result_row$gof[[1]]$stat_pred[2] <- T2_stats["stat_pred"]
+    result_row$gof[[1]]$p[2] <- T2_stats["p"]
   }
   result_row$gof[[1]]$type <- c("T1", if(pooling!="complete"){"T2"})
   result_row$gof[[1]]$focus <- c("mean", if(pooling!="complete"){"cov"})
 
-  result_row$gof[[1]][1,-(1:2)] <- aggregate_ppp(gof_group)
+  T1_stats <- aggregate_ppp(gof_group)
+  result_row$gof[[1]]$stat_obs[1] <- T1_stats["stat_obs"]
+  result_row$gof[[1]]$stat_pred[1] <- T1_stats["stat_pred"]
+  result_row$gof[[1]]$p[1] <- T1_stats["p"]
+
 
   # estimation_time <- unlist(estimation_time)
 
