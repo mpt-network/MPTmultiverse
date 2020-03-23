@@ -10,4 +10,7 @@
     - For the complete-pooling maximum-likelihood method, comparisons rely on the the point estimates
        of parameters and the estimates of the standard errors of differences calculated
        from the Hessian matrix.
-- Prepared `MPTmutliverse` for new `tibble` version.
+- Changed the default behavior for auto-extending Bayesian models: As of now, chains
+    are only combined if Rhat <= Rhat_max. An informative message is printed whether chains were
+    combined with earlier draws or not.
+- Prepared `MPTmultiverse` for new `tibble` version.
