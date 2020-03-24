@@ -4,8 +4,16 @@
 \alias{get_info}
 \title{Collect Model Equations and Data per Tree}
 \usage{
-get_info(model, dataset, data, id = NULL, condition = NULL,
-  include_data = FALSE, core = NULL, autosave = TRUE)
+get_info(
+  model,
+  dataset,
+  data,
+  id = NULL,
+  condition = NULL,
+  include_data = FALSE,
+  core = NULL,
+  autosave = TRUE
+)
 }
 \arguments{
 \item{model}{A model definition, typically the path to an \code{.eqn} model
