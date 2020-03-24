@@ -65,7 +65,7 @@ check_results <- function(results) {
       not_id <- results %>%
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>%
         dplyr::select(.data$est_indiv) %>%
-        tidyr::unnest(.data) %>%
+        tidyr::unnest(.data$est_indiv) %>%
         dplyr::group_by(.data$condition, .data$core) %>%
         dplyr::summarise(proportion = mean(!.data$identifiable |
                                              is.na(.data$identifiable))) %>%
@@ -74,7 +74,7 @@ check_results <- function(results) {
       not_id2 <- results %>%
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>%
         dplyr::select(.data$est_indiv) %>%
-        tidyr::unnest(.data) %>%
+        tidyr::unnest(.data$est_indiv) %>%
         dplyr::filter(!.data$identifiable) %>%
         dplyr::group_by(.data$condition, .data$core, .data$parameter) %>%
         dplyr::count() %>%
@@ -106,7 +106,7 @@ check_results <- function(results) {
     conv_mptinr_comp <- results %>%
       dplyr::filter(.data$package == "MPTinR" & .data$pooling == "complete") %>%
       dplyr::select(.data$convergence) %>%
-      tidyr::unnest(.data)
+      tidyr::unnest(.data$convergence)
 
     comp_prob <- (conv_mptinr_comp$convergence != 0) |
       (conv_mptinr_comp$rank.fisher != conv_mptinr_comp$n.parameters)
