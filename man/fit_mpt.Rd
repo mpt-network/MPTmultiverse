@@ -129,12 +129,9 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
   the data has more than one between-subjects condition, these need to be
   combined into one condition for this function.
 
-  Parameter differences or other support for within-subject conditions is not
-  provided. The best course of action for within-subjects conditions is to
-  simply include separate trees and separate sets of parameters for each
-  within-subjects condition. This allows to at least compare the estimates
-  for each within-subjects condition across levels of pooling and estimation
-  methods.
+  To include multiple within-subjects conditions, include separate trees and
+  separate sets of parameters for each within-subjects condition in your
+  .eqn file.
 
   \subsection{Pooling}{
   The following pooling levels are provided (not all by all estimation approaches, see below).

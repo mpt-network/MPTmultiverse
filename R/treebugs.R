@@ -147,7 +147,7 @@ mpt_treebugs <- function (
           max_rhat <- max(summ[, "Rhat"], na.rm = TRUE)
 
           if(ext_cnt == TREEBUGS_MCMC$extend_max) break
-          if(min_neff >= TREEBUGS_MCMC$Neff_min & max_rhat <= TREEBUGS_MCMC$Rhat_max) break
+          if(min_neff >= TREEBUGS_MCMC$Neff_min & max_rhat <= (TREEBUGS_MCMC$Rhat_max*2-1)) break
 
           cat(
             "Drawing additional samples for method \"", method_for_printing, "\".\n"

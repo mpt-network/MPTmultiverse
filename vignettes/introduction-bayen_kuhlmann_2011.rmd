@@ -150,19 +150,19 @@ After fitting it is a good idea to save the results as a binary `R` data file fo
 
 We can automatically create a file name for the file holding the results based on the model and data file.
 
-```{r, eval=FALSE}
+```{r eval = FALSE}
 save(results, file = paste0(EQN_FILE, "-", DATA_FILE, ".RData"))
 ```
 
 In the current example this would usually lead to quite a long filename (e.g., see `EQN_FILE`), so one can also use a custom filename.
 
-```{r, eval=FALSE}
+```{r eval = FALSE}
 save(results, file = "results_bayen_kuhlmann_2HTSM4.RData")
 ```
 
 One can also directly save in a subfolder of the current working directory (if the subfolder exists).
 
-```{r, eval=FALSE}
+```{r eval=FALSE}
 save(results, file = "fits/results_bayen_kuhlmann_2HTSM4.RData")
 ```
 
@@ -175,8 +175,9 @@ After computations finished, which may take between a couple of hours to days, c
 save(results, file = "../inst/extdata/results_bayen_kuhlmann.RData")
 ```
 
-```{r echo = FALSE}
+```{r echo = FALSE, eval = TRUE}
 load(file = system.file("extdata", "results_bayen_kuhlmann.RData", package = "MPTmultiverse"))
+mpt_options("default")
 ```
 
 ```{r}
@@ -207,7 +208,23 @@ results %>%
   print(width = 150)
 ```
 
-Inspecting the differences across the analysis multiverse shows that the estimated difference is negative in each case and the 95% credibility/confidence intervals around the estimate do not include zero for 6 out of the 10 methods. Only the CIs for the no-pooling frequentist methods as well as the most sophisticated model, the latent trait model, include 0. However, the 80% CIs do not include zero for all methods. Taken together, this provides evidence that the $g$ parameter is larger in the `load` compared to the `no_load` condition. 
+Inspecting the differences across the analysis multiverse shows that the estimated difference is negative in each case and the 95% credibility/confidence intervals around the estimate do not include zero for 6 out of the 10 methods. Only the CIs for the no-pooling frequentist methods as well as the most sophisticated model, the latent trait model, include 0. However, the 80% CIs do not include zero for all methods. Taken together, this provides evidence that the $g$ parameter is larger in the `load` compared to the `no_load` condition.
+
+In a similar manner, it is also possible to examine differences between parameter estimates *within* each group:
+We first `select` the column containing within-condition tests, `unnest` this column, and then `select` only data containing the relevant parameters.
+
+```{r}
+results %>%
+  select(pooling:method, test_within) %>%
+  unnest(cols = test_within) %>%
+  filter(condition == "no_load") %>%
+  filter(parameter1 == "d" & parameter2 == "D") %>% 
+  print(width = 150)
+```
+
+In this example, these comparisons are probably not meaningful,
+but for other designs this column may be used for within-subjects comparisons.
+
 
 ## Plotting Results
 

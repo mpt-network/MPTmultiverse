@@ -18,7 +18,7 @@ mpt_options(...)
   \item{\code{n.thin}: }{Numeric. Thinning interval.}
   \item{\code{Rhat_max}: }{Numeric. The maximum rhat.}
   \item{\code{Neff_min}: }{Numeric. The minimum number of effective samples you are willing to accept.}
-  \item{\code{extend_max}: }{Numeric.}
+  \item{\code{extend_max}: }{Numeric. The maximum number of times additional samples will be drawn to reach Rhat_max/Neff_min.}
   \item{\code{n.PPP}: }{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use for obtaining the parametric bootstrap dsitribution. Defaults to the number of available cores on your machine.}
   \item{\code{ci_size}: }{Numeric.}
