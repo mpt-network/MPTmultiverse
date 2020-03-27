@@ -172,7 +172,8 @@ save(results, file = "fits/results_bayen_kuhlmann_2HTSM4.RData")
 After computations finished, which may take between a couple of hours to days, check if model estimation worked by using the function `check_results`.
 
 ```{r echo = FALSE, eval = FALSE}
-save(results, file = "../inst/extdata/results_bayen_kuhlmann.RData")
+save(results, file = "../inst/extdata/results_bayen_kuhlmann.RData", 
+     version = 2, compress = "xz")
 ```
 
 ```{r echo = FALSE, eval = TRUE}
