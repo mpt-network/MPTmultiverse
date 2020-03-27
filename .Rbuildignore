@@ -6,3 +6,5 @@ examples
 ^\.Rproj\.user$
 .travis.yml
 .gitignore
+^doc$
+^Meta$
