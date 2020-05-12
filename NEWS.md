@@ -1,4 +1,9 @@
 
+# MPTmultiverse 0.4-1
+
+- Adapted MPTinR unit tests for no pooling approaches to fail even less with 
+    R 4.0.0.
+
 # MPTmultiverse 0.4-0
 
 - Added a `NEWS.md` file to track changes to the package.
