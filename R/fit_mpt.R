@@ -255,7 +255,7 @@
 #' With the exception of the first five columns (i.e., after \code{method}) all
 #' columns are \code{list} columns typically holding one \code{tibble} per cell.
 #' The simplest way to analyze the results is separately per column using
-#' \code{\link[tidyr]{unnest}}. Examples for this are given below.
+#' \code{\link[tidyr:nest]{unnest}}. Examples for this are given below.
 #'
 #' @references
 #'   Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences
