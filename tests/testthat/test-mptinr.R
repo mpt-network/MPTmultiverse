@@ -159,9 +159,11 @@ test_that("No-pooling approaches work", {
                dplyr::arrange(ref_indiv, id, condition, parameter)$est,
                tolerance = 0.01)
 
-  expect_equal(dplyr::arrange(new_indiv, id, condition, parameter)$se,
-               dplyr::arrange(ref_indiv, id, condition, parameter)$se,
-               tolerance = 0.05)
+  if (capabilities()[["long.double"]]) {
+    expect_equal(dplyr::arrange(new_indiv, id, condition, parameter)$se,
+                 dplyr::arrange(ref_indiv, id, condition, parameter)$se,
+                 tolerance = 0.05)
+  }
 
   only_npb <- fit_mpt(
     method = "npb_no"
@@ -236,9 +238,11 @@ test_that("No-pooling approaches work", {
                dplyr::arrange(ref_indiv, id, condition, parameter)$est,
                tolerance = 0.01)
 
-  expect_equal(dplyr::arrange(new_indiv, id, condition, parameter)$se,
-               dplyr::arrange(ref_indiv, id, condition, parameter)$se,
-               tolerance = 0.05)
+  if (capabilities()[["long.double"]]) {
+    expect_equal(dplyr::arrange(new_indiv, id, condition, parameter)$se,
+                 dplyr::arrange(ref_indiv, id, condition, parameter)$se,
+                 tolerance = 0.05)
+  }
   mpt_options(op)
 })
 
