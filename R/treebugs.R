@@ -91,6 +91,10 @@ mpt_treebugs <- function (
   } else {
     prior_args <- NULL
   }
+  if (method == "trait") {
+    prior_args <- list(xi = "dunif(0, .71)")
+  }
+
 
   if (method == "beta") {
     prior_args <- list(
@@ -147,13 +151,13 @@ mpt_treebugs <- function (
           max_rhat <- max(summ[, "Rhat"], na.rm = TRUE)
 
           if(ext_cnt == TREEBUGS_MCMC$extend_max) break
-          if(min_neff >= TREEBUGS_MCMC$Neff_min & max_rhat <= (TREEBUGS_MCMC$Rhat_max*2-1)) break
+          if(min_neff >= TREEBUGS_MCMC$Neff_min & max_rhat <= TREEBUGS_MCMC$Rhat_max) break
 
           cat(
             "Drawing additional samples for method \"", method_for_printing, "\".\n"
             , "max(Rhat) = ", round(max_rhat, digits = 3L), ", "
             , "min(n.eff) = ", round(min_neff, digits = 0L), "\n"
-            , if(max_rhat <= TREEBUGS_MCMC$Rhat_max){"Combining with"}else{"Discarding"}
+            , if(max_rhat <= (TREEBUGS_MCMC$Rhat_max * 2 - 1)){"Combining with"}else{"Discarding"}
             , " previously drawn samples.\n"
             , sep = ""
           )
@@ -162,7 +166,7 @@ mpt_treebugs <- function (
             n.iter = TREEBUGS_MCMC$n.iter,
             n.adapt = TREEBUGS_MCMC$n.adapt,
             # combine only if we already reached stationary distribution:
-            combine = max_rhat <= TREEBUGS_MCMC$Rhat_max
+            combine = max_rhat <= (TREEBUGS_MCMC$Rhat_max * 2 - 1)
           )
           summ <- treebugs_fit[[i]]$mcmc.summ
           ext_cnt <- ext_cnt + 1L

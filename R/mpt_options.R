@@ -14,7 +14,7 @@
 #'   \item{\code{n.thin}: }{Numeric. Thinning interval.}
 #'   \item{\code{Rhat_max}: }{Numeric. The maximum rhat.}
 #'   \item{\code{Neff_min}: }{Numeric. The minimum number of effective samples you are willing to accept.}
-#'   \item{\code{extend_max}: }{Numeric.}
+#'   \item{\code{extend_max}: }{Numeric. The maximum number of times additional samples will be drawn to reach Rhat_max/Neff_min.}
 #'   \item{\code{n.PPP}: }{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
 #'   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use for obtaining the parametric bootstrap dsitribution. Defaults to the number of available cores on your machine.}
 #'   \item{\code{ci_size}: }{Numeric.}
@@ -78,7 +78,7 @@ mpt_options <- function(...){
 #' @keywords internal
 
 set_test_options <- function() { # nocov start
-  cat("Setting options for a quick test run.\nDo not interpret results!")
+  message("Setting options for a quick test run.\nDo not interpret results!")
 
   list(
     mptinr = list(
@@ -86,7 +86,7 @@ set_test_options <- function() { # nocov start
       , n.optim = 1
     )
     , treebugs = list(
-      n.chains = 4
+      n.chains = 4L
       , n.iter = 8e2
       , n.adapt = 1e2
       , n.burnin = 1e2
@@ -117,7 +117,7 @@ set_default_options <- function() {
       , n.optim = 10
     )
     , treebugs = list(
-      n.chains = 3
+      n.chains = 4L
       , n.iter = 5e4
       , n.adapt = 1e4
       , n.burnin = 2e4
