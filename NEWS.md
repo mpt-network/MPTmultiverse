@@ -1,3 +1,6 @@
+# MPTmultiverse 0.4-3
+
+- fixed some no pooling issues that prevented certain models from working.
 
 # MPTmultiverse 0.4-1
 

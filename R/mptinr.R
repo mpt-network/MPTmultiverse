@@ -232,13 +232,13 @@ mpt_mptinr_no <- function(
 
       for (p in prepared$parameters) {
 
-        res[["asymptotic_no"]]$est_indiv[[1]][
-          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
-            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "est" ] <-
+        res[["asymptotic_no"]]$est_indiv[[1]]$est[
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data$id[i] &
+            res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p] <-
           fit_mptinr$parameters$individual[p,"estimates",i]
 
         res[["asymptotic_no"]]$est_indiv[[1]][
-          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data$id[i] &
             res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "se" ] <-
           fit_mptinr$parameters$individual[p, "upper.conf",i] -
           fit_mptinr$parameters$individual[p,"estimates",i]
@@ -248,12 +248,12 @@ mpt_mptinr_no <- function(
         if (length(pars_at_optimum) > 1) {
           if (all(abs(pars_at_optimum[1] - pars_at_optimum) < 0.01)) {
             res[["asymptotic_no"]]$est_indiv[[1]][
-          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data$id[i] &
             res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "identifiable" ] <-
               TRUE
           } else {
             res[["asymptotic_no"]]$est_indiv[[1]][
-          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data[i,"id"] &
+          res[["asymptotic_no"]]$est_indiv[[1]]$id == prepared$data$id[i] &
             res[["asymptotic_no"]]$est_indiv[[1]]$parameter == p, "identifiable" ] <-
               FALSE
           }
@@ -490,26 +490,26 @@ get_pb_results <- function(dataset
 
     for (p in prepared$parameters) {
       res$est_indiv[[1]][
-        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+        res$est_indiv[[1]]$id == prepared$data$id[i] &
           res$est_indiv[[1]]$parameter == p, "est" ] <-
         fit_mptinr$parameters$individual[p,"estimates",i]
 
       tmp_ci <- stats::quantile(fit_pb[[i]]$parameters$individual[p,"estimates",], probs = CI_SIZE)
       for (cin in seq_along(prepared$cols_ci)) {
         res$est_indiv[[1]][
-        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+        res$est_indiv[[1]]$id == prepared$data$id[i] &
           res$est_indiv[[1]]$parameter == p,  prepared$cols_ci[cin]] <-
           tmp_ci[cin]
       }
 
       res$est_indiv[[1]][
-        res$est_indiv[[1]]$id == prepared$data[i,"id"] &
+        res$est_indiv[[1]]$id == prepared$data$id[i] &
           res$est_indiv[[1]]$parameter == p, "se" ] <-
         stats::sd(fit_pb[[i]]$parameters$individual[p,"estimates",])
     }
     # gof_indiv
     res$gof_indiv[[1]][
-      res$gof_indiv[[1]]$id == prepared$data[i,"id"], "p" ] <-
+      res$gof_indiv[[1]]$id == prepared$data$id[i], "p" ] <-
       (sum(fit_pb[[i]]$goodness.of.fit$individual$G.Squared >
              fit_mptinr$goodness.of.fit$individual[i,"G.Squared"]) + 1) /
       (MPTINR_OPTIONS$bootstrap_samples + 1)
