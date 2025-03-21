@@ -801,7 +801,7 @@ mpt_mptinr_complete <- function(dataset,
     variance_covariance <- tryCatch(
       solve(fit_mptinr_tmp$hessian[[1]])
       , error = function(x){
-        limSolve::Solve(fit_mptinr_tmp$hessian[[1]])
+        MASS::ginv(fit_mptinr_tmp$hessian[[1]])
       })
     par_se <- rep(NA_real_, length(rownames(fit_mptinr_tmp$parameters)))
     par_se <- sqrt(diag(variance_covariance))

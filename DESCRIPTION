@@ -46,7 +46,7 @@ Imports:
     coda,
     purrr,
     readr,
-    limSolve,
+    MASS,
     utils
 Suggests:
     knitr,
