@@ -161,7 +161,7 @@ plot_est <- function(x, shapes, ...) {
     dplyr::mutate(approach = interaction(.data$method, .data$pooling, .data$package, sep = " ")) %>%
     ggplot2::ggplot() +
     ggplot2::aes_(y = ~ est, x = ~ parameter, col = ~ approach, shape = ~ approach) +
-    ggplot2::facet_grid(facets = ". ~ condition") +
+    # ggplot2::facet_grid(rows = ". ~ condition") +
     ggplot2::geom_errorbar(
       ggplot2::aes_(ymin = ~ci_0.025, ymax = ~ci_0.975)
       , position = dd
