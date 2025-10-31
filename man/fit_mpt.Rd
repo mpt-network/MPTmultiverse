@@ -39,34 +39,34 @@ methods.}
 A \code{tibble} with one row per estimation \code{method} and the
   following columns:
 \enumerate{
-  \item \code{model}: Name of model file (copied from \code{model} argument),
-  \code{character}
-  \item \code{dataset}: Name of data set (copied from \code{dataset}
-  argument), \code{character}
-  \item \code{pooling}: \code{character} specifying the level of pooling with
-  three potential values: \code{c("complete", "no", "partial")}
-  \item \code{package}: \code{character} specifying the package used for
-  estimation with two potential values: \code{c("MPTinR", "TreeBUGS")}
-  \item \code{method}: \code{character} specifying the method used with the
+  \item {\code{model}: Name of model file (copied from \code{model} argument),
+  \code{character}}
+  \item {\code{dataset}: Name of data set (copied from \code{dataset}
+  argument), \code{character}}
+  \item {\code{pooling}: \code{character} specifying the level of pooling with
+  three potential values: \code{c("complete", "no", "partial")}}
+  \item {\code{package}: \code{character} specifying the package used for
+  estimation with two potential values: \code{c("MPTinR", "TreeBUGS")}}
+  \item {\code{method}: \code{character} specifying the method used with the
   following potential values: \code{c("asymptotic", "PB/MLE", "NPB/MLE",
-  "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}
-  \item \code{est_group}: Group-level parameter estimates per condition/group.
-  \item \code{est_indiv}: Individual-level parameter estimates (if provided
-  by method).
-  \item \code{est_rho}: Estimated correlation of individual-level parameters
-  on the probit scale (only in \code{method="trait"}).
-  \item \code{test_between}: Parameter differences between the levels of the
-  between-subjects condition (if specified).
-  \item \code{test_within}: Within-subjects parameter differences.
-  \item \code{gof}: Overall goodness of fit across all individuals.
-  \item \code{gof_group}: Group-level goodness of fit.
-  \item \code{gof_indiv}: Individual-level goodness of fit.
-  \item \code{fungibility}:  Posterior correlation of the group-level means
-  \code{pnorm(mu)} (only in \code{method="trait"}).
-  \item \code{test_homogeneity}: Chi-square based test of participant
+  "simple", "trait", "trait_uncorrelated", "beta", "betacpp")}}
+  \item {\code{est_group}: Group-level parameter estimates per condition/group.}
+  \item {\code{est_indiv}: Individual-level parameter estimates (if provided
+  by method).}
+  \item {\code{est_rho}: Estimated correlation of individual-level parameters
+  on the probit scale (only in \code{method="trait"}).}
+  \item {\code{test_between}: Parameter differences between the levels of the
+  between-subjects condition (if specified).}
+  \item {\code{test_within}: Within-subjects parameter differences.}
+  \item {\code{gof}: Overall goodness of fit across all individuals.}
+  \item {\code{gof_group}: Group-level goodness of fit.}
+  \item {\code{gof_indiv}: Individual-level goodness of fit.}
+  \item {\code{fungibility}: Posterior correlation of the group-level means
+  \code{pnorm(mu)} (only in \code{method="trait"}).}
+  \item {\code{test_homogeneity}: Chi-square based test of participant
   homogeneity proposed by Smith and Batchelder (2008). This test is the same
-  for each estimation method.
-  \item \code{convergence}: Convergence information provided by the
+  for each estimation method.}
+  \item {\code{convergence}: Convergence information provided by the
   respective estimation method. For the asymptotic frequentist methods this
   is a \code{tibble} with rank of the Fisher matrix, the number of parameters
   (which should match the rank of the Fisgher matrix), and the convergence
@@ -77,10 +77,10 @@ A \code{tibble} with one row per estimation \code{method} and the
   parameter estimates (see above for exact description). For the Bayesian
   methods this is a \code{tibble} containing information of the posterior
   dsitribution (i.e., mean, quantiles, SD, SE, \code{n.eff}, and R-hat) for
-  each parameter.
-  \item \code{estimation}: Time it took for each estimation method and group.
-  \item \code{options}: Options used for estimation. Obtained by running
-  \code{\link{mpt_options}()}
+  each parameter.}
+  \item {\code{estimation}: Time it took for each estimation method and group.}
+  \item {\code{options}: Options used for estimation. Obtained by running
+  \code{\link{mpt_options}()}}
 }
 
 With the exception of the first five columns (i.e., after \code{method}) all
@@ -136,17 +136,17 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
   \subsection{Pooling}{
   The following pooling levels are provided (not all by all estimation approaches, see below).
   \itemize{
-      \item{\emph{Complete pooling:} }{The traditional analysis approach in the MPT
+      \item{\emph{Complete pooling:} The traditional analysis approach in the MPT
       literature in which data is aggregated across participants within each
       between-subjects condition. This approach assumes that there are no
       individual-dfferences. Produces one set of model parameters per condition.}
-      \item{\emph{No pooling:} }{The model is fitted to the individual-level data in
+      \item{\emph{No pooling:} The model is fitted to the individual-level data in
       an independent manner (i.e., no data aggregation). This approach
       assumes that there is no similarity across participants and usually
       requires considerable amounts of data on the individual-level. Produces
       one set of model parameters per participant. Group-level estimates are
       based on averaging the individual-level estimates.}
-    \item{\emph{Partial pooling:} }{Data is fitted simultaneously to the
+    \item{\emph{Partial pooling:} Data is fitted simultaneously to the
     individual-level data assuming that the individual-level parameters come
     from a group-level distribution. Individual-level parameters are often
     treated as random-effects which are nested in the group-level parameters,
@@ -164,27 +164,27 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
     Maximum-likelihood estimation with \pkg{MPTinR} via
     \code{\link[MPTinR]{fit.mpt}}:
     \itemize{
-      \item{\code{"asymptotic_complete"}: }{Asymptotic ML theory, complete
+      \item{\code{"asymptotic_complete"}: Asymptotic ML theory, complete
       pooling}
-      \item{\code{"asymptotic_no"}: }{ Asymptotic ML theory, no pooling}
-      \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
-      \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
+      \item{\code{"asymptotic_no"}:  Asymptotic ML theory, no pooling}
+      \item{\code{"pb_no"}: Parametric bootstrap, no pooling}
+      \item{\code{"npb_no"}: Nonparametric bootstrap, no pooling}
     }
 
     Bayesian estimation with \pkg{TreeBUGS}
     \itemize{
-      \item{\code{"simple"}: }{Bayesian estimation, no pooling (C++,
+      \item{\code{"simple"}: Bayesian estimation, no pooling (C++,
         \link[TreeBUGS]{simpleMPT})}
-      \item{\code{"simple_pooling"}: }{Bayesian estimation, complete pooling
+      \item{\code{"simple_pooling"}: Bayesian estimation, complete pooling
         (C++, \link[TreeBUGS]{simpleMPT})}
-      \item{\code{"trait"}: }{latent-trait model, partial pooling (JAGS,
+      \item{\code{"trait"}: latent-trait model, partial pooling (JAGS,
         \link[TreeBUGS]{traitMPT})}
-      \item{\code{"trait_uncorrelated"}: }{latent-trait model without
+      \item{\code{"trait_uncorrelated"}: latent-trait model without
         correlation parameters, partial pooling (JAGS,
         \link[TreeBUGS]{traitMPT})}
-      \item{\code{"beta"}: }{beta-MPT model, partial pooling (JAGS,
+      \item{\code{"beta"}: beta-MPT model, partial pooling (JAGS,
         \link[TreeBUGS]{betaMPT})}
-      \item{\code{"betacpp"}: }{beta-MPT model, partial pooling (C++,
+      \item{\code{"betacpp"}: beta-MPT model, partial pooling (C++,
         \link[TreeBUGS]{betaMPTcpp})}
     }
   }

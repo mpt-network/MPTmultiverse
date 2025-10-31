@@ -5,23 +5,23 @@
 #'
 #' @param ... Named parameters to set. Possible values are:
 #' \itemize{
-#'   \item{\code{bootstrap_samples}: }{Numeric. The number of bootstrap samples to be drawn for the calculation parametric bootstrap confidence intervals.}
-#'   \item{\code{n.optim}: }{Numeric. The number of optimization runs for the models estimated with maximum-likelihood methods.}
-#'   \item{\code{n.chains}: }{Numeric. The number of MCMC chains for the Bayesian models.}
-#'   \item{\code{n.adapt}: }{Numeric. The number of iterations for adaptation.}
-#'   \item{\code{n.burnin}: }{Numeric. The number of burn-in/warm-up iterations.}
-#'   \item{\code{n.iter}: }{Numeric. The total number of iterations to be drawn \emph{after} adaptation (including burnin).}
-#'   \item{\code{n.thin}: }{Numeric. Thinning interval.}
-#'   \item{\code{Rhat_max}: }{Numeric. The maximum rhat.}
-#'   \item{\code{Neff_min}: }{Numeric. The minimum number of effective samples you are willing to accept.}
-#'   \item{\code{extend_max}: }{Numeric.}
-#'   \item{\code{n.PPP}: }{Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
-#'   \item{\code{n.CPU}: }{Numeric. The number of CPU cores to use for obtaining the parametric bootstrap dsitribution. Defaults to the number of available cores on your machine.}
-#'   \item{\code{ci_size}: }{Numeric.}
-#'   \item{\code{max_ci_indiv}: }{Numeric. Used for excluding individual parameter estimates in the bootstrap approaches. If the range of the CI (i.e., distance between minimum and maximum) is larger than this value, the estimate is excluded from the group-level estimates.}
-#'   \item{\code{silent_jags}: }{Logical. Whether to suppress JAGS output.}
-# ' TODO  \item{\code{catch_warnings}: }{Logical. Whether to store warnings and errors as additional columns in the output.}
-#'   \item{\code{save_models}: }{Logical. Default is \code{FALSE} which does not save the individual MCMC samples in \code{.RData} files. Instead only summairzes are retained in \code{results} object.}
+#'   \item{\code{bootstrap_samples}: Numeric. The number of bootstrap samples to be drawn for the calculation parametric bootstrap confidence intervals.}
+#'   \item{\code{n.optim}: Numeric. The number of optimization runs for the models estimated with maximum-likelihood methods.}
+#'   \item{\code{n.chains}: Numeric. The number of MCMC chains for the Bayesian models.}
+#'   \item{\code{n.adapt}: Numeric. The number of iterations for adaptation.}
+#'   \item{\code{n.burnin}: Numeric. The number of burn-in/warm-up iterations.}
+#'   \item{\code{n.iter}: Numeric. The total number of iterations to be drawn \emph{after} adaptation (including burnin).}
+#'   \item{\code{n.thin}: Numeric. Thinning interval.}
+#'   \item{\code{Rhat_max}: Numeric. The maximum rhat.}
+#'   \item{\code{Neff_min}: Numeric. The minimum number of effective samples you are willing to accept.}
+#'   \item{\code{extend_max}: Numeric.}
+#'   \item{\code{n.PPP}: Numeric. The number of posterior predictive samples drawn for the calculation of fit statistics T_1 and T_2.}
+#'   \item{\code{n.CPU}: Numeric. The number of CPU cores to use for obtaining the parametric bootstrap dsitribution. Defaults to the number of available cores on your machine.}
+#'   \item{\code{ci_size}: Numeric.}
+#'   \item{\code{max_ci_indiv}: Numeric. Used for excluding individual parameter estimates in the bootstrap approaches. If the range of the CI (i.e., distance between minimum and maximum) is larger than this value, the estimate is excluded from the group-level estimates.}
+#'   \item{\code{silent_jags}: Logical. Whether to suppress JAGS output.}
+# ' TODO  \item{\code{catch_warnings}: Logical. Whether to store warnings and errors as additional columns in the output.}
+#'   \item{\code{save_models}: Logical. Default is \code{FALSE} which does not save the individual MCMC samples in \code{.RData} files. Instead only summairzes are retained in \code{results} object.}
 #' }
 #'
 #'
