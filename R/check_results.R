@@ -64,7 +64,7 @@ check_results <- function(results) {
 
       not_id <- results %>%
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>%
-        dplyr::select(.data$est_indiv) %>%
+        dplyr::select("est_indiv") %>%
         tidyr::unnest(.data$est_indiv) %>%
         dplyr::group_by(.data$condition, .data$core) %>%
         dplyr::summarise(proportion = mean(!.data$identifiable |
@@ -73,7 +73,7 @@ check_results <- function(results) {
 
       not_id2 <- results %>%
         dplyr::filter(.data$package == "MPTinR" & .data$pooling == "no" & .data$method == meth) %>%
-        dplyr::select(.data$est_indiv) %>%
+        dplyr::select("est_indiv") %>%
         tidyr::unnest(.data$est_indiv) %>%
         dplyr::filter(!.data$identifiable) %>%
         dplyr::group_by(.data$condition, .data$core, .data$parameter) %>%
@@ -105,7 +105,7 @@ check_results <- function(results) {
   tryCatch({
     conv_mptinr_comp <- results %>%
       dplyr::filter(.data$package == "MPTinR" & .data$pooling == "complete") %>%
-      dplyr::select(.data$convergence) %>%
+      dplyr::select("convergence") %>%
       tidyr::unnest(.data$convergence)
 
     comp_prob <- (conv_mptinr_comp$convergence != 0) |
@@ -128,14 +128,14 @@ check_results <- function(results) {
   ### TreeBUGS
   res_tree <- results %>%
     dplyr::filter(.data$package == "TreeBUGS") %>%
-    dplyr::select(.data$model, .data$dataset, .data$pooling, .data$package, .data$method, .data$convergence, .data$est_group)
+    dplyr::select("model", "dataset", "pooling", "package", "method", "convergence", "est_group")
 
   for (i in seq_len(nrow(res_tree))) {
     cat("## ", paste(res_tree[i, 1:5], collapse = " // "), ":\n", sep = "")
 
     params <- res_tree[i,] %>%
       tidyr::unnest(cols = .data$est_group) %>%
-      dplyr::select(.data$parameter, .data$core)
+      dplyr::select("parameter", "core")
 
     tmp_convergence <- res_tree[i, ]$convergence[[1]] %>%
       dplyr::filter(.data$Rhat > getOption("MPTmultiverse")$treebugs$Rhat_max) %>%
@@ -242,7 +242,7 @@ check_set <- function(results) {
 
     params <- res_tree[i,] %>%
       tidyr::unnest(.data$est_group) %>%
-      dplyr::select(.data$parameter, .data$core)
+      dplyr::select("parameter", "core")
 
     tmp_convergence <- res_tree[i, ]$convergence[[1]] %>%
       dplyr::filter(.data$Rhat > getOption("MPTmultiverse")$treebugs$Rhat_max) %>%

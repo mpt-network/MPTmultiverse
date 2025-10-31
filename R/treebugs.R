@@ -224,7 +224,9 @@ mpt_treebugs <- function (
     tsum <- tibble::as_tibble(summ) %>%
       dplyr::mutate(parameter = rownames(summ),
              condition = as.character(cond)) %>%
-      dplyr::select(.data$condition, .data$parameter, .data$Mean : .data$Rhat)
+      dplyr::select("condition", "parameter",
+                    "Mean", "SD", "2.5%", "50%", "97.5%",
+                    "Time-series SE", "n.eff", "Rhat")  # TODO check
 
     result_row$convergence[[1]] <- dplyr::bind_rows(result_row$convergence[[1]], tsum)
 

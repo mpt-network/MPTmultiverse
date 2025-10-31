@@ -114,8 +114,7 @@ make_results_row <- function(
           , stringsAsFactors = FALSE
         )) %>%
         dplyr::mutate(core = .data$parameter %in% core) %>%
-        dplyr::select(.data$parameter, .data$core,
-                      .data$condition1, .data$condition2) %>%
+        dplyr::select("parameter", "core", "condition1", "condition2") %>%
         dplyr::mutate(est_diff = NA_real_, se = NA_real_, p = NA_real_)
 
       tibble_ci <- tibble::as_tibble(
@@ -165,7 +164,7 @@ make_results_row <- function(
           , stringsAsFactors = FALSE
         )) %>%
         dplyr::mutate(core1 = .data$parameter1 %in% core, core2 = .data$parameter2 %in% core) %>%
-        dplyr::select(.data$condition, .data$parameter1, .data$parameter2, .data$core1, .data$core2) %>%
+        dplyr::select("condition", "parameter1", "parameter2", "core1", "core2") %>%
         dplyr::mutate(est = NA_real_, se = NA_real_, statistic = NA_real_, df = NA_real_, p = NA_real_)
     }
     test_within <- dplyr::bind_rows(tmp)
@@ -206,9 +205,7 @@ make_results_row <- function(
         )) %>%
         dplyr::mutate(core1 = .data$parameter1 %in% core,
                       core2 = .data$parameter2 %in% core) %>%
-        dplyr::select(.data$parameter1, .data$parameter2,
-                      .data$core1, .data$core2,
-                      .data$condition)
+        dplyr::select("parameter1", "parameter2", "core1", "core2", "condition")
 
       tmp_fungibility[[i]] <- tmp_tibble %>%
         dplyr::mutate(correlation = NA_real_)
