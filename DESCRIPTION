@@ -30,7 +30,7 @@ Authors@R: c(
 URL: https://github.com/mpt-network/MPTmultiverse
 BugReports: https://github.com/mpt-network/MPTmultiverse/issues
 Depends:
-    R (>= 2.11.1),
+    R (>= 4.0.0),
 Imports:
     parallel,
     magrittr,
@@ -40,6 +40,7 @@ Imports:
     rlang,
     reshape2,
     ggplot2,
+    MASS,
     MPTinR,
     TreeBUGS (>= 1.4.4),
     runjags,
