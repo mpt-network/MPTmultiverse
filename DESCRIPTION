@@ -46,7 +46,6 @@ Imports:
     coda,
     purrr,
     readr,
-    limSolve,
     utils
 Suggests:
     knitr,
@@ -54,6 +53,7 @@ Suggests:
     testthat
 LazyData: yes
 VignetteBuilder: knitr
-RoxygenNote: 7.1.0
+RoxygenNote: 7.3.3
+Encoding: UTF-8
 License:
   GPL-2
