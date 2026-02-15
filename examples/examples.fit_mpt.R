@@ -27,13 +27,13 @@ data[[COL_CONDITION]] <- factor(
 CORE <- c("C1", "C2")
 
 \dontrun{
-op <- mpt_options() 
+op <- mpt_options()
 ## to reset default options (which you would want) use:
 mpt_options("default")
 
-mpt_options() # to see the settings 
+mpt_options() # to see the settings
 ## Note: settings are also saved in the results tibble
-  
+
 ## without specifying method, all are used per default
 fit_all <- fit_mpt(
   model = EQN_FILE
@@ -43,7 +43,7 @@ fit_all <- fit_mpt(
   , core = CORE
 )
 
-mpt_options(op) ## reset options  
+mpt_options(op) ## reset options
 }
 
 load(system.file("extdata", "prospective_memory_example.rda", package = "MPTmultiverse"))
@@ -63,29 +63,29 @@ library("tidyr")
 ## first few columns identify model, data, and estimation approach/method
 ## remaining columns are list columns containing the results for each method
 ## use unnest to work with each of the results columns
-glimpse(fit_all) 
+glimpse(fit_all)
 
 ## Let us inspect the group-level estimates
-fit_all %>% 
-  select(method, pooling, est_group) %>% 
-  unnest() 
+fit_all %>%
+  select(method, pooling, est_group) %>%
+  unnest(c(est_group))
 
 ## which we can plot again
 plot(fit_all, which = "est")
 
 ## Next we take a look at the GoF
-fit_all %>% 
-  select(method, pooling, gof_group) %>% 
-  unnest() %>% 
+fit_all %>%
+  select(method, pooling, gof_group) %>%
+  unnest(c(gof_group)) %>%
   as.data.frame()
 
 # Again, we can plot it as well
 plot(fit_all, which = "gof2")  ## use "gof1" for overall GoF
 
 ## Finally, we take a look at the differences between conditions
-fit_all %>% 
-  select(method, pooling, test_between) %>% 
-  unnest() 
+fit_all %>%
+  select(method, pooling, test_between) %>%
+  unnest(test_between)
 
 # and then we plot it
 plot(fit_all, which = "test_between")

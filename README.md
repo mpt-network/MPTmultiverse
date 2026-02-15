@@ -4,12 +4,10 @@ MPTmultiverse is an R package that provides functions for a multiverse analysis 
 
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Travis-CI Build Status](https://travis-ci.org/mpt-network/MPTmultiverse.svg?branch=master)](https://travis-ci.org/mpt-network/MPTmultiverse)
-
 
 ## Install
 
-To install `MPTmultiverse`, make sure you already installed the `devtools` package via `install.packages("devtools")`. Moreover, you also need a to have JAGS installed: Go to http://mcmc-jags.sourceforge.net/ for instructions on how to install JAGS on your machine.
+To install `MPTmultiverse`, make sure you already installed the `devtools` package via `install.packages("devtools")`. Moreover, you also need a to have JAGS installed: Go to https://mcmc-jags.sourceforge.io/ for instructions on how to install JAGS on your machine.
 
 If these prerequisites are met, type `devtools::install_github("mpt-network/MPTmultiverse")` in your R console to install `MPTmultiverse` together with all required packages that it depends on. To make sure that you are using the latest versions of all packages, you should also run `update.packages(ask = FALSE)`.
 

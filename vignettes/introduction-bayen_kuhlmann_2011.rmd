@@ -37,7 +37,7 @@ For the frequentist approaches, no pooling (with and without parametric or nonpa
 
 # Prerequisites
 
-First of all, make sure that you have installed the *latest* version of `R`, of all necessary `R` packages, *and* of `JAGS`. To install `JAGS`, go to [mcmc-jags.sourceforge.net](http://mcmc-jags.sourceforge.net/) and follow installation instructions. After that, install or update the required `R` packages:
+First of all, make sure that you have installed the *latest* version of `R`, of all necessary `R` packages, *and* of `JAGS`. To install `JAGS`, go to [mcmc-jags.sourceforge.net](https://mcmc-jags.sourceforge.io/) and follow installation instructions. After that, install or update the required `R` packages:
 
 ```{r update-packages, eval = FALSE}
 install.packages("MPTmultiverse")

@@ -91,18 +91,18 @@ The simplest way to analyze the results is separately per column using
 \description{
 Performs a multiverse analysis for multinomial processing tree (MPT) models
 across different levels of pooling (i.e., data aggregation) and across
-maximum-likelihood/frequentist and Bayesian estimation approaches. For the
-frequentist approaches, no pooling (with and without parametric or
-nonparametric bootstrap) and complete pooling  are implemented using
-\pkg{MPTinR}. For the Bayesian approaches, no pooling, complete pooling, and
-three different variants of partial pooling are implemented using
-\pkg{TreeBUGS}. Requires \code{data} on a by-participant level with each row
-corresponding to data from one participant (i.e., different response
-categories correspond to different columns) and the data can contain a single
-between-subjects condition. Model equations need to be passed as a
-\code{.eqn} model file and category labels (first column in \code{.eqn} file)
-need to match the column names in \code{data}. Results are returned in one
-\code{tibble} with one row per estimation method.
+maximum-likelihood/frequentist and Bayesian estimation approaches as
+described in Singmann et al. (2024). For the frequentist approaches, no
+pooling (with and without parametric or nonparametric bootstrap) and complete
+pooling  are implemented using \pkg{MPTinR}. For the Bayesian approaches, no
+pooling, complete pooling, and three different variants of partial pooling
+are implemented using \pkg{TreeBUGS}. Requires \code{data} on a
+by-participant level with each row corresponding to data from one participant
+(i.e., different response categories correspond to different columns) and the
+data can contain a single between-subjects condition. Model equations need to
+be passed as a \code{.eqn} model file and category labels (first column in
+\code{.eqn} file) need to match the column names in \code{data}. Results are
+returned in one \code{tibble} with one row per estimation method.
 }
 \details{
 This functions is a fancy wrapper for packages \pkg{MPTinR} and
@@ -116,7 +116,7 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
 
   The settings for the various methods are specified via function
   \code{\link{mpt_options}}. The default settings use all available cores for
-  calculating the boostrap distribution as well as independent MCMC chains
+  calculating the bootstrap distribution as well as independent MCMC chains
   and should be appropriate for most situations.
 
   The data can have a single between-subjects condition (specified via
@@ -302,13 +302,13 @@ data[[COL_CONDITION]] <- factor(
 CORE <- c("C1", "C2")
 
 \dontrun{
-op <- mpt_options() 
+op <- mpt_options()
 ## to reset default options (which you would want) use:
 mpt_options("default")
 
-mpt_options() # to see the settings 
+mpt_options() # to see the settings
 ## Note: settings are also saved in the results tibble
-  
+
 ## without specifying method, all are used per default
 fit_all <- fit_mpt(
   model = EQN_FILE
@@ -318,7 +318,7 @@ fit_all <- fit_mpt(
   , core = CORE
 )
 
-mpt_options(op) ## reset options  
+mpt_options(op) ## reset options
 }
 
 load(system.file("extdata", "prospective_memory_example.rda", package = "MPTmultiverse"))
@@ -338,29 +338,29 @@ library("tidyr")
 ## first few columns identify model, data, and estimation approach/method
 ## remaining columns are list columns containing the results for each method
 ## use unnest to work with each of the results columns
-glimpse(fit_all) 
+glimpse(fit_all)
 
 ## Let us inspect the group-level estimates
-fit_all \%>\% 
-  select(method, pooling, est_group) \%>\% 
-  unnest() 
+fit_all \%>\%
+  select(method, pooling, est_group) \%>\%
+  unnest(c(est_group))
 
 ## which we can plot again
 plot(fit_all, which = "est")
 
 ## Next we take a look at the GoF
-fit_all \%>\% 
-  select(method, pooling, gof_group) \%>\% 
-  unnest() \%>\% 
+fit_all \%>\%
+  select(method, pooling, gof_group) \%>\%
+  unnest(c(gof_group)) \%>\%
   as.data.frame()
 
 # Again, we can plot it as well
 plot(fit_all, which = "gof2")  ## use "gof1" for overall GoF
 
 ## Finally, we take a look at the differences between conditions
-fit_all \%>\% 
-  select(method, pooling, test_between) \%>\% 
-  unnest() 
+fit_all \%>\%
+  select(method, pooling, test_between) \%>\%
+  unnest(test_between)
 
 # and then we plot it
 plot(fit_all, which = "test_between")
@@ -390,7 +390,15 @@ bayes_complete$est_group
 }
 }
 \references{
-Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences
+Singmann, H., Heck, D. W., Barth, M., Erdfelder, E., Arnold, N. R., Aust,
+  F., Calanchini, J., Gümüsdagli, F. E., Horn, S. S., Kellen, D., Klauer, K.
+  C., Matzke, D., Meissner, F., Michalkiewicz, M., Schaper, M. L., Stahl, C.,
+  Kuhlmann, B. G., & Groß, J. (2024). Evaluating the robustness of parameter
+  estimates in cognitive models: A meta-analytic review of multinomial
+  processing tree models across the multiverse of estimation methods.
+  \emph{Psychological Bulletin}, 150(8), 965–1003. \doi{10.1037/bul0000434}
+
+  Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences
   in categorical data. \emph{Psychonomic Bulletin & Review}, 15(4), 713-731.
-  \url{https://doi.org/10.3758/PBR.15.4.713}
+  \doi{10.3758/PBR.15.4.713}
 }

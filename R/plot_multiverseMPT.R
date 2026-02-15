@@ -160,10 +160,10 @@ plot_est <- function(x, shapes, ...) {
     tidyr::unnest(.data$est_group) %>%
     dplyr::mutate(approach = interaction(.data$method, .data$pooling, .data$package, sep = " ")) %>%
     ggplot2::ggplot() +
-    ggplot2::aes_(y = ~ est, x = ~ parameter, col = ~ approach, shape = ~ approach) +
+    ggplot2::aes(y = .data$est, x = .data$parameter, col = .data$approach, shape = .data$approach) +
     # ggplot2::facet_grid(rows = ". ~ condition") +
     ggplot2::geom_errorbar(
-      ggplot2::aes_(ymin = ~ci_0.025, ymax = ~ci_0.975)
+      ggplot2::aes(ymin = .data$ci_0.025, ymax = .data$ci_0.975)
       , position = dd
       , width = 0.4
     ) +
@@ -195,10 +195,10 @@ plot_test_between <- function(x, shapes, ...) {
   test_between %>%
     dplyr::mutate(approach = interaction(.data$method, .data$pooling, .data$package, sep = " ")) %>%
     ggplot2::ggplot() +
-    ggplot2::aes_(y = ~ est_diff, x = ~ parameter, col = ~ approach, shape = ~ approach) +
+    ggplot2::aes(y = .data$est_diff, x = .data$parameter, col = .data$approach, shape = .data$approach) +
     ggplot2::facet_grid("condition2 ~ condition1") +
     ggplot2::geom_errorbar(
-      ggplot2::aes_(ymin = ~ ci_0.025, ymax = ~ ci_0.975)
+      ggplot2::aes(ymin = .data$ci_0.025, ymax = .data$ci_0.975)
       , position = dd
       , width = 0.4
     ) +
@@ -217,7 +217,7 @@ plot_gof1 <- function(x, ...) {
     tidyr::unnest(.data$gof) %>%
     dplyr::mutate(approach = interaction(.data$method, .data$pooling, .data$package, sep = " ")) %>%
     ggplot2::ggplot() +
-    ggplot2::aes_(y = ~ p, x = ~ approach) +
+    ggplot2::aes(y = .data$p, x = .data$approach) +
     ggplot2::geom_point() +
     ggplot2::ylim(0, 1) +
     ggplot2::geom_hline(yintercept = .05, lty = 2)+
@@ -240,7 +240,7 @@ plot_gof2 <- function(x, ...) {
   gof_group %>%
     dplyr::mutate(approach = interaction(.data$method, .data$pooling, .data$package, sep = " ")) %>%
     ggplot2::ggplot() +
-    ggplot2::aes_(y = ~ p, x = ~ approach, col = ~ condition) +
+    ggplot2::aes(y = .data$p, x = .data$approach, col = .data$condition) +
     ggplot2::geom_point() +
     ggplot2::ylim(0, 1) +
     ggplot2::geom_hline(yintercept = .05, lty = 2)+
