@@ -277,7 +277,7 @@ mpt_mptinr_no <- function(
                        se = stats::sd(.data$est) /
                          sqrt(sum(!is.na(.data$est)))) %>%
       dplyr::ungroup() %>%
-      dplyr::rename(est = .data$estN)
+      dplyr::rename(est = "estN")
     for (i in seq_along(CI_SIZE)) {
       est_group2[, prepared$cols_ci[i]] <- est_group2[,"est"] +
         stats::qnorm(CI_SIZE[i])*est_group2[,"se"]
@@ -548,7 +548,7 @@ get_pb_results <- function(dataset
                      se = stats::sd(.data$est) /
                        sqrt(sum(!is.na(.data$est)))) %>%
     dplyr::ungroup() %>%
-    dplyr::rename(est = .data$estN)
+    dplyr::rename(est = "estN")
   for (i in seq_along(CI_SIZE)) {
     est_group[, prepared$cols_ci[i]] <- est_group[,"est"] +
       stats::qnorm(CI_SIZE[i])*est_group[,"se"]

@@ -8,3 +8,5 @@ examples
 .gitignore
 ^doc$
 ^Meta$
+^\.positai$
+^\.claude$

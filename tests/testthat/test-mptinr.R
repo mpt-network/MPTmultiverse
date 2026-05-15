@@ -37,7 +37,7 @@ test_that("No-pooling approaches work", {
 
   ## extract correct parameters:
   new <- only_asymptotic$est_group[[1]]
-  ref <- tibble(condition = c("low_WM", "low_WM", "low_WM", "low_WM",
+  ref <- tibble::tibble(condition = c("low_WM", "low_WM", "low_WM", "low_WM",
                               "high_WM", "high_WM", "high_WM", "high_WM"),
                 parameter = c("C1", "C2", "M", "P", "C1", "C2", "M", "P"),
                 core = c(FALSE, FALSE,FALSE, FALSE, FALSE, FALSE, FALSE,
@@ -55,7 +55,7 @@ test_that("No-pooling approaches work", {
                tolerance = 0.01)
 
   new <- only_asymptotic$est_indiv[[1]]
-  ref <- tibble(
+  ref <- tibble::tibble(
     id = c("1", "1", "1", "1", "2", "2", "2", "2", "3", "3", "3",
                        "3", "4", "4", "4", "4", "5", "5", "5", "5", "6", "6",
                        "6", "6", "7", "7", "7", "7", "8", "8", "8", "8", "9",
@@ -99,7 +99,7 @@ test_that("No-pooling approaches work", {
   ### NOTE: ordering of conditions differs between asymptotic and PB!
 
   new <- only_pb$est_group[[1]]
-  ref <- tibble(
+  ref <- tibble::tibble(
     condition = c("low_WM", "low_WM", "low_WM", "low_WM",
                   "high_WM", "high_WM", "high_WM", "high_WM"),
     parameter = c("C1", "C2", "M", "P", "C1", "C2", "M", "P"),
@@ -111,7 +111,7 @@ test_that("No-pooling approaches work", {
                tolerance = 0.001)
 
   new_gof <- only_pb$gof_group[[1]]
-  ref_gof <- tibble(
+  ref_gof <- tibble::tibble(
     condition = c("low_WM", "high_WM"),
     stat_obs = c(27.2, 31.75),
     p = c(0.09, 0.09)
@@ -126,7 +126,7 @@ test_that("No-pooling approaches work", {
                tolerance = 0.01)
 
   new_indiv <- only_pb$est_indiv[[1]]
-  ref_indiv <- tibble(
+  ref_indiv <- tibble::tibble(
     id = c("1", "1", "1", "1", "2", "2", "2", "2",
            "3", "3", "3", "3", "4", "4", "4", "4", "5", "5", "5", "5", "6",
            "6", "6", "6", "7", "7", "7", "7", "8", "8", "8", "8", "9", "9",
@@ -178,7 +178,7 @@ test_that("No-pooling approaches work", {
 
 
   new <- only_npb$est_group[[1]]
-  ref <- tibble(
+  ref <- tibble::tibble(
     condition = c("low_WM", "low_WM", "low_WM", "low_WM",
                   "high_WM", "high_WM", "high_WM", "high_WM"),
     parameter = c("C1", "C2", "M", "P", "C1", "C2", "M", "P"),
@@ -190,7 +190,7 @@ test_that("No-pooling approaches work", {
                tolerance = 0.001)
 
   new_gof <- only_npb$gof_group[[1]]
-  ref_gof <- tibble(
+  ref_gof <- tibble::tibble(
     condition = c("low_WM", "high_WM"),
     stat_obs = c(27.2, 31.75),
     p = c(0.64, 1) ## is now: c(0.64, 0.91)
@@ -205,7 +205,7 @@ test_that("No-pooling approaches work", {
                tolerance = 0.1)
 
   new_indiv <- only_npb$est_indiv[[1]]
-  ref_indiv <- tibble(
+  ref_indiv <- tibble::tibble(
     id = c("1", "1", "1", "1", "2", "2", "2", "2",
            "3", "3", "3", "3", "4", "4", "4", "4", "5", "5", "5", "5", "6",
            "6", "6", "6", "7", "7", "7", "7", "8", "8", "8", "8", "9", "9",
