@@ -14,11 +14,12 @@ jobs:
     strategy:
       matrix:
         include:
-        include:
-          - { name: container, os: ubuntu-latest, container: rocker/r2u4ci }
-          - { name: r-devel,   os: ubuntu-latest, container: rocker/drd }
-          - { name: macos,     os: macos-latest }
-          - { name: ubuntu,    os: ubuntu-latest }
+          - {os: macOS-latest,   r: release}
+          - {os: windows-latest, r: release}
+          - {os: windows-latest, r: oldrelease}
+          - {os: ubuntu-latest,  r: devel}
+          - {os: ubuntu-latest,  r: release}
+          - {os: ubuntu-latest,  r: oldrelease}
 
     runs-on: ${{ matrix.os }}
 
