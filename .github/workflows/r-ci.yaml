@@ -1,12 +1,13 @@
 # Run CI for R using https://eddelbuettel.github.io/r-ci/
 
-name: ci
+name: R-CMD-CHECK
 
 on:
   push:
   pull_request:
 
 env:
+  USE_BSPM: "true"
   _R_CHECK_FORCE_SUGGESTS_: "false"
 
 jobs:
@@ -21,27 +22,22 @@ jobs:
           - {os: ubuntu-latest,  r: release}
           - {os: ubuntu-latest,  r: oldrelease}
 
+
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Setup
-        uses: eddelbuettel/github-actions/r-ci@master
+      - name: Bootstrap
+        run: |
+          curl -OLs https://eddelbuettel.github.io/r-ci/run.sh && chmod 0755 run.sh
+          ./run.sh bootstrap
 
       - name: Dependencies
         run: ./run.sh install_all
 
       - name: Test
         run: ./run.sh run_tests
-
-      #- name: Logs
-      #  run: ./run.sh dump_logs
-      #  if: failure()
-
-      #- name: Coverage
-      #  if: ${{ matrix.os == 'ubuntu-latest' }}
-      #  run: ./run.sh coverage
-      #  env:
-      #    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      # - name: Coverage
+      #   run: ./run.sh coverage
