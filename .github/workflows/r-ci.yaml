@@ -14,9 +14,11 @@ jobs:
     strategy:
       matrix:
         include:
-          #- {os: macOS-latest}
-          #- {os: ubuntu-slim}
-          - {os: ubuntu-latest}
+        include:
+          - { name: container, os: ubuntu-latest, container: rocker/r2u4ci }
+          - { name: r-devel,   os: ubuntu-latest, container: rocker/drd }
+          - { name: macos,     os: macos-latest }
+          - { name: ubuntu,    os: ubuntu-latest }
 
     runs-on: ${{ matrix.os }}
 
@@ -36,9 +38,9 @@ jobs:
       #- name: Logs
       #  run: ./run.sh dump_logs
       #  if: failure()
-        
+
       #- name: Coverage
       #  if: ${{ matrix.os == 'ubuntu-latest' }}
       #  run: ./run.sh coverage
       #  env:
-      #    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}  
+      #    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
